@@ -34,5 +34,6 @@
                 {{ $slot }}
             </main>
         </div>
+        <script src="https://unpkg.com/flowbite@latest/dist/flowbite.min.js"></script>
     </body>
 </html>
