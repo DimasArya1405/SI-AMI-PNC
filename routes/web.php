@@ -1,10 +1,9 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AkunAuditeeController;
 use App\Http\Controllers\AkunAuditorController;
 use App\Http\Controllers\AkunDosenController;
-use App\Http\Controllers\AuditeeController;
+use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\ProfileController;
