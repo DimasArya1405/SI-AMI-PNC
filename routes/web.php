@@ -1,10 +1,9 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AkunAuditeeController;
 use App\Http\Controllers\AkunAuditorController;
 use App\Http\Controllers\AkunDosenController;
-use App\Http\Controllers\AuditeeController;
+use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\ProfileController;
@@ -27,7 +26,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/akun/auditor', [AkunAuditorController::class, 'index'])->name('admin.akun.auditor');
-    Route::get('/admin/akun/auditee', [AkunAuditeeController::class, 'index'])->name('admin.akun.auditee');
+    Route::get('/admin/akun/auditee', [AuditeeController::class, 'index'])->name('admin.akun.auditee');
     Route::get('/admin/akun/dosen', [AkunDosenController::class, 'index'])->name('admin.akun.dosen');
 });
 
