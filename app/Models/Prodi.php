@@ -19,4 +19,9 @@ class Prodi extends Model
         'nama_prodi',
         'jenjang',
     ];
+
+    public function auditor()
+    {
+        return $this->hasMany(Auditor::class, 'prodi_id', 'prodi_id');
+    }
 }

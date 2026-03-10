@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Auditor extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'auditor';
     protected $primaryKey = 'auditor_id';
@@ -23,4 +24,9 @@ class Auditor extends Model
         'email',
         'status_aktif',
     ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
+    }
 }
