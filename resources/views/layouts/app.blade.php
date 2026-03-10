@@ -20,7 +20,7 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-[#F4F6FF]">
+    <div class="min-h-screen bg-[#F4F6FF] pt-16">
         @include('layouts.navigation')
         <!-- Page Heading -->
         @isset($header)
