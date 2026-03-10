@@ -26,7 +26,10 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/akun/auditor', [AkunAuditorController::class, 'index'])->name('admin.akun.auditor');
-    Route::get('/admin/akun/auditee', [AuditeeController::class, 'index'])->name('admin.akun.auditee');
+    Route::post('/admin/akun/auditor/tambah', [AkunAuditorController::class, 'tambah'])->name('admin.auditor.tambah');
+    Route::put('/admin/akun/auditor/edit', [AkunAuditorController::class, 'edit'])->name('admin.auditor.edit');
+    Route::delete('/admin/akun/auditor/hapus', [AkunAuditorController::class, 'hapus'])->name('admin.auditor.hapus');
+    Route::get('/admin/akun/auditee', [AkunAuditeeController::class, 'index'])->name('admin.akun.auditee');
     Route::get('/admin/akun/dosen', [AkunDosenController::class, 'index'])->name('admin.akun.dosen');
 });
 
