@@ -3,99 +3,21 @@
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-6 text-xl font-bold text-gray-900">
                     {{ __('Data Akun Auditor') }}
                 </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
-                <div class="flex justify-between items-center p-4">
+                <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <button data-modal-target="modal-tambah" data-modal-toggle="modal-tambah"
-                        class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline"
+                        class="flex items-center gap-2 bg-green-500 hover:bg-green-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline"
                         type="button">
                         <i class="bi bi-plus"></i> <span class="text-sm">Tambah Data</span>
                     </button>
                 </div>
-                <table class="w-full text-sm text-left rtl:text-right text-body">
-                    <thead class="text-sm text-body bg-neutral-secondary-medium border-b border-default-medium">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                NIP
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                NAMA
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                JABATAN
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                PRODI
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                EMAIL
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                NO. TELP
-                            </th>
-                            <th scope="col" class="px-6 py-3 font-semibold">
-                                STATUS
-                            </th>
-                            <th scope="col" class="px-6 py-3  font-semibold">
-                                AKSI
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($auditor as $item)
-                            <tr
-                                class="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium">
-                                <th scope="row" class="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                                    {{ $item->nip }}
-                                </th>
-                                <td class="px-6 py-4">
-                                    {{ $item->nama_lengkap }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $item->jabatan }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $item->prodi->nama_prodi }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $item->email }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $item->no_telp }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if ($item->status_aktif == '1')
-                                        <span
-                                            class="bg-blue-200/80 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Aktif</span>
-                                    @else
-                                        <span
-                                            class="bg-red-200/80 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Tidak
-                                            Aktif</span>
-                                    @endif
-                                </td>
-                                <td class="flex items-center px-6 py-4 gap-2">
-                                    <button data-modal-target="modal-edit" id="button-edit"
-                                        data-modal-toggle="modal-edit"
-                                        class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                                        data-id="{{ $item->auditor_id }}" data-nip="{{ $item->nip }}"
-                                        data-nama="{{ $item->nama_lengkap }}" data-jabatan="{{ $item->jabatan }}"
-                                        data-prodi="{{ $item->prodi_id }}" data-email="{{ $item->email }}"
-                                        data-no_telp="{{ $item->no_telp }}">
-                                        <i class="bi bi-pencil text-xs"></i>
-                                    </button>
-                                    <button data-modal-target="modal-hapus" data-modal-toggle="modal-hapus"
-                                        data-id="{{ $item->auditor_id }}"
-                                        class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
-                                        <i class="bi bi-trash text-xs"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="dt-responsive table-responsive p-4 pt-4">
+                     {!! $dataTable->table(['class' => 'min-w-full text-sm text-left text-gray-700'], true) !!}
+                </div>
             </div>
         </div>
     </div>
@@ -140,8 +62,7 @@
                                 required="">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="price"
-                                class="block mb-2.5 text-sm font-medium text-heading">Jabatan</label>
+                            <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Jabatan</label>
                             <input type="text" name="jabatan" id="price"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
@@ -180,7 +101,7 @@
                             </svg>
                             Tambah Auditor Baru
                         </button>
-                        <button data-modal-hide="crud-modal" type="submit"
+                        <button data-modal-hide="modal-tambah" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
                     </div>
                 </form>
@@ -344,4 +265,5 @@
             });
         </script>
     @endpush
+    {!! $dataTable->scripts() !!}
 </x-app-layout>

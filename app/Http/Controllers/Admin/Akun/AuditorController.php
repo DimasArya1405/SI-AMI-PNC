@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin\Akun;
 
+use App\DataTables\Admin\Akun\AuditorDataTable;
+use App\Http\Controllers\Controller;
 use App\Models\Auditor;
 use App\Models\Prodi;
 use App\Models\User;
@@ -9,13 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class AkunAuditorController extends Controller
+class AuditorController extends Controller
 {
-    public function index()
+    public function index(AuditorDataTable $dataTable)
     {
-        $auditor = Auditor::with('prodi')->get();
         $prodi = Prodi::all();
-        return view('admin.akun.auditor', compact('auditor', 'prodi'));
+        return $dataTable->render('admin.akun.auditor', compact('prodi'));
     }
     public function tambah(Request $request)
     {
