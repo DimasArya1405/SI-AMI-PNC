@@ -34,22 +34,23 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/akun/auditee/tambah', [AuditeeController::class, 'tambah'])->name('admin.auditee.tambah');
     Route::put('/admin/akun/auditee/edit', [AuditeeController::class, 'edit'])->name('admin.auditee.edit');
     Route::delete('/admin/akun/auditee/hapus', [AuditeeController::class, 'hapus'])->name('admin.auditee.hapus');
+    Route::put('/admin/akun/auditee/aktivasi', [AuditeeController::class, 'aktivasi'])->name('admin.auditee.aktivasi');
     Route::get('/admin/akun/dosen', [AkunDosenController::class, 'index'])->name('admin.akun.dosen');
 });
 
-Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
+Route::middleware(['auth', 'checkRole:auditor', 'cek.status.aktif'])->group(function () {
     Route::get('/auditor/dashboard', [AuditorController::class, 'index'])->name('auditor.dashboard');
 });
 
-Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
+Route::middleware(['auth', 'checkRole:auditee', 'cek.status.aktif'])->group(function () {
     Route::get('/auditee/dashboard', [AuditeeController::class, 'index'])->name('auditee.dashboard');
 });
 
-Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
+Route::middleware(['auth', 'checkRole:dosen', 'cek.status.aktif'])->group(function () {
     Route::get('/dosen/dashboard', [DosenController::class, 'index'])->name('dosen.dashboard');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth', 'cek.status.aktif')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

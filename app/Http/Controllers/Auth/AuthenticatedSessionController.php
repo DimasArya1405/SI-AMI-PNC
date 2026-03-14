@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Auditee;
+use App\Models\Auditor;
+use App\Models\Dosen;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +29,35 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
+
+        $user = $request->user();
+
+        // Cek status aktif untuk role selain admin
+        if ($user->role !== 'admin') {
+            $statusAktif = false;
+
+            if ($user->role === 'auditor') {
+                $auditor = Auditor::where('user_id', $user->id)->first();
+                $statusAktif = $auditor?->status_aktif ?? false;
+            } elseif ($user->role === 'auditee') {
+                $auditee = Auditee::where('user_id', $user->id)->first();
+                $statusAktif = $auditee?->status_aktif ?? false;
+            } elseif ($user->role === 'dosen') {
+                $dosen = Dosen::where('user_id', $user->id)->first();
+                $statusAktif = $dosen?->status_aktif ?? false;
+            }
+
+            if (!$statusAktif) {
+                Auth::guard('web')->logout();
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akun Anda tidak aktif. Silakan hubungi admin.',
+                ]);
+            }
+        }
 
         // Logika redirect berdasarkan role
         $url = '';
