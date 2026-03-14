@@ -31,6 +31,29 @@ class AuditeeDataTable extends DataTable
                 }
             })
             ->addColumn('action', function ($row) {
+                $buttonStatus = '';
+
+                if ($row->status_aktif == 1) {
+                    $buttonStatus = '
+                        <button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
+                            data-id="'.$row->auditee_id.'"
+                            data-status="'.$row->status_aktif.'"
+                            class="hover:bg-orange-700 transition button-aktivasi duration-300 ease-in-out py-1 px-2 bg-orange-500 rounded text-white">
+                            Nonaktifkan
+                        </button>
+                    ';
+                } else {
+                    $buttonStatus = '
+                        <button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
+                            data-id="'.$row->auditee_id.'"
+                            data-status="'.$row->status_aktif.'"
+                            class="hover:bg-blue-700 transition button-aktivasi duration-300 ease-in-out py-1 px-2 bg-blue-500 rounded text-white">
+                            Aktifkan
+                        </button>
+                    ';
+                }
                 return '
                     <div class="flex items-center gap-2">
                         <button data-modal-target="modal-edit"
@@ -48,9 +71,11 @@ class AuditeeDataTable extends DataTable
                         <button data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
                             data-id="'.$row->auditee_id.'"
+                            data-email="'.$row->email.'"
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
+                        '.$buttonStatus.'
                     </div>
                 ';
             })

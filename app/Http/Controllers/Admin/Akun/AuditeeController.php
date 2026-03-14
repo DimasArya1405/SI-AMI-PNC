@@ -30,7 +30,7 @@ class AuditeeController extends Controller
         $newUser->id = Str::uuid();
         $newUser->name = $request->nama;
         $newUser->email = $request->email;
-        $newUser->password = Hash::make($request->nama);
+        $newUser->password = Hash::make($request->nip);
         $newUser->role = 'auditee';
         $newUser->save();
 
@@ -57,12 +57,33 @@ class AuditeeController extends Controller
         $auditee->no_telp = $request->no_telp;
         $auditee->email = $request->email;
         $auditee->save();
+
+        $user = User::find($auditee->user_id);
+        $user->name = $request->nama;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->nip);
+        $user->save();
         return redirect('/admin/akun/auditee')->with('success', 'Data Auditee Berhasil Diubah!');
     }
 
     public function hapus(Request $request) {
         $auditee = Auditee::find($request->auditee_id);
+        $user = User::where('email', $request->email)->first();
+        $user->delete();
         $auditee->delete();
         return redirect('/admin/akun/auditee')->with('success', 'Data Auditee Berhasil Dihapus!');
+    }
+
+    public function aktivasi(Request $request) {
+    $auditee = Auditee::find($request->auditee_id);
+
+    if ($auditee->status_aktif == 1) {
+        $auditee->status_aktif = 0;
+    } else {
+        $auditee->status_aktif = 1;
+    }
+
+    $auditee->save();
+    return redirect('/admin/akun/auditee')->with('success','Status berhasil diubah!');
     }
 }
