@@ -25,15 +25,33 @@ class AuditeeDataTable extends DataTable
             ->eloquent($query)
             ->editColumn('status_aktif', function ($row) {
                 if ($row->status_aktif) {
-                    return '<span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Aktif</span>';
+                    return '<span class="bg-blue-200/80 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Aktif</span>';
+                } else {
+                    return '<span class="bg-red-200/80 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Tidak Aktif</span>';
                 }
-
-                return '<span class="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">Nonaktif</span>';
             })
             ->addColumn('action', function ($row) {
                 return '
-                <button class="text-blue-500">Edit</button>
-                <button class="text-red-500">Delete</button>
+                    <div class="flex items-center gap-2">
+                        <button data-modal-target="modal-edit"
+                            data-modal-toggle="modal-edit"
+                            class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
+                            data-id="'.$row->auditee_id.'"
+                            data-nip="'.$row->nip.'"
+                            data-nama="'.$row->nama_lengkap.'"
+                            data-jabatan="'.$row->jabatan.'"
+                            data-prodi="'.$row->prodi_id.'"
+                            data-email="'.$row->email.'"
+                            data-no_telp="'.$row->no_telp.'">
+                            <i class="bi bi-pencil text-xs"></i>
+                        </button>
+                        <button data-modal-target="modal-hapus"
+                            data-modal-toggle="modal-hapus"
+                            data-id="'.$row->auditee_id.'"
+                            class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
+                            <i class="bi bi-trash text-xs"></i>
+                        </button>
+                    </div>
                 ';
             })
             ->rawColumns(['status_aktif', 'action']);
@@ -45,6 +63,8 @@ class AuditeeDataTable extends DataTable
     public function query(Auditee $model): QueryBuilder
     {
         return $model->newQuery()->select([
+            'auditee_id',
+            'prodi_id',
             'nip',
             'nama_lengkap',
             'jabatan',

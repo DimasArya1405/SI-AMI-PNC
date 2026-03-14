@@ -31,6 +31,9 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/akun/auditor/edit', [AdminAkunAuditorController::class, 'edit'])->name('admin.auditor.edit');
     Route::delete('/admin/akun/auditor/hapus', [AdminAkunAuditorController::class, 'hapus'])->name('admin.auditor.hapus');
     Route::get('/admin/akun/auditee', [AuditeeController::class, 'index'])->name('admin.akun.auditee');
+    Route::post('/admin/akun/auditee/tambah', [AuditeeController::class, 'tambah'])->name('admin.auditee.tambah');
+    Route::put('/admin/akun/auditee/edit', [AuditeeController::class, 'edit'])->name('admin.auditee.edit');
+    Route::delete('/admin/akun/auditee/hapus', [AuditeeController::class, 'hapus'])->name('admin.auditee.hapus');
     Route::get('/admin/akun/dosen', [AkunDosenController::class, 'index'])->name('admin.akun.dosen');
 });
 
