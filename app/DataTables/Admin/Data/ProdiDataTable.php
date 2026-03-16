@@ -21,9 +21,30 @@ class ProdiDataTable extends DataTable
      */
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        return (new EloquentDataTable($query))
-            ->addColumn('action', 'prodi.action')
-            ->setRowId('id');
+        return datatables()
+            ->eloquent($query)
+            ->addColumn('action', function ($row) {
+                return '
+                    <div class="flex items-center gap-2">
+                        <button data-modal-target="modal-edit"
+                            data-modal-toggle="modal-edit"
+                            class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
+                            data-id="'.$row->prodi_id.'"
+                            data-nama-prodi="'.$row->nama_prodi.'"
+                            data-kode-prodi="'.$row->kode_prodi.'"
+                            data-jenjang="'.$row->jenjang.'">
+                            <i class="bi bi-pencil text-xs"></i>
+                        </button>
+                        <button data-modal-target="modal-hapus"
+                            data-modal-toggle="modal-hapus"
+                            data-id="'.$row->prodi_id.'"
+                            class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
+                            <i class="bi bi-trash text-xs"></i>
+                        </button>
+                    </div>
+                ';
+            })
+            ->rawColumns(['action']);
     }
 
     /**
@@ -31,7 +52,12 @@ class ProdiDataTable extends DataTable
      */
     public function query(Prodi $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->newQuery()->select(
+            'prodi_id',
+            'kode_prodi',
+            'nama_prodi',
+            'jenjang',
+        );
     }
 
     /**
@@ -40,20 +66,14 @@ class ProdiDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         return $this->builder()
-                    ->setTableId('prodi-table')
-                    ->columns($this->getColumns())
-                    ->minifiedAjax()
-                    //->dom('Bfrtip')
-                    ->orderBy(1)
-                    ->selectStyleSingle()
-                    ->buttons([
-                        Button::make('excel'),
-                        Button::make('csv'),
-                        Button::make('pdf'),
-                        Button::make('print'),
-                        Button::make('reset'),
-                        Button::make('reload')
-                    ]);
+            ->setTableId('auditee-table')
+            ->columns($this->getColumns())
+            ->minifiedAjax()
+            ->orderBy(0, 'desc')
+            ->parameters([
+                'responsive' => false,
+                'autoWidth' => false,
+            ]);
     }
 
     /**
@@ -62,15 +82,10 @@ class ProdiDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::computed('action')
-                  ->exportable(false)
-                  ->printable(false)
-                  ->width(60)
-                  ->addClass('text-center'),
-            Column::make('id'),
-            Column::make('add your columns'),
-            Column::make('created_at'),
-            Column::make('updated_at'),
+            ['data' => 'kode_prodi', 'name' => 'kode_prodi', 'title' => 'Kode Prodi'],
+            ['data' => 'nama_prodi', 'name' => 'nama_prodi', 'title' => 'Nama Prodi'],
+            ['data' => 'jenjang', 'name' => 'jenjang', 'title' => 'Jenjang'],
+            ['data' => 'action', 'name' => 'action', 'title' => 'Action', 'orderable' => false, 'searchable' => false],
         ];
     }
 
