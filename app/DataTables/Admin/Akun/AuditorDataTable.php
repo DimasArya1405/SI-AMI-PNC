@@ -31,24 +31,32 @@ class AuditorDataTable extends DataTable
                 }
             })
             ->addColumn('action', function ($row) {
+
                 return '
-                    <div class="flex items-center px-6 py-4 gap-2">
-                        <button data-modal-target="modal-edit" id="button-edit"
-                            data-modal-toggle="modal-edit"
-                            class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                            data-id="{{ $item->auditor_id }}" data-nip="{{ $item->nip }}"
-                            data-nama="{{ $item->nama_lengkap }}" data-jabatan="{{ $item->jabatan }}"
-                            data-prodi="{{ $item->prodi_id }}" data-email="{{ $item->email }}"
-                            data-no_telp="{{ $item->no_telp }}">
-                            <i class="bi bi-pencil text-xs"></i>
-                        </button>
-                        <button data-modal-target="modal-hapus" data-modal-toggle="modal-hapus"
-                            data-id="{{ $item->auditor_id }}"
-                            class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
-                            <i class="bi bi-trash text-xs"></i>
-                        </button>
-                    </div>
-                ';
+        <div class="flex items-center gap-2">
+
+            <button data-modal-target="modal-edit"
+                data-modal-toggle="modal-edit"
+                class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
+                data-id="' . $row->auditor_id . '"
+                data-nip="' . $row->nip . '"
+                data-nama="' . $row->nama_lengkap . '"
+                data-jabatan="' . $row->jabatan . '"
+                data-prodi="' . $row->prodi_id . '"
+                data-email="' . $row->email . '"
+                data-no_telp="' . $row->no_telp . '">
+                <i class="bi bi-pencil text-xs"></i>
+            </button>
+
+            <button data-modal-target="modal-hapus"
+                data-modal-toggle="modal-hapus"
+                data-id="' . $row->auditor_id . '"
+                class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
+                <i class="bi bi-trash text-xs"></i>
+            </button>
+
+        </div>
+    ';
             })
             ->rawColumns(['status_aktif', 'action']);
     }
@@ -59,9 +67,11 @@ class AuditorDataTable extends DataTable
     public function query(Auditor $model): QueryBuilder
     {
         return $model->newQuery()->select([
+            'auditor_id',
             'nip',
             'nama_lengkap',
             'jabatan',
+            'prodi_id',
             'no_telp',
             'email',
             'status_aktif'
@@ -74,7 +84,7 @@ class AuditorDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         return $this->builder()
-            ->setTableId('auditee-table')
+            ->setTableId('auditor-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0, 'desc')
