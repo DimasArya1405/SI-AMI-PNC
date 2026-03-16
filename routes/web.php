@@ -5,6 +5,7 @@ use App\Http\Controllers\AkunAuditorController;
 use App\Http\Controllers\AkunDosenController;
 use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
+use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\ProfileController;
@@ -36,6 +37,11 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::delete('/admin/akun/auditee/hapus', [AuditeeController::class, 'hapus'])->name('admin.auditee.hapus');
     Route::put('/admin/akun/auditee/aktivasi', [AuditeeController::class, 'aktivasi'])->name('admin.auditee.aktivasi');
     Route::get('/admin/akun/dosen', [AkunDosenController::class, 'index'])->name('admin.akun.dosen');
+
+    Route::get('/admin/data/prodi', [ProdiController::class, 'index'])->name('admin.data.prodi');
+    Route::post('/admin/data/prodi/tambah', [ProdiController::class, 'tambah'])->name('admin.prodi.tambah');
+    Route::put('/admin/data/prodi/edit', [ProdiController::class, 'edit'])->name('admin.prodi.edit');
+    Route::delete('/admin/data/prodi/hapus', [ProdiController::class, 'hapus'])->name('admin.prodi.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:auditor', 'cek.status.aktif'])->group(function () {

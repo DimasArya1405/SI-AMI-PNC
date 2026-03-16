@@ -47,9 +47,9 @@
         </div>
         <ul id="dp-audit" class="pl-6 hidden py-2 space-y-2">
             <li>
-                <a href="#"
+                <a href="{{ route('admin.data.prodi') }}"
                     class="pl-5 flex items-center px-2 py-1.5  text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
-                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Data Master
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Data Prodi
                 </a>
             </li>
             <li>
