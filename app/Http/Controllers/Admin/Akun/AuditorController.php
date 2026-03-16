@@ -26,6 +26,12 @@ class AuditorController extends Controller
                 ->with('error', 'NIP sudah terdaftar!');
         }
 
+        $cekEmail = User::where('email', $request->email)->exists();
+        if ($cekEmail) {
+            return redirect('/admin/akun/auditor')
+                ->with('error', 'Email sudah terdaftar!');
+        }
+
         $newUser = new User;
         $newUser->id = Str::uuid();
         $newUser->name = $request->nama;
