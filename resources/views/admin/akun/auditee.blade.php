@@ -101,7 +101,7 @@
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="M5 12h14m-7 7V5" />
                             </svg>
-                            Tambah Auditor Baru
+                            Tambah Auditee Baru
                         </button>
                         <button data-modal-hide="modal-tambah" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
@@ -224,7 +224,7 @@
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    <h3 class="mb-6 text-body">Apakah anda yakin akan menghapus data auditor dengan ini?</h3>
+                    <h3 class="mb-6 text-body">Apakah anda yakin akan menghapus data auditee ini?</h3>
                     <form action="{{ route('admin.auditee.hapus') }}" method="post">
                         @csrf
                         @method('delete')
@@ -289,90 +289,89 @@
 
     {{-- JS --}}
     @push('js')
-<script>
-    $(document).on('click', '.button-edit', function() {
-        let auditee_id = $(this).data('id');
-        let nip = $(this).data('nip');
-        let nama = $(this).data('nama');
-        let jabatan = $(this).data('jabatan');
-        let prodi = $(this).data('prodi');
-        let email = $(this).data('email');
-        let no_telp = $(this).data('no_telp');
+    <script>
+        $(document).on('click', '.button-edit', function() {
+            let auditee_id = $(this).data('id');
+            let nip = $(this).data('nip');
+            let nama = $(this).data('nama');
+            let jabatan = $(this).data('jabatan');
+            let prodi = $(this).data('prodi');
+            let email = $(this).data('email');
+            let no_telp = $(this).data('no_telp');
 
-        $('#auditee_id').val(auditee_id);
-        $('#nip').val(nip);
-        $('#nama').val(nama);
-        $('#jabatan').val(jabatan);
-        $('#prodi').val(prodi);
-        $('#email').val(email);
-        $('#no_telp').val(no_telp);
+            $('#auditee_id').val(auditee_id);
+            $('#nip').val(nip);
+            $('#nama').val(nama);
+            $('#jabatan').val(jabatan);
+            $('#prodi').val(prodi);
+            $('#email').val(email);
+            $('#no_telp').val(no_telp);
 
-        $('#modal-edit').removeClass('hidden').addClass('flex');
-    });
+            $('#modal-edit').removeClass('hidden').addClass('flex');
+        });
 
-    $(document).on('click', '.button-hapus', function() {
-        let auditee_id = $(this).data('id');
-        let email = $(this).data('email');
-        $('#auditee_id_hapus').val(auditee_id);
-        $('#email_hapus').val(email);
+        $(document).on('click', '.button-hapus', function() {
+            let auditee_id = $(this).data('id');
+            let email = $(this).data('email');
+            $('#auditee_id_hapus').val(auditee_id);
+            $('#email_hapus').val(email);
 
-        $('#modal-hapus').removeClass('hidden').addClass('flex');
-    });
+            $('#modal-hapus').removeClass('hidden').addClass('flex');
+        });
 
-    $(document).on('click', '.button-aktivasi', function() {
-        let auditee_id = $(this).data('id');
-        let email = $(this).data('email');
-        $('#auditee_id_aktivasi').val(auditee_id);
+        $(document).on('click', '.button-aktivasi', function() {
+            let auditee_id = $(this).data('id');
+            let email = $(this).data('email');
+            $('#auditee_id_aktivasi').val(auditee_id);
 
-        $('#modal-aktivasi').removeClass('hidden').addClass('flex');
-    });
+            $('#modal-aktivasi').removeClass('hidden').addClass('flex');
+        });
 
-    // Conditional button aktivasi
-    $(document).on('click', '.button-aktivasi, .button-nonaktif', function() {
-        let auditee_id = $(this).data('id');
+        // Conditional button aktivasi
+        $(document).on('click', '.button-aktivasi, .button-nonaktif', function() {
+            let auditee_id = $(this).data('id');
 
-        $('#auditee_id_aktivasi').val(auditee_id);
+            $('#auditee_id_aktivasi').val(auditee_id);
 
-        $('#modal-aktivasi').removeClass('hidden').addClass('flex');
-    });
+            $('#modal-aktivasi').removeClass('hidden').addClass('flex');
+        });
 
-    // conditional konfirmasi modal
-    $(document).on('click', '.button-aktivasi', function() {
-        let auditee_id = $(this).data('id');
-        let status = $(this).data('status');
+        // conditional konfirmasi modal
+        $(document).on('click', '.button-aktivasi', function() {
+            let auditee_id = $(this).data('id');
+            let status = $(this).data('status');
 
-        $('#auditee_id_aktivasi').val(auditee_id);
+            $('#auditee_id_aktivasi').val(auditee_id);
 
-        if (status == 1) {
-            $('#text-modal-aktivasi').text('Apakah anda yakin akan menonaktifkan data auditee ini?');
-        } else {
-            $('#text-modal-aktivasi').text('Apakah anda yakin akan mengaktifkan data auditee ini?');
-        }
+            if (status == 1) {
+                $('#text-modal-aktivasi').text('Apakah anda yakin akan menonaktifkan data auditee ini?');
+            } else {
+                $('#text-modal-aktivasi').text('Apakah anda yakin akan mengaktifkan data auditee ini?');
+            }
 
-        $('#modal-aktivasi').removeClass('hidden').addClass('flex');
-    });
+            $('#modal-aktivasi').removeClass('hidden').addClass('flex');
+        });
 
-    $(document).on('click', '[data-modal-hide="modal-edit"]', function() {
-        $('#modal-edit').removeClass('flex').addClass('hidden');
-    });
+        $(document).on('click', '[data-modal-hide="modal-edit"]', function() {
+            $('#modal-edit').removeClass('flex').addClass('hidden');
+        });
 
-    $(document).on('click', '[data-modal-hide="modal-hapus"]', function() {
-        $('#modal-hapus').removeClass('flex').addClass('hidden');
-    });
+        $(document).on('click', '[data-modal-hide="modal-hapus"]', function() {
+            $('#modal-hapus').removeClass('flex').addClass('hidden');
+        });
 
-    $(document).on('click', '[data-modal-hide="modal-aktivasi"]', function() {
-        $('#modal-aktivasi').removeClass('flex').addClass('hidden');
-    });
+        $(document).on('click', '[data-modal-hide="modal-aktivasi"]', function() {
+            $('#modal-aktivasi').removeClass('flex').addClass('hidden');
+        });
 
-    $(document).on('click', '[data-modal-hide="modal-tambah"]', function() {
-        $('#modal-tambah').removeClass('flex').addClass('hidden');
-    });
+        $(document).on('click', '[data-modal-hide="modal-tambah"]', function() {
+            $('#modal-tambah').removeClass('flex').addClass('hidden');
+        });
 
-    $(document).on('click', '[data-modal-target="modal-tambah"]', function() {
-        $('#modal-tambah').removeClass('hidden').addClass('flex');
-    });
-</script>
-@endpush
+        $(document).on('click', '[data-modal-target="modal-tambah"]', function() {
+            $('#modal-tambah').removeClass('hidden').addClass('flex');
+        });
+    </script>
+    @endpush
     {!! $dataTable->scripts() !!}
-    @stack('js')    
 </x-app-layout>
