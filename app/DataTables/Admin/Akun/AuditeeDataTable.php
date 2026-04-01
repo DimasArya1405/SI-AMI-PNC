@@ -23,6 +23,13 @@ class AuditeeDataTable extends DataTable
     {
         return datatables()
             ->eloquent($query)
+            ->addIndexColumn()
+            ->editColumn('upt_id', function ($row) {
+                return $row->upt->nama_upt ?? '-';
+            })
+            ->editColumn('kategori_upt', function ($row) {
+                return $row->upt->kategori_upt ?? '-';
+            })
             ->editColumn('status_aktif', function ($row) {
                 if ($row->status_aktif) {
                     return '<span class="bg-blue-200/80 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Aktif</span>';
@@ -37,8 +44,8 @@ class AuditeeDataTable extends DataTable
                     $buttonStatus = '
                         <button data-modal-target="modal-aktivasi"
                             data-modal-toggle="modal-aktivasi"
-                            data-id="'.$row->auditee_id.'"
-                            data-status="'.$row->status_aktif.'"
+                            data-id="' . $row->auditee_id . '"
+                            data-status="' . $row->status_aktif . '"
                             class="hover:bg-orange-700 transition button-aktivasi duration-300 ease-in-out py-1 px-2 bg-orange-500 rounded text-white">
                             Nonaktifkan
                         </button>
@@ -47,8 +54,8 @@ class AuditeeDataTable extends DataTable
                     $buttonStatus = '
                         <button data-modal-target="modal-aktivasi"
                             data-modal-toggle="modal-aktivasi"
-                            data-id="'.$row->auditee_id.'"
-                            data-status="'.$row->status_aktif.'"
+                            data-id="' . $row->auditee_id . '"
+                            data-status="' . $row->status_aktif . '"
                             class="hover:bg-blue-700 transition button-aktivasi duration-300 ease-in-out py-1 px-2 bg-blue-500 rounded text-white">
                             Aktifkan
                         </button>
@@ -59,19 +66,19 @@ class AuditeeDataTable extends DataTable
                         <button data-modal-target="modal-edit"
                             data-modal-toggle="modal-edit"
                             class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                            data-id="'.$row->auditee_id.'"
-                            data-nip="'.$row->nip.'"
-                            data-nama="'.$row->nama_lengkap.'"
-                            data-jabatan="'.$row->jabatan.'"
-                            data-prodi="'.$row->prodi_id.'"
-                            data-email="'.$row->email.'"
-                            data-no_telp="'.$row->no_telp.'">
+                            data-id="' . $row->auditee_id . '"
+                            data-nip="' . $row->nip . '"
+                            data-nama="' . $row->nama_lengkap . '"
+                            data-jabatan="' . $row->jabatan . '"
+                            data-prodi="' . $row->upt_id . '"
+                            data-email="' . $row->email . '"
+                            data-no_telp="' . $row->no_telp . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
                         <button data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
-                            data-id="'.$row->auditee_id.'"
-                            data-email="'.$row->email.'"
+                            data-id="' . $row->auditee_id . '"
+                            data-email="' . $row->email . '"
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
@@ -86,16 +93,17 @@ class AuditeeDataTable extends DataTable
      */
     public function query(Auditee $model): QueryBuilder
     {
-        return $model->newQuery()->select([
-            'auditee_id',
-            'prodi_id',
-            'nip',
-            'nama_lengkap',
-            'jabatan',
-            'no_telp',
-            'email',
-            'status_aktif'
-        ]);
+        return $model->newQuery()
+            ->with('upt')
+            ->select([
+                'auditee.auditee_id',
+                'auditee.upt_id',
+                'auditee.nip',
+                'auditee.nama_lengkap',
+                'auditee.no_telp',
+                'auditee.email',
+                'auditee.status_aktif'
+            ]);
     }
 
     /**
@@ -120,9 +128,11 @@ class AuditeeDataTable extends DataTable
     public function getColumns(): array
     {
         return [
+            ['data' => 'DT_RowIndex', 'name' => 'DT_RowIndex', 'title' => 'No', 'orderable' => false, 'searchable' => false],
+            ['data' => 'upt_id', 'name' => 'upt.nama_upt', 'title' => 'Nama UPT'],
+            ['data' => 'kategori_upt', 'name' => 'upt.kategori_upt', 'title' => 'Kategori UPT'],
             ['data' => 'nip', 'name' => 'nip', 'title' => 'NIP'],
             ['data' => 'nama_lengkap', 'name' => 'nama_lengkap', 'title' => 'Nama Lengkap'],
-            ['data' => 'jabatan', 'name' => 'jabatan', 'title' => 'Jabatan'],
             ['data' => 'no_telp', 'name' => 'no_telp', 'title' => 'No Telp'],
             ['data' => 'email', 'name' => 'email', 'title' => 'Email'],
             ['data' => 'status_aktif', 'name' => 'status_aktif', 'title' => 'Status Aktif'],

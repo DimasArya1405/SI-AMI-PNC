@@ -89,6 +89,13 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('admin.data.upt') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ request()->routeIs('admin.data.upt') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Data UPT
+                </a>
+            </li>
+            <li>
                 <a href="#"
                     class="pl-5 flex items-center px-2 py-1.5  text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Data Akademik

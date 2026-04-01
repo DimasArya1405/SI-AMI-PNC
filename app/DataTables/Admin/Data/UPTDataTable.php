@@ -2,7 +2,7 @@
 
 namespace App\DataTables\Admin\Data;
 
-use App\Models\Prodi;
+use App\Models\UPT;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -12,7 +12,7 @@ use Yajra\DataTables\Html\Editor\Editor;
 use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
 
-class ProdiDataTable extends DataTable
+class UPTDataTable extends DataTable
 {
     /**
      * Build the DataTable class.
@@ -30,15 +30,15 @@ class ProdiDataTable extends DataTable
                         <button data-modal-target="modal-edit"
                             data-modal-toggle="modal-edit"
                             class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                            data-id="'.$row->prodi_id.'"
-                            data-nama-prodi="'.$row->nama_prodi.'"
-                            data-kode-prodi="'.$row->kode_prodi.'"
-                            data-jenjang="'.$row->jenjang.'">
+                            data-id="' . $row->upt_id . '"
+                            data-nama-upt="' . $row->nama_upt . '"
+                            data-kode-upt="' . $row->kode_upt . '"
+                            data-kategori-upt="' . $row->kategori_upt . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
                         <button data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
-                            data-id="'.$row->prodi_id.'"
+                            data-id="' . $row->upt_id . '"
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
@@ -51,13 +51,13 @@ class ProdiDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(Prodi $model): QueryBuilder
+    public function query(UPT $model): QueryBuilder
     {
         return $model->newQuery()->select(
-            'prodi_id',
-            'kode_prodi',
-            'nama_prodi',
-            'jenjang',
+            'upt_id',
+            'kode_upt',
+            'nama_upt',
+            'kategori_upt',
         );
     }
 
@@ -70,7 +70,7 @@ class ProdiDataTable extends DataTable
             ->setTableId('auditee-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(0, 'desc')
+            ->orderBy(3, 'asc')
             ->parameters([
                 'responsive' => false,
                 'autoWidth' => false,
@@ -84,9 +84,9 @@ class ProdiDataTable extends DataTable
     {
         return [
             ['data' => 'DT_RowIndex', 'name' => 'DT_RowIndex', 'title' => 'No', 'orderable' => false, 'searchable' => false],
-            ['data' => 'kode_prodi', 'name' => 'kode_prodi', 'title' => 'Kode Prodi'],
-            ['data' => 'nama_prodi', 'name' => 'nama_prodi', 'title' => 'Nama Prodi'],
-            ['data' => 'jenjang', 'name' => 'jenjang', 'title' => 'Jenjang'],
+            ['data' => 'kode_upt', 'name' => 'kode_upt', 'title' => 'Kode UPT'],
+            ['data' => 'nama_upt', 'name' => 'nama_upt', 'title' => 'Nama UPT'],
+            ['data' => 'kategori_upt', 'name' => 'kategori_upt', 'title' => 'Kategori UPT'],
             ['data' => 'action', 'name' => 'action', 'title' => 'Action', 'orderable' => false, 'searchable' => false],
         ];
     }
@@ -96,6 +96,6 @@ class ProdiDataTable extends DataTable
      */
     protected function filename(): string
     {
-        return 'Prodi_' . date('YmdHis');
+        return 'UPT_' . date('YmdHis');
     }
 }

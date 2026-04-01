@@ -20,7 +20,7 @@ class AuditeeSeeder extends Seeder
                 'prodi_id' => $prodiIds[0],
                 'nip' => '198001011',
                 'nama_lengkap' => 'Budi Santoso',
-                'jabatan' => 'Ketua Prodi',
+                'kategori' => 'Prodi',
                 'no_telp' => '081234567890',
                 'email' => 'budi@example.com',
                 'status_aktif' => true,
