@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
 use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Data\ProdiController;
+use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,11 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/data/prodi/tambah', [ProdiController::class, 'tambah'])->name('admin.prodi.tambah');
     Route::put('/admin/data/prodi/edit', [ProdiController::class, 'edit'])->name('admin.prodi.edit');
     Route::delete('/admin/data/prodi/hapus', [ProdiController::class, 'hapus'])->name('admin.prodi.hapus');
+
+    // ROUTE PERIODE
+    Route::get('/admin/periode', [PeriodeController::class, 'index'])->name('admin.periode');
+    Route::post('/admin/periode/tambah', [PeriodeController::class, 'tambah'])->name('admin.periode.tambah');
+    Route::delete('/admin/periode/hapus', [PeriodeController::class, 'hapus'])->name('admin.periode.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
