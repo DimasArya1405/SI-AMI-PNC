@@ -47,19 +47,19 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::delete('/admin/data/prodi/hapus', [ProdiController::class, 'hapus'])->name('admin.prodi.hapus');
 });
 
-Route::middleware(['auth', 'checkRole:auditor', 'cek.status.aktif'])->group(function () {
+Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/dashboard', [AuditorController::class, 'index'])->name('auditor.dashboard');
 });
 
-Route::middleware(['auth', 'checkRole:auditee', 'cek.status.aktif'])->group(function () {
+Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/dashboard', [AuditeeController::class, 'index'])->name('auditee.dashboard');
 });
 
-Route::middleware(['auth', 'checkRole:dosen', 'cek.status.aktif'])->group(function () {
+Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
     Route::get('/dosen/dashboard', [DosenController::class, 'index'])->name('dosen.dashboard');
 });
 
-Route::middleware('auth', 'cek.status.aktif')->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
