@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('auditee', function (Blueprint $table) {
             $table->uuid('auditee_id')->primary();
             $table->uuid('user_id')->unique();
-            $table->uuid('prodi_id');
+            $table->uuid('upt_id');
             $table->string('nip')->unique();
             $table->string('nama_lengkap');
-            $table->string('jabatan')->nullable();
             $table->string('no_telp')->nullable();
             $table->string('email')->unique()->nullable();
             $table->boolean('status_aktif')->default(true);
@@ -27,9 +26,9 @@ return new class extends Migration
                 ->references('id')
                 ->on('users')
                 ->cascadeOnDelete();
-            $table->foreign('prodi_id')
-                ->references('prodi_id')
-                ->on('prodi')
+            $table->foreign('upt_id')
+                ->references('upt_id')
+                ->on('upt')
                 ->cascadeOnDelete();
         });
     }

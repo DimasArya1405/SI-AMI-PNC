@@ -15,12 +15,21 @@ class Auditee extends Model
     protected $fillable = [
         'auditee_id',
         'user_id',
-        'prodi_id',
+        'upt_id',
         'nip',
         'nama_lengkap',
-        'jabatan',
         'no_telp',
         'email',
         'status_aktif'
     ];
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
+    }
+
+    public function upt()
+    {
+        return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
+    }
 }

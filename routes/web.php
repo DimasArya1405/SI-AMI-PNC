@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
 use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Data\ProdiController;
+use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,12 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/data/prodi/tambah', [ProdiController::class, 'tambah'])->name('admin.prodi.tambah');
     Route::put('/admin/data/prodi/edit', [ProdiController::class, 'edit'])->name('admin.prodi.edit');
     Route::delete('/admin/data/prodi/hapus', [ProdiController::class, 'hapus'])->name('admin.prodi.hapus');
+
+    Route::get('/admin/data/upt', [UPTController::class, 'index'])->name('admin.data.upt');
+    Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
+    Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
+    Route::put('/admin/data/upt/edit', [UPTController::class, 'edit'])->name('admin.upt.edit');
+    Route::delete('/admin/data/upt/hapus', [UPTController::class, 'hapus'])->name('admin.upt.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {

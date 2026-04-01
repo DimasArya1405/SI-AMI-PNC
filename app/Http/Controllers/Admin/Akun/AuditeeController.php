@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\Akun;
 use App\DataTables\Admin\Akun\AuditeeDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
-use App\Models\Prodi;
+use App\Models\UPT;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,8 +15,8 @@ class AuditeeController extends Controller
 {
     public function index(AuditeeDataTable $dataTable)
     {
-        $prodi = Prodi::all();
-        return $dataTable->render('admin.akun.auditee', compact('prodi'));
+        $upt = UPT::all();
+        return $dataTable->render('admin.akun.auditee', compact('upt'));
     }
 
     public function tambah(Request $request) {
@@ -39,8 +39,7 @@ class AuditeeController extends Controller
         $auditee->user_id = $newUser->id;
         $auditee->nip = $request->nip;
         $auditee->nama_lengkap = $request->nama;
-        $auditee->jabatan = $request->jabatan;
-        $auditee->prodi_id = $request->prodi;
+        $auditee->upt_id = $request->upt;
         $auditee->no_telp = $request->no_telp;
         $auditee->email = $request->email;
         $auditee->status_aktif = '1';
@@ -52,8 +51,7 @@ class AuditeeController extends Controller
         $auditee = Auditee::find($request->auditee_id);
         $auditee->nip = $request->nip;
         $auditee->nama_lengkap = $request->nama;
-        $auditee->jabatan = $request->jabatan;
-        $auditee->prodi_id = $request->prodi;
+        $auditee->upt_id = $request->upt;
         $auditee->no_telp = $request->no_telp;
         $auditee->email = $request->email;
         $auditee->save();
