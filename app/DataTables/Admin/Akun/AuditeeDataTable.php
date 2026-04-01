@@ -75,7 +75,6 @@ class AuditeeDataTable extends DataTable
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
-                        '.$buttonStatus.'
                     </div>
                 ';
             })
