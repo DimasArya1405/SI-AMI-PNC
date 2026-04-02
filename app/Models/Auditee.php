@@ -33,4 +33,14 @@ class Auditee extends Model
     {
         return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'auditee_id', 'auditee_id');
+    }
 }

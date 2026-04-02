@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
+use App\Http\Controllers\Admin\PenugasanController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
     Route::put('/admin/data/upt/edit', [UPTController::class, 'edit'])->name('admin.upt.edit');
     Route::delete('/admin/data/upt/hapus', [UPTController::class, 'hapus'])->name('admin.upt.hapus');
+
+    // ROUTE PENUGASAN
+    Route::get('/admin/ami/penugasan', [PenugasanController::class, 'index'])->name('admin.ami.penugasan');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {

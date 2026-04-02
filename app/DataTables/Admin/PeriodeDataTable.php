@@ -34,16 +34,33 @@ class PeriodeDataTable extends DataTable
                 return $row->tahun;
             })
             ->addColumn('action', function ($row) {
-                return '
-                <div class="flex items-center gap-2">
-                    <button data-modal-target="modal-hapus"
-                        data-modal-toggle="modal-hapus"
-                        data-id="'.$row->id.'"
-                        class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
-                        <i class="bi bi-trash text-xs"></i>
-                    </button>
-                </div>
+                if (request()->routeIs('admin.periode')) {
+                    return '
+                    <div class="flex items-center gap-2">
+                        <button data-modal-target="modal-hapus"
+                            data-modal-toggle="modal-hapus"
+                            data-id="' . $row->id . '"
+                            class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
+                            <i class="bi bi-trash text-xs"></i>
+                        </button>
+                    </div>
             ';
+                }
+
+                if (request()->routeIs('admin.ami.penugasan')) {
+                    if($row->status == '1'){
+                        return '
+                        <div class="flex items-center gap-2">
+                            <button data-id="' . $row->id . '"
+                                class="bg-yellow-500 hover:bg-yellow-600 transition duration-200 ease-in-out px-2 py-1 text-white rounded">
+                                Buat Penugasan
+                            </button>
+                        </div>
+                        ';
+                }else{
+                    return '<div class="text-red-500 text-sm">Periode tidak aktif</div>';
+                }
+                }
             })
             ->rawColumns(['action', 'status_aktif']);
     }
