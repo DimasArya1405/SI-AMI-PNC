@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Ami\ItemSubStandarMutuController;
 use App\Http\Controllers\Admin\Ami\StandarMutuController;
 use App\Http\Controllers\Admin\Ami\SubStandarMutuController;
+use App\Http\Controllers\Admin\Ami\UptStandarMutuController;
 use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
@@ -50,7 +51,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/data/prodi/tambah', [ProdiController::class, 'tambah'])->name('admin.prodi.tambah');
     Route::put('/admin/data/prodi/edit', [ProdiController::class, 'edit'])->name('admin.prodi.edit');
     Route::delete('/admin/data/prodi/hapus', [ProdiController::class, 'hapus'])->name('admin.prodi.hapus');
-    
+
     // ROUTE PERIODE
     Route::get('/admin/periode', [PeriodeController::class, 'index'])->name('admin.periode');
     Route::post('/admin/periode/tambah', [PeriodeController::class, 'tambah'])->name('admin.periode.tambah');
@@ -76,6 +77,12 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/ami/standar-mutu/sub-standar-mutu/item/tambah', [ItemSubStandarMutuController::class, 'tambah'])->name('admin.item_sub_standar_mutu.tambah');
     Route::put('/admin/ami/standar-mutu/sub-standar-mutu/item/edit', [ItemSubStandarMutuController::class, 'edit'])->name('admin.item_sub_standar_mutu.edit');
     Route::delete('/admin/ami/standar-mutu/sub-standar-mutu/item/hapus', [ItemSubStandarMutuController::class, 'hapus'])->name('admin.item_sub_standar_mutu.hapus');
+
+    Route::get('/admin/ami/pemetaan-standar-mutu', [UptStandarMutuController::class, 'index'])->name('admin.ami.upt_standar_mutu');
+    Route::get('/admin/ami/pemetaan-standar/{upt_id}', [UptStandarMutuController::class, 'detail'])->name('admin.upt_standar_mutu.detail');
+    Route::post('/admin/ami/pemetaan-standar-mutu/tambah', [UptStandarMutuController::class, 'tambah'])->name('admin.upt_standar_mutu.tambah');
+    Route::put('/admin/ami/pemetaan-standar-mutu/edit', [UptStandarMutuController::class, 'edit'])->name('admin.upt_standar_mutu.edit');
+    Route::delete('/admin/ami/pemetaan-standar-mutu/hapus', [UptStandarMutuController::class, 'hapus'])->name('admin.upt_standar_mutu.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
@@ -96,4 +103,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

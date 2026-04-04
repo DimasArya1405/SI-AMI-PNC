@@ -18,4 +18,9 @@ class UPT extends Model
         'nama_upt',
         'kategori_upt',
     ];
+
+    public function uptStandarMutu()
+    {
+        return $this->hasMany(UptStandarMutu::class, 'upt_id');
+    }
 }

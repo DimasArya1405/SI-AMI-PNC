@@ -13,7 +13,7 @@ class ItemSubStandarMutuController extends Controller
 {
     public function index(ItemSubStandarMutuDataTable $dataTable, $sub_standar_id)
     {
-        $sub_standar = SubStandarMutu::findOrFail($sub_standar_id);
+        $sub_standar = SubStandarMutu::with('standar_mutu')->findOrFail($sub_standar_id);
         return $dataTable->setSubStandarId($sub_standar_id)->render('admin.ami.item-sub-standar-mutu', compact('sub_standar', 'sub_standar_id'));
     }
 

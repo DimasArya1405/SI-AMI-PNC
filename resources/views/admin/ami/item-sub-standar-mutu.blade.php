@@ -3,8 +3,31 @@
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    Data Sub
+                <div class="p-6 text-gray-900 flex items-center justify-between">
+
+                    <div>
+                        Data Item
+                        {{ $sub_standar->standar_mutu->nama_standar_mutu ?? '-' }}
+                        →
+                        {{ $sub_standar->nama_sub_standar ?? '-' }}
+                    </div>
+
+                    <div class="flex gap-2">
+
+                        <a href="{{ route('admin.ami.sub_standar_mutu', $sub_standar->standar_mutu_id) }}"
+                            class="flex items-center gap-2 bg-gray-500 hover:bg-gray-700 text-white text-sm px-3 py-1 rounded">
+                            <i class="bi bi-arrow-left"></i>
+                            Sub Standar
+                        </a>
+
+                        <a href="{{ route('admin.ami.standar_mutu') }}"
+                            class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded">
+                            <i class="bi bi-house"></i>
+                            Standar Mutu
+                        </a>
+
+                    </div>
+
                 </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">

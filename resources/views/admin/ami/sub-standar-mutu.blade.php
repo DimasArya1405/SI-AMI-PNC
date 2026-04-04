@@ -3,8 +3,18 @@
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    Data Sub {{ $standar->nama_standar_mutu }}
+                <div class="p-6 text-gray-900 flex items-center justify-between">
+
+                    <div>
+                        Data Sub {{ $standar->nama_standar_mutu }}
+                    </div>
+
+                    <a href="{{ route('admin.ami.standar_mutu') }}"
+                        class="flex items-center gap-2 bg-gray-500 hover:bg-gray-700 text-white text-sm px-3 py-1 rounded">
+                        <i class="bi bi-arrow-left"></i>
+                        Kembali
+                    </a>
+
                 </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
@@ -88,7 +98,7 @@
                     <h3 class="text-lg font-medium text-heading">
                         Edit Sub Standar Mutu
                     </h3>
-                    <button type="button"   
+                    <button type="button"
                         class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
                         data-modal-hide="modal-edit">
                         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
