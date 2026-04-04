@@ -62,6 +62,10 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 
     // ROUTE PENUGASAN
     Route::get('/admin/ami/penugasan', [PenugasanController::class, 'index'])->name('admin.ami.penugasan');
+    Route::get('/admin/ami/penugasan/detial/{id}', [PenugasanController::class, 'detail'])->name('admin.ami.penugasan.detail');
+    Route::post('/admin/ami/penugasan/tambah', [PenugasanController::class, 'tambah'])->name('admin.ami.penugasan.tambah');
+    Route::put('/admin/ami/penugasan/edit', [PenugasanController::class, 'edit'])->name('admin.ami.penugasan.edit');
+    Route::put('/admin/ami/penugasan/aktifkan/{id}', [PenugasanController::class, 'aktifkan'])->name('admin.ami.penugasan.aktifkan');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {

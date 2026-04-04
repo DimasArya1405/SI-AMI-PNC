@@ -16,13 +16,12 @@ return new class extends Migration
             $table->uuid('periode_id');
             $table->uuid('upt_id');
             $table->uuid('auditor_id');
-            $table->uuid('auditee_id');
 
             // Jadwal Audit
             $table->date('tanggal_audit')->nullable();
             $table->string('lokasi')->nullable();
 
-            $table->enum('status_penugasan', ['aktif', 'selesai'])
+            $table->enum('status_penugasan', ['pending','aktif', 'selesai'])
                   ->default('aktif');
 
             $table->timestamps();

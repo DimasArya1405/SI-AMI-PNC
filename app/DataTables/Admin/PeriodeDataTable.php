@@ -51,10 +51,10 @@ class PeriodeDataTable extends DataTable
                     if($row->status == '1'){
                         return '
                         <div class="flex items-center gap-2">
-                            <button data-id="' . $row->id . '"
+                            <a href="' . route('admin.ami.penugasan.detail', $row->id) . '"
                                 class="bg-yellow-500 hover:bg-yellow-600 transition duration-200 ease-in-out px-2 py-1 text-white rounded">
                                 Buat Penugasan
-                            </button>
+                            </a>
                         </div>
                         ';
                 }else{
