@@ -10,17 +10,17 @@ class AuditeeSeeder extends Seeder
 {
     public function run(): void
     {
-        $prodiIds = DB::table('prodi')->pluck('prodi_id')->toArray();
+        $uptIds = DB::table('upt')->pluck('upt_id')->toArray();
         $userIds = DB::table('users')->pluck('id')->toArray();
 
         DB::table('auditee')->insert([
             [
                 'auditee_id' => Str::uuid(),
                 'user_id' => $userIds[1],
-                'prodi_id' => $prodiIds[0],
+                'upt_id' => $uptIds[0],
                 'nip' => '198001011',
                 'nama_lengkap' => 'Budi Santoso',
-                'kategori' => 'Prodi',
+                // 'kategori' => 'Prodi',
                 'no_telp' => '081234567890',
                 'email' => 'budi@example.com',
                 'status_aktif' => true,

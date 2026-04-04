@@ -18,4 +18,9 @@ class UPT extends Model
         'nama_upt',
         'kategori_upt',
     ];
+
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'upt_id', 'upt_id');
+    }
 }

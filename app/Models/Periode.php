@@ -17,4 +17,9 @@ class Periode extends Model
         'id',
         'tahun',
     ];
+
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'periode_id', 'id');
+    }
 }
