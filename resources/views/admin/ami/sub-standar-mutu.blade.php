@@ -64,9 +64,9 @@
                     <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
                         <div class="col-span-2">
                             <label for="name" class="block mb-2.5 text-sm font-medium text-heading">Nama Sub Standar Mutu</label>
-                            <input type="text" name="nama_sub_standar_mutu" id="name"
+                            <textarea name="nama_sub_standar_mutu" id="name" rows="3"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
+                                required></textarea>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
@@ -120,9 +120,9 @@
                             required="">
                         <div class="col-span-2">
                             <label for="name" class="block mb-2.5 text-sm font-medium text-heading">Nama Sub Standar Mutu</label>
-                            <input type="text" name="nama_sub_standar_mutu" id="nama_sub_standar_mutu"
+                            <textarea name="nama_sub_standar_mutu" id="nama_sub_standar_mutu" rows="3"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
+                                required></textarea>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">

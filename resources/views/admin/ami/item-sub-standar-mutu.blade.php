@@ -77,24 +77,74 @@
                     <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
                         <div class="col-span-2">
                             <label for="name" class="block mb-2.5 text-sm font-medium text-heading">Pertanyaan dan Pernyataan</label>
-                            <input type="text" name="nama_item" id="name"
+                            <textarea name="nama_item" id="name" rows="4"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
+                                placeholder=""
+                                required></textarea>
                         </div>
 
                         <input type="hidden" name="sub_standar_id" value="{{ $sub_standar->sub_standar_id }}">
 
                         <div class="col-span-2">
                             <label class="block mb-2.5 text-sm font-medium text-heading">Parent Item</label>
-                            <select name="parent_item_id"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base block w-full px-3 py-2.5">
-                                <option value="">Item Utama</option>
-                                @foreach ($parentItems as $parent)
-                                <option value="{{ $parent->item_sub_standar_id }}">
-                                    {{ $parent->nama_item }}
-                                </option>
-                                @endforeach
-                            </select>
+
+                            {{-- value yang dikirim ke backend --}}
+                            <input type="hidden" name="parent_item_id" id="parent_item_id">
+
+                            {{-- tombol dropdown --}}
+                            <button id="dropdownParentButton" data-dropdown-toggle="dropdownParentMenu"
+                                data-dropdown-placement="bottom"
+                                class="w-full flex items-center justify-between bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base px-3 py-2.5"
+                                type="button">
+                                <span id="dropdownParentLabel">Item Utama</span>
+                                <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="m1 1 4 4 4-4" />
+                                </svg>
+                            </button>
+
+                            {{-- isi dropdown --}}
+                            <div id="dropdownParentMenu"
+                                class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-full border border-gray-200">
+
+                                <div class="p-3">
+                                    <label for="search_parent_item" class="sr-only">Cari Parent Item</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                            <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 20 20">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                            </svg>
+                                        </div>
+                                        <input type="text" id="search_parent_item"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full ps-10 p-2.5"
+                                            placeholder="Cari parent item...">
+                                    </div>
+                                </div>
+
+                                <ul class="max-h-60 overflow-y-auto text-sm text-gray-700" id="parent_item_list">
+                                    <li>
+                                        <button type="button"
+                                            class="parent-item-option inline-flex w-full px-4 py-2 hover:bg-gray-100"
+                                            data-value="" data-label="Item Utama">
+                                            Item Utama
+                                        </button>
+                                    </li>
+
+                                    @foreach ($parentItems as $parent)
+                                    <li class="parent-item-row">
+                                        <button type="button"
+                                            class="parent-item-option inline-flex w-full px-4 py-2 hover:bg-gray-100 text-left"
+                                            data-value="{{ $parent->item_sub_standar_id }}"
+                                            data-label="{{ $parent->nama_item }}">
+                                            {{ $parent->nama_item }}
+                                        </button>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
@@ -146,9 +196,9 @@
                             <label for="nama_item" class="block mb-2.5 text-sm font-medium text-heading">
                                 Pertanyaan dan Pernyataan
                             </label>
-                            <input type="text" name="nama_item" id="nama_item"
+                            <textarea name="nama_item" id="nama_item" rows="4"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required>
+                                required></textarea>
                         </div>
                     </div>
 
@@ -217,6 +267,71 @@
     {{-- JS --}}
     @push('js')
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== MODAL TAMBAH =====
+            const searchInput = document.getElementById('search_parent_item');
+            const hiddenInput = document.getElementById('parent_item_id');
+            const label = document.getElementById('dropdownParentLabel');
+            const options = document.querySelectorAll('.parent-item-option');
+            const rows = document.querySelectorAll('#parent_item_list li');
+
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    const keyword = this.value.toLowerCase();
+
+                    rows.forEach((row) => {
+                        const text = row.innerText.toLowerCase();
+                        row.style.display = text.includes(keyword) ? '' : 'none';
+                    });
+                });
+            }
+
+            options.forEach((option) => {
+                option.addEventListener('click', function() {
+                    hiddenInput.value = this.dataset.value;
+                    label.textContent = this.dataset.label;
+                });
+            });
+
+            // ===== MODAL EDIT =====
+            const searchInputEdit = document.getElementById('search_parent_item_edit');
+            const hiddenInputEdit = document.getElementById('parent_item_id_edit');
+            const labelEdit = document.getElementById('dropdownParentLabelEdit');
+            const optionsEdit = document.querySelectorAll('.parent-item-option-edit');
+            const rowsEdit = document.querySelectorAll('#parent_item_list_edit li');
+
+            if (searchInputEdit) {
+                searchInputEdit.addEventListener('keyup', function() {
+                    const keyword = this.value.toLowerCase();
+
+                    rowsEdit.forEach((row) => {
+                        const text = row.innerText.toLowerCase();
+                        row.style.display = text.includes(keyword) ? '' : 'none';
+                    });
+                });
+            }
+
+            optionsEdit.forEach((option) => {
+                option.addEventListener('click', function() {
+                    hiddenInputEdit.value = this.dataset.value;
+                    labelEdit.textContent = this.dataset.label;
+                });
+            });
+
+            // ===== isi data saat klik tombol edit =====
+            $(document).on('click', '.button-edit', function() {
+                let itemId = $(this).data('id');
+                let namaItem = $(this).data('nama_item');
+                let parentItemId = $(this).data('parent_item_id') ?? '';
+                let parentItemLabel = $(this).data('parent_item_label') ?? 'Item Utama';
+
+                $('#item_sub_standar_id').val(itemId);
+                $('#nama_item').val(namaItem);
+                $('#parent_item_id_edit').val(parentItemId);
+                $('#dropdownParentLabelEdit').text(parentItemLabel);
+            });
+        });
+
         $(document).on('click', '.button-edit', function() {
             let item_sub_standar_id = $(this).data('id');
             let nama_item = $(this).data('nama');
