@@ -27,4 +27,9 @@ class StandarMutu extends Model
     {
         return $this->hasMany(UptStandarMutu::class, 'standar_mutu_id');
     }
+
+    public function upt_sub_standar_mutu()
+    {
+        return $this->hasMany(UptSubStandarMutu::class, 'standar_mutu_id', 'standar_mutu_id');
+    }
 }

@@ -23,33 +23,50 @@ class ItemSubStandarMutuDataTable extends DataTable
         return datatables()
             ->eloquent($query)
             ->addIndexColumn()
+            ->editColumn('nama_item', function ($row) {
+                $level = $row->level ?? 1;
+                $padding = ($level - 1) * 28;
+
+                $icon = '';
+                if ($level > 1) {
+                    $icon = '<span class="text-gray-400 mr-2">↳</span>';
+                }
+
+                return '
+                    <div style="padding-left: '.$padding.'px;" class="whitespace-normal leading-7">
+                        '.$icon.'
+                        <span class="text-gray-900">'.$row->nama_item.'</span>
+                    </div>
+                ';
+            })
             ->addColumn('action', function ($row) {
                 return '
                     <div class="flex items-center gap-2">
                         <button data-modal-target="modal-edit"
                             data-modal-toggle="modal-edit"
                             class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                            data-id="'.$row->item_sub_standar_id.'"
-                            data-nama="'.$row->nama_item.'">
+                            data-id="' . $row->item_sub_standar_id . '"
+                            data-nama="' . $row->nama_item . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
                         <button data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
-                            data-id="'.$row->item_sub_standar_id.'"
+                            data-id="' . $row->item_sub_standar_id . '"
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
                     </div>
                 ';
             })
-            ->rawColumns(['action']);
+            ->rawColumns(['action', 'nama_item']);
     }
 
     public function query(ItemSubStandarMutu $model): QueryBuilder
     {
         return $model->newQuery()
-            ->with('sub_standar_mutu')
+            ->with(['sub_standar_mutu', 'parent'])
             ->where('sub_standar_id', $this->sub_standar_id)
+            ->orderBy('urutan', 'asc')
             ->select('item_sub_standar.*');
     }
 

@@ -17,6 +17,7 @@ class SubStandarMutu extends Model
         'sub_standar_id',
         'standar_mutu_id',
         'nama_sub_standar',
+        'urutan',
     ];
 
     public function standar_mutu()
@@ -27,5 +28,10 @@ class SubStandarMutu extends Model
     public function item_sub_standar_mutu()
     {
         return $this->hasMany(ItemSubStandarMutu::class, 'sub_standar_id');
+    }
+
+    public function upt_sub_standar_mutu()
+    {
+        return $this->hasMany(UptSubStandarMutu::class, 'sub_standar_master_id', 'sub_standar_id');
     }
 }

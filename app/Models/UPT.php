@@ -23,4 +23,14 @@ class UPT extends Model
     {
         return $this->hasMany(UptStandarMutu::class, 'upt_id');
     }
+
+    public function upt_sub_standar_mutu()
+    {
+        return $this->hasMany(UptSubStandarMutu::class, 'upt_id', 'upt_id');
+    }
+
+    public function upt_item_sub_standar_mutu()
+    {
+        return $this->hasMany(UptItemSubStandarMutu::class, 'upt_id', 'upt_id');
+    }
 }

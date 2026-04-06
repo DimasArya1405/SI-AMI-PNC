@@ -15,7 +15,14 @@ return new class extends Migration
             $table->uuid('upt_sub_standar_id')->primary();
             $table->uuid('upt_id');
             $table->uuid('standar_mutu_id');
-            $table->uuid('sub_standar_id');
+            $table->integer('urutan')->nullable();
+
+            // referensi ke master, nullable supaya bisa bikin custom
+            $table->uuid('sub_standar_master_id')->nullable();
+
+            // editable
+            $table->string('nama_sub_standar');
+
             $table->timestamps();
             $table->softDeletes();
 
@@ -29,15 +36,12 @@ return new class extends Migration
                 ->on('standar_mutu')
                 ->onDelete('cascade');
 
-            $table->foreign('sub_standar_id')
+            $table->foreign('sub_standar_master_id')
                 ->references('sub_standar_id')
                 ->on('sub_standar_mutu')
-                ->onDelete('cascade');
+                ->nullOnDelete();
 
-            $table->unique(
-                ['upt_id', 'sub_standar_id'],
-                'upt_sub_standar_unique'
-            );
+            $table->unique(['upt_id', 'standar_mutu_id', 'nama_sub_standar'], 'upt_standar_nama_sub_unique');
         });
     }
 

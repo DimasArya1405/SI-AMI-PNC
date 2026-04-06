@@ -81,6 +81,21 @@
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
                         </div>
+
+                        <input type="hidden" name="sub_standar_id" value="{{ $sub_standar->sub_standar_id }}">
+
+                        <div class="col-span-2">
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Parent Item</label>
+                            <select name="parent_item_id"
+                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base block w-full px-3 py-2.5">
+                                <option value="">Item Utama</option>
+                                @foreach ($parentItems as $parent)
+                                <option value="{{ $parent->item_sub_standar_id }}">
+                                    {{ $parent->nama_item }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
                         <button type="submit"
@@ -205,9 +220,11 @@
         $(document).on('click', '.button-edit', function() {
             let item_sub_standar_id = $(this).data('id');
             let nama_item = $(this).data('nama');
+            let parent_item_id = $(this).data('parent');
 
             $('#item_sub_standar_id').val(item_sub_standar_id);
             $('#nama_item').val(nama_item);
+            $('#parent_item_id').val(parent_item_id);
 
             $('#modal-edit').removeClass('hidden').addClass('flex');
         });

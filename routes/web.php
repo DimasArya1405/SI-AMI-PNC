@@ -9,7 +9,9 @@ use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Ami\ItemSubStandarMutuController;
 use App\Http\Controllers\Admin\Ami\StandarMutuController;
 use App\Http\Controllers\Admin\Ami\SubStandarMutuController;
+use App\Http\Controllers\Admin\Ami\UptItemSubStandarMutuController;
 use App\Http\Controllers\Admin\Ami\UptStandarMutuController;
+use App\Http\Controllers\Admin\Ami\UptSubStandarMutuController;
 use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
@@ -83,6 +85,14 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/ami/pemetaan-standar-mutu/tambah', [UptStandarMutuController::class, 'tambah'])->name('admin.upt_standar_mutu.tambah');
     Route::put('/admin/ami/pemetaan-standar-mutu/edit', [UptStandarMutuController::class, 'edit'])->name('admin.upt_standar_mutu.edit');
     Route::delete('/admin/ami/pemetaan-standar-mutu/hapus', [UptStandarMutuController::class, 'hapus'])->name('admin.upt_standar_mutu.hapus');
+
+    Route::post('/admin/ami/upt-sub-standar-mutu/tambah', [UptSubStandarMutuController::class, 'tambah'])->name('admin.ami.upt_sub_standar_mutu.tambah');
+    Route::post('/admin/ami/upt-sub-standar-mutu/edit', [UptSubStandarMutuController::class, 'edit'])->name('admin.ami.upt_sub_standar_mutu.edit');
+    Route::post('/admin/ami/upt-sub-standar-mutu/hapus', [UptSubStandarMutuController::class, 'hapus'])->name('admin.ami.upt_sub_standar_mutu.hapus');
+    
+    Route::post('/admin/ami/upt-item-sub-standar-mutu/tambah', [UptItemSubStandarMutuController::class, 'tambah'])->name('admin.ami.upt_item_sub_standar_mutu.tambah');
+    Route::post('/admin/ami/upt-item-sub-standar-mutu/edit', [UptItemSubStandarMutuController::class, 'edit'])->name('admin.ami.upt_item_sub_standar_mutu.edit');
+    Route::post('/admin/ami/upt-item-sub-standar-mutu/hapus', [UptItemSubStandarMutuController::class, 'hapus'])->name('admin.ami.upt_item_sub_standar_mutu.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {

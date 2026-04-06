@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('sub_standar_id')->primary();
             $table->uuid('standar_mutu_id');
             $table->string('nama_sub_standar');
+            $table->integer('urutan')->nullable();
             $table->foreign('standar_mutu_id')->references('standar_mutu_id')->on('standar_mutu')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
