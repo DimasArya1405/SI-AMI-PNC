@@ -29,4 +29,13 @@ class Auditor extends Model
     {
         return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'auditor_id', 'auditor_id');
+    }
 }

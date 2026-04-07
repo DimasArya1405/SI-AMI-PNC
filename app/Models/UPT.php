@@ -33,4 +33,9 @@ class UPT extends Model
     {
         return $this->hasMany(UptItemSubStandarMutu::class, 'upt_id', 'upt_id');
     }
+
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'upt_id', 'upt_id');
+    }
 }

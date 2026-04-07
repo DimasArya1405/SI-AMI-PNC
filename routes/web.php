@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\Ami\UptSubStandarMutuController;
 use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
+use App\Http\Controllers\Admin\PenugasanController;
 use App\Http\Controllers\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +94,13 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/ami/upt-item-sub-standar-mutu/tambah', [UptItemSubStandarMutuController::class, 'tambah'])->name('admin.ami.upt_item_sub_standar_mutu.tambah');
     Route::post('/admin/ami/upt-item-sub-standar-mutu/edit', [UptItemSubStandarMutuController::class, 'edit'])->name('admin.ami.upt_item_sub_standar_mutu.edit');
     Route::post('/admin/ami/upt-item-sub-standar-mutu/hapus', [UptItemSubStandarMutuController::class, 'hapus'])->name('admin.ami.upt_item_sub_standar_mutu.hapus');
+
+    // ROUTE PENUGASAN
+    Route::get('/admin/ami/penugasan', [PenugasanController::class, 'index'])->name('admin.ami.penugasan');
+    Route::get('/admin/ami/penugasan/detial/{id}', [PenugasanController::class, 'detail'])->name('admin.ami.penugasan.detail');
+    Route::post('/admin/ami/penugasan/tambah', [PenugasanController::class, 'tambah'])->name('admin.ami.penugasan.tambah');
+    Route::put('/admin/ami/penugasan/edit', [PenugasanController::class, 'edit'])->name('admin.ami.penugasan.edit');
+    Route::put('/admin/ami/penugasan/aktifkan/{id}', [PenugasanController::class, 'aktifkan'])->name('admin.ami.penugasan.aktifkan');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
