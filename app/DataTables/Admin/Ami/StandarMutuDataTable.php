@@ -57,7 +57,8 @@ class StandarMutuDataTable extends DataTable
     {
         return $model->newQuery()->select(
             'standar_mutu.*'
-        );
+        )
+        ->orderBy('urutan', 'asc');
     }
 
     /**

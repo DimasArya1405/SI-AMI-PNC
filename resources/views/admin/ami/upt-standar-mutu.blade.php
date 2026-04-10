@@ -9,11 +9,18 @@
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
-                    <button data-modal-target="modal-tambah" data-modal-toggle="modal-tambah"
-                        class="flex items-center gap-2 bg-green-500 hover:bg-green-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline"
-                        type="button">
-                        <i class="bi bi-plus"></i> <span class="text-sm">Tambah Pemetaan</span>
-                    </button>
+                    <div class="flex gap-2">
+                        <button data-modal-target="modal-tambah" data-modal-toggle="modal-tambah"
+                            class="flex items-center gap-2 bg-green-500 hover:bg-green-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline"
+                            type="button">
+                            <i class="bi bi-plus"></i> <span class="text-sm">Tambah Pemetaan</span>
+                        </button>
+                        <button data-modal-target="modal-copy-periode" data-modal-toggle="modal-copy-periode"
+                            class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded"
+                            type="button">
+                            <i class="bi bi-files"></i> <span class="text-sm">Copy Periode</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="dt-responsive table-responsive p-4 pt-4">
@@ -49,6 +56,23 @@
                 {{-- Form --}}
                 <form action="{{ route('admin.upt_standar_mutu.tambah') }}" method="POST">
                     @csrf
+
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Pilih Periode
+                        </label>
+
+                        <select name="periode_id"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                            required>
+                            <option value="">-- Pilih Periode --</option>
+                            @foreach ($periodeList as $periode)
+                            <option value="{{ $periode->id }}">
+                                {{ $periode->tahun }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="py-4 md:py-6 space-y-5">
                         {{-- Target pemetaan --}}
@@ -268,6 +292,23 @@
 
                     <input type="hidden" name="upt_id" id="edit_upt_id">
 
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Pilih Periode
+                        </label>
+
+                        <select name="periode_id" id="edit_periode_id"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                            required>
+                            <option value="">-- Pilih Periode --</option>
+                            @foreach ($periodeList as $periode)
+                            <option value="{{ $periode->id }}">
+                                {{ $periode->tahun }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="py-4 md:py-6 space-y-5">
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900">Nama UPT</label>
@@ -412,6 +453,75 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Copy Periode --}}
+    <div id="modal-copy-periode" tabindex="-1" aria-hidden="true"
+        class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
+        <div class="relative p-4 w-full max-w-xl max-h-full">
+            <div class="relative bg-white border border-default rounded-base shadow-sm p-4 md:p-6">
+
+                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                    <h3 class="text-lg font-medium text-heading">
+                        Copy Pemetaan dari Periode Sebelumnya
+                    </h3>
+                    <button type="button"
+                        class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
+                        data-modal-hide="modal-copy-periode">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18 17.94 6M18 18 6.06 6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.upt_standar_mutu.copy_periode') }}" method="POST">
+                    @csrf
+
+                    <div class="py-4 md:py-6 space-y-5">
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Periode Sumber</label>
+                            <select name="periode_sumber_id"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                                required>
+                                <option value="">-- Pilih Periode Sumber --</option>
+                                @foreach ($periodeList as $periode)
+                                <option value="{{ $periode->id }}">{{ $periode->tahun }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Periode Tujuan</label>
+                            <select name="periode_tujuan_id"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                                required>
+                                <option value="">-- Pilih Periode Tujuan --</option>
+                                @foreach ($periodeList as $periode)
+                                <option value="{{ $periode->id }}">{{ $periode->tahun }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="p-4 text-sm text-blue-700 bg-blue-50 rounded-lg">
+                            Sistem akan menyalin seluruh pemetaan standar, sub standar, dan item dari periode sumber ke periode tujuan.
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
+                        <button type="submit"
+                            class="inline-flex items-center text-white bg-blue-500 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-xs font-medium rounded-base text-sm px-4 py-2.5 focus:outline-none transition duration-200 ease-in-out">
+                            Copy Pemetaan
+                        </button>
+
+                        <button data-modal-hide="modal-copy-periode" type="button"
+                            class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium rounded-base text-sm px-4 py-2.5 focus:outline-none">
+                            Batal
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -601,9 +711,11 @@
             let uptId = $(this).data('upt-id');
             let namaUpt = $(this).data('nama-upt');
             let standarIds = ($(this).data('standar-ids') + '').split(',');
+            let periodeId = $(this).data('periode-id');
 
             $('#edit_upt_id').val(uptId);
             $('#edit_nama_upt').val(namaUpt);
+            $('#edit_periode_id').val(periodeId);
 
             $('.standar-edit-checkbox').prop('checked', false);
 

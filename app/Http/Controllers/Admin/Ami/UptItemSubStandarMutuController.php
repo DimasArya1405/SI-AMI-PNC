@@ -14,6 +14,7 @@ class UptItemSubStandarMutuController extends Controller
         $request->validate([
             'upt_id' => 'required|exists:upt,upt_id',
             'upt_sub_standar_id' => 'required|exists:upt_sub_standar_mutu,upt_sub_standar_id',
+            'periode_id' => 'required|exists:periode,id',
             'nama_item' => 'required|string',
             'parent_upt_item_id' => 'nullable|exists:upt_item_sub_standar_mutu,upt_item_sub_standar_id',
         ]);
@@ -28,6 +29,7 @@ class UptItemSubStandarMutuController extends Controller
 
             // cari urutan anak terakhir dari parent
             $urutanAnakTerakhir = UptItemSubStandarMutu::where('parent_upt_item_id', $parent->upt_item_sub_standar_id)
+                ->where('periode_id', $request->periode_id)
                 ->max('urutan');
 
             if ($urutanAnakTerakhir) {
@@ -38,11 +40,13 @@ class UptItemSubStandarMutuController extends Controller
 
             // geser item lain di bawah posisi sisipan
             UptItemSubStandarMutu::where('upt_sub_standar_id', $request->upt_sub_standar_id)
+                ->where('periode_id', $request->periode_id)
                 ->where('urutan', '>=', $urutanBaru)
                 ->increment('urutan');
         } else {
             // item utama: taruh paling bawah
             $urutanTerakhir = UptItemSubStandarMutu::where('upt_sub_standar_id', $request->upt_sub_standar_id)
+                ->where('periode_id', $request->periode_id)
                 ->max('urutan');
 
             $urutanBaru = ($urutanTerakhir ?? 0) + 1;
@@ -52,6 +56,7 @@ class UptItemSubStandarMutuController extends Controller
         $uptItem->upt_item_sub_standar_id = Str::uuid();
         $uptItem->upt_id = $request->upt_id;
         $uptItem->upt_sub_standar_id = $request->upt_sub_standar_id;
+        $uptItem->periode_id = $request->periode_id; // tambahkan ini
         $uptItem->parent_upt_item_id = $request->parent_upt_item_id;
         $uptItem->item_sub_standar_master_id = null;
         $uptItem->nama_item = $request->nama_item;

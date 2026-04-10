@@ -17,6 +17,7 @@ class UptStandarMutu extends Model
         'upt_standar_mutu_id',
         'upt_id',
         'standar_mutu_id',
+        'periode_id',
     ];
 
     public function standar_mutu()
