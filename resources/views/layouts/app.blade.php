@@ -29,6 +29,26 @@
         table.dataTable tbody tr {
             border-bottom: 1px solid #e5e7eb;
         }
+
+        /* Opsional: Membuat scrollbar lebih tipis dan modern */
+        aside::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        aside::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        aside::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            /* Warna abu-abu muda tailwind */
+            border-radius: 10px;
+        }
+
+        aside::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+            /* Warna biru saat di-hover */
+        }
     </style>
 </head>
 
