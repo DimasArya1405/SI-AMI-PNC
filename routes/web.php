@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AkunAuditorController;
 use App\Http\Controllers\AkunDosenController;
 use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\AuditeeController as RoleAuditeeController;
@@ -17,7 +16,7 @@ use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
-use App\Http\Controllers\AuditorController;
+use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 

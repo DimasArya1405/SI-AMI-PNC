@@ -30,6 +30,9 @@ class AuditorDataTable extends DataTable
                     return '<span class="bg-red-200/80 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Tidak Aktif</span>';
                 }
             })
+            ->editColumn('prodi', function ($row) {
+                return $row->prodi->nama_prodi;
+            })
             ->addColumn('action', function ($row) {
 
                 return '
@@ -75,7 +78,7 @@ class AuditorDataTable extends DataTable
             'no_telp',
             'email',
             'status_aktif'
-        ]);
+        ])->with('prodi');
     }
 
     /**
@@ -102,7 +105,7 @@ class AuditorDataTable extends DataTable
         return [
             ['data' => 'nip', 'name' => 'nip', 'title' => 'NIP'],
             ['data' => 'nama_lengkap', 'name' => 'nama_lengkap', 'title' => 'Nama Lengkap'],
-            ['data' => 'jabatan', 'name' => 'jabatan', 'title' => 'Jabatan'],
+            ['data' => 'prodi', 'name' => 'prodi', 'title' => 'Prodi'],
             ['data' => 'no_telp', 'name' => 'no_telp', 'title' => 'No Telp'],
             ['data' => 'email', 'name' => 'email', 'title' => 'Email'],
             ['data' => 'status_aktif', 'name' => 'status_aktif', 'title' => 'Status Aktif'],
