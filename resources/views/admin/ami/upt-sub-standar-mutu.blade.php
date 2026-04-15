@@ -63,10 +63,17 @@
                         aria-labelledby="tab-{{ $standar->standar_mutu_id }}">
 
                         {{-- Info Standar --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div class="bg-white border rounded-lg p-4">
                                 <p class="text-sm text-gray-500 mb-1">Nama UPT</p>
                                 <p class="text-sm font-medium text-gray-900">{{ $upt->nama_upt }}</p>
+                            </div>
+
+                            <div class="bg-white border rounded-lg p-4">
+                                <p class="text-sm text-gray-500 mb-1">Periode</p>
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ $periode->tahun ?? '-' }}
+                                </p>
                             </div>
 
                             <div class="bg-white border rounded-lg p-4">

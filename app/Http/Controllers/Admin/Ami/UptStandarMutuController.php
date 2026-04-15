@@ -121,6 +121,7 @@ class UptStandarMutuController extends Controller
     public function detail($upt_id, $periode_id)
     {
         $upt = UPT::findOrFail($upt_id);
+        $periode = Periode::find($periode_id);
 
         $pemetaanStandar = UptStandarMutu::with('standar_mutu')
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
@@ -147,7 +148,8 @@ class UptStandarMutuController extends Controller
             'pemetaanStandar',
             'uptSubStandar',
             'uptItemSubStandar',
-            'periode_id'
+            'periode_id',
+            'periode',
         ));
     }
 
