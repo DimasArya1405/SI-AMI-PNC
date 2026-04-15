@@ -3,7 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AkunDosenController;
 use App\Http\Controllers\Admin\Akun\AuditeeController;
-use App\Http\Controllers\AuditeeController as RoleAuditeeController;
+use App\Http\Controllers\Auditee\AuditeeController as RoleAuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
 use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Ami\ItemSubStandarMutuController;
