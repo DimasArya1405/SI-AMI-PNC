@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AkunAuditorController;
 use App\Http\Controllers\AkunDosenController;
 use App\Http\Controllers\Admin\Akun\AuditeeController;
+use App\Http\Controllers\AuditeeController as RoleAuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
 use App\Http\Controllers\Admin\Akun\DosenController;
 use App\Http\Controllers\Admin\Ami\ItemSubStandarMutuController;
@@ -109,7 +110,7 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 });
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
-    Route::get('/auditee/dashboard', [AuditeeController::class, 'index'])->name('auditee.dashboard');
+    Route::get('/auditee/dashboard', [RoleAuditeeController::class, 'index'])->name('auditee.dashboard');
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
