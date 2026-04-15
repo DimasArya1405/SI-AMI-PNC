@@ -12,10 +12,18 @@ class UptSubStandarMutuController extends Controller
 {
     public function tambah(Request $request)
     {
+        $request->validate([
+            'upt_id' => 'required|exists:upt,upt_id',
+            'standar_mutu_id' => 'required|exists:standar_mutu,standar_mutu_id',
+            'periode_id' => 'required|exists:periode,id',
+            'nama_sub_standar' => 'required|string|max:255',
+        ]);
+
         $upt_sub = new UptSubStandarMutu();
         $upt_sub->upt_sub_standar_id = Str::uuid();
         $upt_sub->upt_id = $request->upt_id;
         $upt_sub->standar_mutu_id = $request->standar_mutu_id;
+        $upt_sub->periode_id = $request->periode_id;
         $upt_sub->sub_standar_master_id = null;
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
@@ -25,6 +33,11 @@ class UptSubStandarMutuController extends Controller
 
     public function edit(Request $request)
     {
+        $request->validate([
+            'upt_sub_standar_id' => 'required|exists:upt_sub_standar_mutu,upt_sub_standar_id',
+            'nama_sub_standar' => 'required|string|max:255',
+        ]);
+
         $upt_sub = UptSubStandarMutu::findOrFail($request->upt_sub_standar_id);
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
@@ -34,6 +47,10 @@ class UptSubStandarMutuController extends Controller
 
     public function hapus(Request $request)
     {
+        $request->validate([
+            'upt_sub_standar_id' => 'required|exists:upt_sub_standar_mutu,upt_sub_standar_id',
+        ]);
+        
         $uptSubStandarId = $request->upt_sub_standar_id;
 
         // hapus semua item yang ada di sub standar ini

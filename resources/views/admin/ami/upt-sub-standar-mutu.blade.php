@@ -242,6 +242,7 @@
                                                         <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                                         <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                                         <input type="hidden" name="parent_upt_item_id" value="{{ $item->upt_item_sub_standar_id }}">
+                                                        <input type="hidden" name="periode_id" value="{{ $periode_id }}">
 
                                                         <div class="p-4 space-y-4">
                                                             <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg p-3">
@@ -376,6 +377,7 @@
                                             <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                             <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="parent_upt_item_id" value="">
+                                            <input type="hidden" name="periode_id" value="{{ $periode_id }}">
 
                                             <div class="p-4 space-y-4">
                                                 <div>
@@ -503,6 +505,7 @@
                                         @csrf
                                         <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                         <input type="hidden" name="standar_mutu_id" value="{{ $standar->standar_mutu_id }}">
+                                        <input type="hidden" name="periode_id" value="{{ $periode_id }}">
 
                                         <div class="p-4 space-y-4">
                                             <div>

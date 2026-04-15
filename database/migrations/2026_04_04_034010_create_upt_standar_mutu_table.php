@@ -15,6 +15,13 @@ return new class extends Migration
             $table->uuid('upt_standar_mutu_id')->primary();
             $table->uuid('upt_id');
             $table->uuid('standar_mutu_id');
+            $table->uuid('periode_id');
+
+            $table->foreign('periode_id')
+                ->references('id')
+                ->on('periode')
+                ->onDelete('cascade');
+
             $table->foreign('upt_id')
                 ->references('upt_id')
                 ->on('upt')
@@ -25,7 +32,7 @@ return new class extends Migration
                 ->on('standar_mutu')
                 ->onDelete('cascade');
 
-            $table->unique(['upt_id', 'standar_mutu_id']);
+            $table->unique(['upt_id', 'standar_mutu_id', 'periode_id']);
             $table->timestamps();
             $table->softDeletes();
         });

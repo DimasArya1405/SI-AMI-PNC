@@ -17,6 +17,7 @@ return new class extends Migration
             $table->uuid('upt_sub_standar_id');
             $table->uuid('item_sub_standar_master_id')->nullable();
             $table->uuid('parent_upt_item_id')->nullable();
+            $table->uuid('periode_id');
             $table->string('nama_item');
             $table->string('tipe_item')->nullable();
             $table->integer('level')->default(1);
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            $table->foreign('periode_id')->references('id')->on('periode')->onDelete('cascade');
             $table->foreign('upt_id')->references('upt_id')->on('upt')->onDelete('cascade');
             $table->foreign('upt_sub_standar_id')->references('upt_sub_standar_id')->on('upt_sub_standar_mutu')->onDelete('cascade');
             $table->foreign('item_sub_standar_master_id')->references('item_sub_standar_id')->on('item_sub_standar')->nullOnDelete();

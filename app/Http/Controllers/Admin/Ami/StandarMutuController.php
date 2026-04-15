@@ -17,11 +17,15 @@ class StandarMutuController extends Controller
 
     public function tambah(Request $request)
     {
+        $urutanTerakhir = StandarMutu::max('urutan');
+
         $standar_mutu = new StandarMutu();
         $standar_mutu->standar_mutu_id = Str::uuid();
         $standar_mutu->nama_standar_mutu = $request->nama_standar_mutu;
+        $standar_mutu->urutan = ($urutanTerakhir ?? 0) + 1;
         $standar_mutu->save();
-        return redirect()->route('admin.ami.standar_mutu')->with('success', 'Standar Mutu berhasil ditambahkan');
+
+        return redirect()->back()->with('success', 'Standar mutu berhasil ditambahkan');
     }
 
     public function edit(Request $request)

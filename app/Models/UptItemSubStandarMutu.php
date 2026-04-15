@@ -23,6 +23,7 @@ class UptItemSubStandarMutu extends Model
         'level',
         'nama_item',
         'urutan',
+        'periode_id',
     ];
 
     public function upt()

@@ -54,6 +54,7 @@ class SubStandarMutuDataTable extends DataTable
         return $model->newQuery()
             ->with('standar_mutu')
             ->where('standar_mutu_id', $this->standar_mutu_id)
+            ->orderBy('urutan', 'asc')
             ->select('sub_standar_mutu.*');
     }
 

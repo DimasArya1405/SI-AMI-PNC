@@ -20,6 +20,7 @@ class UptSubStandarMutu extends Model
         'sub_standar_master_id',
         'nama_sub_standar',
         'urutan',
+        'periode_id',
     ];
 
     public function upt()
