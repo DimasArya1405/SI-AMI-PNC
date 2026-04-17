@@ -439,6 +439,7 @@
                         @method('delete')
 
                         <input type="hidden" name="upt_id" id="upt_id_hapus">
+                        <input type="hidden" name="periode_id" id="periode_id_hapus">
 
                         <div class="flex items-center space-x-4 justify-center">
                             <button data-modal-hide="modal-hapus" type="submit"
@@ -730,7 +731,10 @@
 
         $(document).on('click', '.button-hapus', function() {
             let upt_id = $(this).data('upt-id');
+            let periodeId = $(this).data('periode-id');
+
             $('#upt_id_hapus').val(upt_id);
+            $('#periode_id_hapus').val(periodeId);
 
             $('#modal-hapus').removeClass('hidden').addClass('flex');
         });

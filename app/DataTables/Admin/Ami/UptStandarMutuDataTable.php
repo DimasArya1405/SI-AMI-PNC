@@ -37,7 +37,8 @@ class UptStandarMutuDataTable extends DataTable
                             data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
                             class="hover:bg-red-700 button-hapus transition duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white"
-                            data-upt-id="' . $row->upt_id . '">
+                            data-upt-id="' . $row->upt_id . '"
+                            data-periode-id="' . $row->periode_id . '">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
                     </div>
