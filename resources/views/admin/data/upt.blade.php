@@ -127,14 +127,28 @@
 
                                 <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
                                     aria-labelledby="dropdownSearchButtonProdi" id="prodi-list">
+
+                                    {{-- Pilih Semua --}}
+                                    <li class="py-2 border-b border-gray-200 sticky top-0 bg-white z-10">
+                                        <div class="flex items-center">
+                                            <input id="check-all-prodi"
+                                                type="checkbox"
+                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                            <label for="check-all-prodi"
+                                                class="ms-2 text-sm font-semibold text-gray-900">
+                                                Pilih Semua
+                                            </label>
+                                        </div>
+                                    </li>
+
                                     @foreach ($prodi as $item)
                                     <li class="py-2 prodi-item">
                                         <div class="flex items-center">
                                             <input id="prodi-{{ $item->prodi_id }}"
-                                                type="radio"
-                                                name="prodi_id"
+                                                type="checkbox"
+                                                name="prodi_id[]"
                                                 value="{{ $item->prodi_id }}"
-                                                class="prodi-radio w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
+                                                class="prodi-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
                                             <label for="prodi-{{ $item->prodi_id }}"
                                                 class="ms-2 text-sm font-medium text-gray-900 prodi-label">
                                                 {{ $item->nama_prodi }}
@@ -317,6 +331,14 @@
                 } else if (selected === 'Unit/Bagian') {
                     wrapperProdi.classList.add('hidden');
                     wrapperUnit.classList.remove('hidden');
+
+                    // optional: reset pilihan prodi saat pindah ke Unit/Bagian
+                    const prodiCheckboxes = document.querySelectorAll('.prodi-checkbox');
+                    const checkAllProdi = document.getElementById('check-all-prodi');
+                    prodiCheckboxes.forEach(cb => cb.checked = false);
+                    if (checkAllProdi) checkAllProdi.checked = false;
+
+                    updateProdiSelectedText();
                 } else {
                     wrapperProdi.classList.add('hidden');
                     wrapperUnit.classList.add('hidden');
@@ -327,28 +349,55 @@
                 radio.addEventListener('change', toggleKategoriUpt);
             });
 
-            toggleKategoriUpt();
-
-            const prodiRadios = document.querySelectorAll('.prodi-radio');
+            const prodiCheckboxes = document.querySelectorAll('.prodi-checkbox');
+            const checkAllProdi = document.getElementById('check-all-prodi');
             const prodiSelectedText = document.getElementById('prodi-selected-text');
             const searchProdiInput = document.getElementById('input-group-search-prodi');
             const prodiItems = document.querySelectorAll('.prodi-item');
 
             function updateProdiSelectedText() {
-                const checked = document.querySelector('.prodi-radio:checked');
+                const checked = document.querySelectorAll('.prodi-checkbox:checked');
+                const total = prodiCheckboxes.length;
 
-                if (!checked) {
+                if (checked.length === 0) {
                     prodiSelectedText.textContent = 'Pilih prodi';
-                    return;
-                }
+                } else if (checked.length === total) {
+                    prodiSelectedText.textContent = 'Semua prodi dipilih';
+                } else if (checked.length === 1) {
+                    const label = checked[0].closest('.flex.items-center')
+                        .querySelector('.prodi-label')
+                        .textContent
+                        .trim();
 
-                const label = checked.closest('.flex.items-center').querySelector('.prodi-label').textContent.trim();
-                prodiSelectedText.textContent = label;
+                    prodiSelectedText.textContent = label;
+                } else {
+                    prodiSelectedText.textContent = `${checked.length} prodi dipilih`;
+                }
             }
 
-            prodiRadios.forEach(item => {
-                item.addEventListener('change', updateProdiSelectedText);
+            function syncCheckAll() {
+                const checkedCount = document.querySelectorAll('.prodi-checkbox:checked').length;
+                if (checkAllProdi) {
+                    checkAllProdi.checked = checkedCount === prodiCheckboxes.length && prodiCheckboxes.length > 0;
+                }
+            }
+
+            prodiCheckboxes.forEach(item => {
+                item.addEventListener('change', function() {
+                    syncCheckAll();
+                    updateProdiSelectedText();
+                });
             });
+
+            if (checkAllProdi) {
+                checkAllProdi.addEventListener('change', function() {
+                    prodiCheckboxes.forEach(item => {
+                        item.checked = this.checked;
+                    });
+
+                    updateProdiSelectedText();
+                });
+            }
 
             if (searchProdiInput) {
                 searchProdiInput.addEventListener('keyup', function() {
@@ -361,6 +410,7 @@
                 });
             }
 
+            toggleKategoriUpt();
             updateProdiSelectedText();
         });
 

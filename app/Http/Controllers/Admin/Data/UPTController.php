@@ -21,35 +21,56 @@ class UPTController extends Controller
     {
         $request->validate([
             'kategori_upt' => 'required|in:Prodi,Unit/Bagian',
-            'prodi_id' => 'nullable',
+            'prodi_id' => 'nullable|array',
+            'prodi_id.*' => 'exists:prodi,prodi_id',
             'nama_upt' => 'nullable|string|max:255',
             'kode_upt' => 'nullable|string|max:255',
         ]);
 
         if ($request->kategori_upt == 'Prodi') {
             $request->validate([
-                'prodi_id' => 'required|exists:prodi,prodi_id',
+                'prodi_id' => 'required|array|min:1',
+                'prodi_id.*' => 'exists:prodi,prodi_id',
             ]);
 
-            $prodi = Prodi::where('prodi_id', $request->prodi_id)->first();
+            $prodis = Prodi::whereIn('prodi_id', $request->prodi_id)->get();
 
-            if (!$prodi) {
+            if ($prodis->isEmpty()) {
                 return redirect()->back()->with('error', 'Data prodi tidak ditemukan');
             }
 
-            $cekKode = UPT::where('kode_upt', $prodi->kode_prodi)->first();
-            if ($cekKode) {
-                return redirect()->back()->with('error', 'UPT prodi sudah terdaftar');
+            $berhasil = 0;
+            $sudahAda = 0;
+
+            foreach ($prodis as $prodi) {
+                $cekKode = UPT::where('kode_upt', $prodi->kode_prodi)->first();
+
+                if ($cekKode) {
+                    $sudahAda++;
+                    continue;
+                }
+
+                $upt = new UPT();
+                $upt->upt_id = Str::uuid();
+                $upt->kode_upt = $prodi->kode_prodi;
+                $upt->nama_upt = $prodi->nama_prodi;
+                $upt->kategori_upt = 'Prodi';
+                $upt->save();
+
+                $berhasil++;
             }
 
-            $upt = new UPT();
-            $upt->upt_id = Str::uuid();
-            $upt->kode_upt = $prodi->kode_prodi;
-            $upt->nama_upt = $prodi->nama_prodi;
-            $upt->kategori_upt = 'Prodi';
-            $upt->save();
+            if ($berhasil > 0 && $sudahAda > 0) {
+                return redirect()->route('admin.data.upt')
+                    ->with('success', "$berhasil UPT prodi berhasil ditambahkan, $sudahAda prodi dilewati karena sudah terdaftar");
+            }
 
-            return redirect()->route('admin.data.upt')->with('success', 'UPT prodi berhasil ditambahkan');
+            if ($berhasil > 0) {
+                return redirect()->route('admin.data.upt')
+                    ->with('success', "$berhasil UPT prodi berhasil ditambahkan");
+            }
+
+            return redirect()->back()->with('error', 'Semua prodi yang dipilih sudah terdaftar');
         }
 
         $request->validate([
