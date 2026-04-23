@@ -1,10 +1,10 @@
 <x-app-layout>
-    @include('admin.sidebar')
+    @include('auditor.sidebar')
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    {{ __('Data Penugasan - Buat Penugasan') }}
+                    {{ __('Data Penugasan') }}
                 </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
@@ -21,227 +21,56 @@
                         <table class="w-full text-sm text-left rtl:text-right text-body">
                             <thead class="text-sm text-body bg-gray-200 border-b rounded-base border-default">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        NO
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-72 font-semibold">
-                                        NAMA UPT
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Auditor
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Jadwal
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Aksi
-                                    </th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-center">NO</th>
+                                    <th scope="col" class="px-6 py-3 w-72 font-semibold">NAMA UPT</th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-center">TIM AUDITOR</th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-center">JADWAL</th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-center">AKSI</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($uptProdi as $item)
+                                @forelse ($penugasanProdi as $item)
                                     <tr class="bg-neutral-primary border-b border-default">
-                                        <td scope="row" class="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                                            {{ $loop->iteration }}
-                                        </td>
+                                        <td class="px-6 py-4 font-medium text-center">{{ $loop->iteration }}</td>
+                                        <td class="px-6 py-4 font-bold">{{ $item->upt->nama_upt }}</td>
                                         <td class="px-6 py-4">
-                                            {{ $item->nama_upt }}
+                                            <div class="flex flex-col gap-1">
+                                                <span
+                                                    class="text-xs text-green-600 font-semibold uppercase">Ketua:</span>
+                                                <span
+                                                    class="font-bold">{{ $item->auditor1->nama_lengkap ?? '-' }}</span>
+                                                <hr class="w-full border-gray-100">
+                                                <span
+                                                    class="text-xs text-blue-600 font-semibold uppercase">Anggota:</span>
+                                                <span
+                                                    class="font-bold">{{ $item->auditor2->nama_lengkap ?? '-' }}</span>
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            @php $tugas = $item->penugasan->first(); @endphp
-
-                                            @if ($tugas)
-                                                <ul class="list-disc ml-4">
-                                                    <li>
-                                                        <span class="font-semibold text-green-500"> Ketua
-                                                            Auditor:</span> <br>
-                                                        <span
-                                                            class="font-bold">{{ $tugas->auditor1->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
-                                                    </li>
-                                                    <li class="mt-2">
-                                                        <span class="font-semibold text-green-500"> Anggota
-                                                            Auditor:</span> <br>
-                                                        <span
-                                                            class="font-bold">{{ $tugas->auditor2->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
-                                                    </li>
-                                                </ul>
-                                            @else
-                                                <span class="text-red-500 italic">Belum ada auditor</span>
-                                            @endif
+                                        <td class="px-6 py-4 text-center">
+                                            <span
+                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span><br>
+                                            <span class="text-gray-500">{{ $item->jam }} WIB</span>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            {{-- Contoh menampilkan jadwal dari data penugasan pertama --}}
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
-                                            @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $jam }} WIB
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 flex flex-col gap-2">
-                                            @php $tugas = $item->penugasan->first(); @endphp
-
-                                            @if (!$tugas)
-                                                {{-- Tombol Buat Penugasan --}}
-                                                <button data-modal-target="modal-penugasan"
-                                                    data-modal-toggle="modal-penugasan" data-uptId="{{ $item->upt_id }}"
-                                                    data-periodeId="{{ $periode_id }}"
-                                                    class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    Buat Penugasan
-                                                </button>
-                                            @else
-                                                @if ($tugas->status_penugasan == 'pending')
-                                                    <button data-modal-target="modal-edit-penugasan"
-                                                        data-modal-toggle="modal-edit-penugasan"
-                                                        data-uptId="{{ $item->upt_id }}"
-                                                        data-periodeId="{{ $periode_id }}"
-                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
-                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
-                                                        data-jam="{{ $tugas->jam }}"
-                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
-                                                        class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
-                                                        <i class="bi bi-edit text-xs"></i> Edit Penugasan
-                                                    </button>
-                                                @else
-                                                    <span class="text-green-500 font-semibold">Penugasan sudah
-                                                        aktif</span>
-                                                @endif
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
-                    <div class="font-semibold">Unit / Bagian Lain</div>
-                </div>
-                <div class="dt-responsive table-responsive p-4 pt-4">
-                    <div
-                        class="relative mb-6 overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default">
-                        <table class="w-full text-sm text-left rtl:text-right text-body">
-                            <thead class="text-sm text-body bg-gray-200 border-b rounded-base border-default">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        NO
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 w-72 font-semibold">
-                                        NAMA UPT
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Auditor
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Jadwal
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <tbody>
-                                @forelse ($uptBagian as $item)
-                                    {{-- BLOK INI AKAN JALAN JIKA ADA DATA --}}
-                                    <tr class="bg-neutral-primary border-b border-default">
-                                        <td class="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $item->nama_upt }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            @php $tugas = $item->penugasan->first(); @endphp
-
-                                            @if ($tugas)
-                                                <ul class="list-disc ml-4">
-                                                    <li>
-                                                        <span class="font-semibold text-green-500"> Ketua
-                                                            Auditor:</span> <br>
-                                                        <span
-                                                            class="font-bold">{{ $tugas->auditor1->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
-                                                    </li>
-                                                    <li class="mt-2">
-                                                        <span class="font-semibold text-green-500"> Anggota
-                                                            Auditor:</span> <br>
-                                                        <span
-                                                            class="font-bold">{{ $tugas->auditor2->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
-                                                    </li>
-                                                </ul>
-                                            @else
-                                                <span class="text-red-500 italic">Belum ada auditor</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
-                                            @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $jam }} WIB
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 flex flex-col gap-2">
-                                            @php $tugas = $item->penugasan->first(); @endphp
-
-                                            @if (!$tugas)
-                                                {{-- Tombol Buat Penugasan --}}
-                                                <button data-modal-target="modal-penugasan"
-                                                    data-modal-toggle="modal-penugasan"
-                                                    data-uptId="{{ $item->upt_id }}"
-                                                    data-periodeId="{{ $periode_id }}"
-                                                    class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    Buat Penugasan
-                                                </button>
-                                            @else
-                                                @if ($tugas->status_penugasan == 'pending')
-                                                    <button data-modal-target="modal-edit-penugasan"
-                                                        data-modal-toggle="modal-edit-penugasan"
-                                                        data-uptId="{{ $item->upt_id }}"
-                                                        data-periodeId="{{ $periode_id }}"
-                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
-                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
-                                                        data-jam="{{ $tugas->jam }}"
-                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
-                                                        class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
-                                                        <i class="bi bi-edit text-xs"></i> Edit Penugasan
-                                                    </button>
-                                                @else
-                                                    <span class="text-green-500 font-semibold">Penugasan sudah
-                                                        aktif</span>
-                                                @endif
-                                            @endif
+                                        <td class="px-6 py-4 text-center">
+                                            {{-- Ganti URL ini sesuai route detail audit Anda --}}
+                                            <a href="#"
+                                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition">
+                                                <i class="bi bi-calendar-check mr-1"></i> Ajukan Jadwal
+                                            </a><br>
+                                            <a href="#"
+                                                class="inline-flex items-center px-3 mt-2 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition">
+                                                <i class="bi bi-check-circle mr-1"></i> Setujui Jadwal
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
-                                    {{-- BLOK INI AKAN JALAN JIKA $uptBagian KOSONG --}}
                                     <tr>
-                                        <td colspan="5" class="px-6 py-10 text-center text-body italic">
-                                            <div class="flex flex-col items-center justify-center">
-                                                <i class="bi bi-folder-x text-4xl mb-2 text-gray-300"></i>
-                                                <p>Belum ada data UPT/Bagian yang tersedia.</p>
-                                            </div>
-                                        </td>
+                                        <td colspan="5" class="px-6 py-10 text-center italic">Belum ada penugasan
+                                            untuk Anda pada kategori ini.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
-                            </tbody>
                         </table>
-                    </div>
-                    <div class="flex justify-end">
-                        @if ($penugasan_sekarang->count() > 0)
-                            @if ($penugasan_sekarang->first()->status_penugasan == 'pending')
-                                <button data-modal-target="modal-konfirmasi-aktif"
-                                    data-modal-toggle="modal-konfirmasi-aktif" {{-- href="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" --}}
-                                    class="hover:bg-blue-700 mb-2 px-4 py-2 transition button-penugasan duration-300 ease-in-out bg-blue-500 rounded text-white">
-                                    <i class="bi bi-check-circle"></i> Aktifkan Penugasan
-                                </button>
-                            @else
-                                <p class="text-green-500">Penugasan sudah aktif</p>
-                            @endif
-                        @else
-                            <p class="text-red-500">Belum ada penugasan</p>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -354,26 +183,21 @@
                 </div>
 
                 <div class="p-4 md:p-5">
-                    <p class="text-sm text-gray-500 mb-2">Pastikan setiap UPT telah memiliki penugasan (Tanda <span
+                    <p class="text-sm text-gray-500 mb-2">Pastikan setiap UPT memiliki 2 auditor (Tanda <span
                             class="text-green-600 font-bold">✔</span>).</p>
                     <p class="px-2 py-1 text-sm text-red-700 bg-red-100 mb-4 rounded-sm">Pastikan semua data penugasan
                         sudah benar!!!</p>
-
                     <ul class="max-h-60 overflow-y-auto divide-y divide-gray-100 border rounded-lg">
                         @foreach ($upts as $upt)
-                            {{-- Logika baru: Dianggap lengkap jika penugasan_count adalah 1 --}}
-                            @php $isLengkap = $upt->penugasan_count > 0; @endphp
-
                             <li
-                                class="flex items-center justify-between p-3 {{ $isLengkap ? 'bg-green-50/50' : 'bg-white' }}">
+                                class="flex items-center justify-between p-3 {{ $upt->penugasan_count == 2 ? 'bg-green-50/50' : 'bg-white' }}">
                                 <div class="flex flex-col">
                                     <span class="text-sm font-medium text-gray-800">{{ $upt->nama_upt }}</span>
-                                    <span class="text-xs {{ $isLengkap ? 'text-green-600' : 'text-red-500' }}">
-                                        {{ $isLengkap ? 'Penugasan Tersedia' : 'Belum Ada Penugasan' }}
-                                    </span>
+                                    <span class="text-xs text-gray-500">{{ $upt->penugasan_count }}/2 Auditor
+                                        Terdaftar</span>
                                 </div>
 
-                                @if ($isLengkap)
+                                @if ($upt->penugasan_count == 2)
                                     <div class="flex items-center justify-center w-6 h-6 bg-green-100 rounded-full">
                                         <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -392,8 +216,7 @@
 
                     <div class="mt-5 flex gap-3">
                         @php
-                            // Tombol aktif jika SEMUA UPT sudah punya minimal 1 baris penugasan
-                            $siapAktif = $upts->every(fn($u) => $u->penugasan_count > 0);
+                            $siapAktif = $upts->every(fn($u) => $u->penugasan_count == 2);
                         @endphp
 
                         @if ($siapAktif)
@@ -507,18 +330,10 @@
     @push('js')
         <script>
             $(document).on('click', '.button-penugasan', function() {
-                // Ambil nilai dari atribut tombol
-                // Kita gunakan .attr untuk memastikan data diambil sesuai tulisan di Blade
-                let valUpt = $(this).attr('data-uptId');
-                let valPeriode = $(this).attr('data-periodeId');
-
-                // Masukkan nilainya ke dalam input hidden
-                // .val() digunakan untuk mengisi value
-                $('#upt_id').val(valUpt);
-                $('#periode_id').val(valPeriode);
-
-                // Cek di console untuk memastikan (Tekan F12 di browser)
-                console.log("Isi UPT ID: " + valUpt);
+                let upt_id = $(this).data('uptid');
+                let periode_id = $(this).data('periodeid');
+                $('#periode_id').val(periode_id);
+                $('#upt_id').val(upt_id);
             });
             $(document).on('click', '.button-edit-penugasan', function() {
                 let upt_id = $(this).data('uptid');

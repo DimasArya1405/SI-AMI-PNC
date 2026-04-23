@@ -15,11 +15,15 @@ return new class extends Migration
             // Foreign UUID
             $table->uuid('periode_id');
             $table->uuid('upt_id');
-            $table->uuid('auditor_id');
+            $table->uuid('auditor_id_1');
+            $table->uuid('auditor_id_2');
 
             // Jadwal Audit
             $table->date('tanggal_audit')->nullable();
-            $table->string('lokasi')->nullable();
+            $table->date('tanggal_audit_auditee')->nullable();
+            $table->date('tanggal_audit_auditor_1')->nullable();
+            $table->date('tanggal_audit_auditor_2')->nullable();
+            $table->time('jam')->nullable();
 
             $table->enum('status_penugasan', ['pending','aktif', 'selesai'])
                   ->default('aktif');
