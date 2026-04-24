@@ -19,10 +19,10 @@
             <i class="bi bi-cloud-arrow-up mr-2 text-xl"></i> Upload Dokumen
         </a>
 
-        <a href="{{ route('auditee.dashboard') }}"
+        <a href="{{ route('auditee.ami') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('auditee.instrumen*') ? 'bg-blue-500 text-white' : '' }}">
-            <i class="bi bi-ui-checks-grid mr-2 text-xl"></i> Instrumen Audit
+            {{ request()->routeIs('auditee.ami.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-ui-checks-grid mr-2 text-xl"></i> Standar Mutu
         </a>
 
         <a href="{{ route('auditee.dashboard') }}"

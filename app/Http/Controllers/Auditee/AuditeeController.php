@@ -25,7 +25,7 @@ class AuditeeController extends Controller
 
         if ($auditee && $periodeNow) {
             $penugasan = Penugasan::with(['auditor', 'upt', 'periode'])
-                ->where('auditee_id', $auditee->auditee_id)
+                ->where('upt_id', $auditee->upt_id)
                 ->where('periode_id', $periodeNow->id)
                 ->get();
         }

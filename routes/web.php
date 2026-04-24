@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
+use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,11 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/dashboard', [RoleAuditeeController::class, 'index'])->name('auditee.dashboard');
+
+    Route::get('/auditee/ami', [StandarAMIController::class, 'index'])->name('auditee.ami');
+    Route::get('/auditee/ami/detail/{upt_id}/{periode_id}', [StandarAMIController::class, 'detail'])->name('auditee.ami.detail');
+    Route::post('/auditee/ami/bukti-dukung/upload', [StandarAMIController::class, 'uploadBukti'])->name('auditee.bukti_dukung.upload');
+    Route::delete('/auditee/ami/bukti-dukung/{id}', [StandarAMIController::class, 'hapusBukti'])->name('auditee.bukti_dukung.hapus');
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
