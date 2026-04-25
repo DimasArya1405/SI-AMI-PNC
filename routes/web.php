@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PenugasanController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
+use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -120,6 +121,12 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/dashboard', [RoleAuditeeController::class, 'index'])->name('auditee.dashboard');
+
+    // ROUTE PENUGASAN
+    Route::get('/auditee/penugasan', [AuditeePenugasanController::class, 'index'])->name('auditee.penugasan');
+    Route::post('/auditee/penugasan/ajukan', [AuditeePenugasanController::class, 'ajukan'])->name('auditee.penugasan.ajukan');
+    Route::post('/auditee/penugasan/setuju', [AuditeePenugasanController::class, 'setuju'])->name('auditee.penugasan.setuju');
+    Route::post('/auditee/penugasan/tolak', [AuditeePenugasanController::class, 'tolak'])->name('auditee.penugasan.tolak');
 
     Route::get('/auditee/ami', [StandarAMIController::class, 'index'])->name('auditee.ami');
     Route::get('/auditee/ami/detail/{upt_id}/{periode_id}', [StandarAMIController::class, 'detail'])->name('auditee.ami.detail');
