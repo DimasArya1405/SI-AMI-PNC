@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Ami;
 
 use App\DataTables\Admin\Ami\UptStandarMutuDataTable;
 use App\Http\Controllers\Controller;
+use App\Imports\UptStandarMutuImport;
 use App\Models\ItemSubStandarMutu;
 use App\Models\Periode;
 use App\Models\StandarMutu;
@@ -15,6 +16,7 @@ use App\Models\UptSubStandarMutu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UptStandarMutuController extends Controller
 {
@@ -402,5 +404,22 @@ class UptStandarMutuController extends Controller
                 $periodeId
             );
         }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'periode_id' => 'required|exists:periode,id',
+            'file' => 'required|mimes:xlsx,xls|max:10240',
+        ]);
+
+        Excel::import(
+            new UptStandarMutuImport($request->periode_id),
+            $request->file('file')
+        );
+
+        return redirect()
+            ->back()
+            ->with('success', 'Data pemetaan berhasil diimport.');
     }
 }

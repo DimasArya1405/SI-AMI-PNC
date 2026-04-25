@@ -75,12 +75,15 @@ class StandarAMIController extends Controller
         $validated = $request->validate([
             'upt_item_sub_standar_id' => 'required|exists:upt_item_sub_standar_mutu,upt_item_sub_standar_id',
             'periode_id' => 'required|exists:periode,id',
-            'file_bukti' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
+            'file_bukti' => 'required|array',
+            'file_bukti.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
             'keterangan' => 'nullable|string|max:1000',
+            'active_tab' => 'nullable|string',
         ], [
             'file_bukti.required' => 'File bukti wajib diupload.',
-            'file_bukti.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
-            'file_bukti.max' => 'Ukuran file terlalu besar. Maksimal 5 MB.',
+            'file_bukti.array' => 'File bukti tidak valid.',
+            'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
+            'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
 
         $auditee = Auditee::with('upt')
@@ -92,38 +95,33 @@ class StandarAMIController extends Controller
             ->where('periode_id', $validated['periode_id'])
             ->firstOrFail();
 
-        $file = $request->file('file_bukti');
-
-        // ambil nama UPT & tahun periode
-        $uptNama = Str::slug($auditee->upt->nama_upt ?? 'upt');
-
         $periode = Periode::findOrFail($validated['periode_id']);
+
+        $uptNama = Str::slug($auditee->upt->nama_upt ?? 'upt');
         $periodeTahun = $periode->tahun;
 
-        // folder otomatis
         $folder = 'bukti-dukung/upt-' . $uptNama . '/periode-' . $periodeTahun;
 
-        // nama file aman
-        $namaAsliTanpaExt = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension();
+        foreach ($request->file('file_bukti') as $file) {
+            $extension = $file->getClientOriginalExtension();
+            $namaFileBaru = Str::random(40) . '.' . $extension;
 
-        $namaFileBaru = time() . '_' . Str::slug($namaAsliTanpaExt) . '.' . $extension;
-        // $namaFileBaru = Str::random(40) . '.' . $extension;
+            $path = $file->storeAs($folder, $namaFileBaru, 'public');
 
-        // simpan file
-        $path = $file->storeAs($folder, $namaFileBaru, 'public');
+            Dokumen::create([
+                'dokumen_id' => Str::uuid()->toString(),
+                'upt_item_sub_standar_id' => $item->upt_item_sub_standar_id,
+                'auditee_id' => $auditee->auditee_id,
+                'nama_file' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]);
+        }
 
-        // simpan database
-        Dokumen::create([
-            'dokumen_id' => Str::uuid()->toString(),
-            'upt_item_sub_standar_id' => $item->upt_item_sub_standar_id,
-            'auditee_id' => $auditee->auditee_id,
-            'nama_file' => $file->getClientOriginalName(),
-            'file_path' => $path,
-            'keterangan' => $validated['keterangan'] ?? null,
-        ]);
-
-        return back()->with('success', 'Bukti dukung berhasil diupload.');
+        return redirect()
+            ->to(url()->previous() . '#item-' . $item->upt_item_sub_standar_id)
+            ->with('success', 'Bukti dukung berhasil diupload.')
+            ->with('active_tab', $request->active_tab);
     }
 
     public function hapusBukti($id)

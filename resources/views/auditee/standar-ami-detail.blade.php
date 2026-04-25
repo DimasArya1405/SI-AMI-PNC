@@ -1,4 +1,10 @@
 <x-app-layout>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+
     @include('auditee.sidebar')
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
@@ -42,6 +48,7 @@
                         @foreach ($pemetaanStandar as $index => $standar)
                         <li class="me-2" role="presentation">
                             <button
+                                onclick="localStorage.setItem('activeTabAuditee', 'content-{{ $standar->standar_mutu_id }}')"
                                 class="inline-block p-4 border-b-2 rounded-t-lg"
                                 id="tab-{{ $standar->standar_mutu_id }}"
                                 data-tabs-target="#content-{{ $standar->standar_mutu_id }}"
@@ -125,7 +132,7 @@
                                             @endif
                                         </div>
 
-                                        <div class="flex-1">
+                                        <div id="item-{{ $item->upt_item_sub_standar_id }}" class="flex-1">
                                             <p class="text-md font-medium text-gray-800">
                                                 {{ $item->nama_item }}
                                             </p>
@@ -193,6 +200,8 @@
                                                         name="upt_item_sub_standar_id"
                                                         value="{{ $item->upt_item_sub_standar_id }}">
 
+                                                    <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+
                                                     <input type="hidden" name="periode_id" value="{{ $periode->id }}">
 
                                                     <div>
@@ -200,11 +209,12 @@
                                                             Upload File Bukti
                                                         </label>
                                                         <input type="file"
-                                                            name="file_bukti"
+                                                            name="file_bukti[]"
+                                                            multiple
                                                             class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
                                                             required>
                                                         <p class="mt-1 text-xs text-gray-400">
-                                                            Format: PDF, Word, Excel, JPG, PNG. Maksimal 5MB.
+                                                            Bisa upload lebih dari satu file. Format: PDF, Word, Excel, JPG, PNG. Maksimal 5MB.
                                                         </p>
                                                     </div>
 
@@ -250,6 +260,22 @@
             @endif
         </div>
     </div>
+
+    <button
+        id="backToTop"
+        type="button"
+        class="hidden fixed bottom-6 right-6 z-50 p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 15l7-7 7 7" />
+        </svg>
+    </button>
 
     {{-- Modal Hapus Bukti --}}
     <div id="modal-hapus-bukti" tabindex="-1"
@@ -340,5 +366,77 @@
                 setTimeout(() => success.remove(), 500);
             }
         }, 3000); // 3 detik hilang
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = localStorage.getItem('activeTabAuditee');
+
+            if (activeTab) {
+                const tabButton = document.querySelector(`[data-tabs-target="#${activeTab}"]`);
+
+                if (tabButton) {
+                    tabButton.click();
+                }
+            }
+
+            if (window.location.hash) {
+                setTimeout(() => {
+                    const target = document.querySelector(window.location.hash);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                }, 500);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = @json(session('active_tab'));
+
+            if (activeTab) {
+                const tabButton = document.querySelector(`[data-tabs-target="#${activeTab}"]`);
+
+                if (tabButton) {
+                    setTimeout(() => {
+                        tabButton.click();
+
+                        if (window.location.hash) {
+                            setTimeout(() => {
+                                const target = document.querySelector(window.location.hash);
+
+                                if (target) {
+                                    target.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'center'
+                                    });
+                                }
+                            }, 300);
+                        }
+                    }, 200);
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToTopButton = document.getElementById('backToTop');
+
+            // tampilkan tombol saat scroll ke bawah
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.classList.remove('hidden');
+                } else {
+                    backToTopButton.classList.add('hidden');
+                }
+            });
+
+            // klik tombol → scroll ke atas
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
     </script>
 </x-app-layout>

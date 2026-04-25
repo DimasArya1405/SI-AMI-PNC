@@ -15,6 +15,12 @@
                             type="button">
                             <i class="bi bi-plus"></i> <span class="text-sm">Tambah Pemetaan</span>
                         </button>
+                        <button data-modal-target="modal-import" data-modal-toggle="modal-import"
+                            class="flex items-center gap-2 bg-purple-500 hover:bg-purple-700 text-white py-1 px-4 rounded"
+                            type="button">
+                            <i class="bi bi-upload"></i>
+                            <span class="text-sm">Import Excel</span>
+                        </button>
                         <button data-modal-target="modal-copy-periode" data-modal-toggle="modal-copy-periode"
                             class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded"
                             type="button">
@@ -520,6 +526,52 @@
                         <button data-modal-hide="modal-copy-periode" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium rounded-base text-sm px-4 py-2.5 focus:outline-none">
                             Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Import --}}
+    <div id="modal-import" tabindex="-1" aria-hidden="true" class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
+        <div class="relative p-4 w-full max-w-md">
+            <div class="bg-white shadow">
+                <form action="{{ route('admin.upt_standar_mutu.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+
+                    <div class="p-4 border-b">
+                        <h3 class="text-lg font-semibold">Import Pemetaan Standar Mutu</h3>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <label class="block mb-2 text-sm font-medium">Periode</label>
+                            <select name="periode_id" class="w-full border-gray-300 rounded-lg" required>
+                                @foreach ($periodeList as $item)
+                                <option value="{{ $item->periode_id }}">
+                                    {{ $item->tahun }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-medium">File Excel</label>
+                            <input type="file" name="file" accept=".xlsx,.xls"
+                                class="w-full border border-gray-300 rounded-lg p-2" required>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border-t flex justify-end gap-2">
+                        <button type="button" data-modal-hide="modal-import"
+                            class="px-4 py-2 bg-gray-200 rounded">
+                            Batal
+                        </button>
+
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-600 text-white rounded">
+                            Import
                         </button>
                     </div>
                 </form>
