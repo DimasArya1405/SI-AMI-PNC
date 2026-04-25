@@ -55,6 +55,6 @@ class PengajuanJadwalAudit extends Model
     }
     public function upt()
     {
-        return $this->belongsTo(UPT::class, 'upt', 'upt_id');
+        return $this->belongsTo(UPT::class, 'id_pengaju', 'upt_id');
     }
 }

@@ -242,11 +242,11 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
                                             @if ($jam = $item->penugasan->first()?->jam)
+                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
                                                 {{ $jam }} WIB
                                             @else
-                                                -
+                                                <span class="text-gray-400 italic">Belum ada penugasan</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 flex flex-col gap-2">
