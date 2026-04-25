@@ -160,9 +160,18 @@
 
                     <div class="space-y-4">
 
-                        <div class="bg-gray-50 p-4 rounded-xl">
-                            <p class="text-xs text-gray-400">Auditor</p>
-                            <p class="font-semibold">{{ $nama_auditor }}</p>
+                        <div>
+                            <p class="text-sm text-gray-500">Ketua Auditor</p>
+                            <p class="font-semibold text-gray-800">
+                                {{ $nama_ketua_auditor }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500">Anggota Auditor</p>
+                            <p class="font-semibold text-gray-800">
+                                {{ $nama_anggota_auditor }}
+                            </p>
                         </div>
 
                         <div class="bg-gray-50 p-4 rounded-xl">

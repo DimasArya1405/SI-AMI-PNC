@@ -171,6 +171,7 @@
                                                                 @csrf
                                                                 @method('DELETE')
 
+                                                                @if(!$status_periode)
                                                                 <button type="button"
                                                                     data-modal-target="modal-hapus-bukti"
                                                                     data-modal-toggle="modal-hapus-bukti"
@@ -179,6 +180,7 @@
                                                                     data-nama-file="{{ $bukti->nama_file }}">
                                                                     Hapus
                                                                 </button>
+                                                                @endif
                                                             </form>
                                                         </div>
                                                     </div>
@@ -190,6 +192,7 @@
                                                 </p>
                                                 @endif
 
+                                                @if (!$status_periode)
                                                 <form action="{{ route('auditee.bukti_dukung.upload') }}"
                                                     method="POST"
                                                     enctype="multipart/form-data"
@@ -233,6 +236,13 @@
                                                         Upload Bukti
                                                     </button>
                                                 </form>
+                                                @else
+                                                <div class="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+                                                    <p class="text-sm text-yellow-700">
+                                                        Periode ini sudah tidak aktif. Data hanya dapat dilihat.
+                                                    </p>
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
