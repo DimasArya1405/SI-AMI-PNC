@@ -23,6 +23,7 @@ class PenugasanController extends Controller
         $periode_id = $periode_now->id;
         // Filter UPT Prodi yang ditugaskan ke auditor login
         $penugasanProdi = Penugasan::where('periode_id', $periode_id)
+            ->where('status_penugasan', 'aktif')
             ->where(function ($query) use ($auditor_id) {
                 $query->where('auditor_id_1', $auditor_id)
                     ->orWhere('auditor_id_2', $auditor_id);
