@@ -64,7 +64,7 @@
                                 required="">
                         </div>
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Prodi</label>
+                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">UPT</label>
                             <select id="" name="upt"
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
                                 <option selected="">Pilih UPT</option>
@@ -140,24 +140,17 @@
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
                         </div>
-                        <div class="col-span-2 sm:col-span-1">
+                        <div class="col-span-2">
                             <label for="price" class="block mb-2.5 text-sm font-medium text-heading">NIP</label>
                             <input type="number" name="nip" id="nip"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
                         </div>
-                        <div class="col-span-2 sm:col-span-1">
-                            <label for="price"
-                                class="block mb-2.5 text-sm font-medium text-heading">Jabatan</label>
-                            <input type="text" name="jabatan" id="jabatan"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
-                        </div>
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Prodi</label>
+                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">UPT</label>
                             <select id="prodi" name="prodi"
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Prodi</option>
+                                <option selected="">Pilih UPT</option>
                                 @foreach ($upt as $item)
                                     <option value="{{ $item->upt_id }}">{{ $item->nama_upt }}</option>
                                 @endforeach

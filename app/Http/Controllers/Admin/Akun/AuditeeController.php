@@ -26,6 +26,12 @@ class AuditeeController extends Controller
                 ->with('error', 'NIP sudah terdaftar!');
         }
 
+        $cekEmail = User::where('email', $request->email)->exists();
+        if ($cekEmail) {
+            return redirect('/admin/akun/auditee')
+                ->with('error', 'Email sudah terdaftar!');
+        }
+
         $newUser = new User;
         $newUser->id = Str::uuid();
         $newUser->name = $request->nama;
@@ -48,6 +54,12 @@ class AuditeeController extends Controller
     }
 
     public function edit(Request $request) {
+        $cekEmail = User::where('email', $request->email)->exists();
+        if ($cekEmail) {
+            return redirect('/admin/akun/auditee')
+                ->with('error', 'Email sudah terdaftar!');
+        }
+
         $auditee = Auditee::find($request->auditee_id);
         $auditee->nip = $request->nip;
         $auditee->nama_lengkap = $request->nama;

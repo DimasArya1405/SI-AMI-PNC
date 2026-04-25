@@ -66,7 +66,7 @@
             <li>
                 <a href="{{ route('admin.ami.upt_standar_mutu') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.ami.standar_mutu') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    {{ request()->routeIs('admin.ami.upt_standar_mutu') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Pemetaan Standar Mutu
                 </a>
             </li>
