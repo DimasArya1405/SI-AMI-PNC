@@ -11,6 +11,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "phpoffice/phpspreadsheet": "^1.30",
         "yajra/laravel-datatables-buttons": "12.0",
         "yajra/laravel-datatables-html": "^12.7",
         "yajra/laravel-datatables-oracle": "^12.7"

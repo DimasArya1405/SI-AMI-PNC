@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sub_standar');
+        Schema::dropIfExists('sub_standar_mutu');
     }
 };
