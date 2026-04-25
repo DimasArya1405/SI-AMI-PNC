@@ -50,9 +50,6 @@
                                                 $done = 1;
                                             }
                                         }
-                                        // $statusUPT = $dataPengajuan ? $dataPengajuan->upt == 1 : false;
-                                        // $statusKetua = $dataPengajuan ? $dataPengajuan->ketua_auditor == 1 : false;
-                                        // $statusAnggota = $dataPengajuan ? $dataPengajuan->anggota_auditor == 1 : false;
                                         $pengaju = $dataPengajuan
                                             ? $dataPengajuan->auditor->nama_lengkap ??
                                                 ($dataPengajuan->upt->nama_upt ?? 'Tidak Diketahui')
@@ -169,8 +166,8 @@
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             @if ($dataPengajuan)
-                                                <button data-modal-target="modal-lihat-pengajuan"
-                                                    data-modal-toggle="modal-lihat-pengajuan"
+                                                <button data-modal-target={{ $item->penugasan_id }}
+                                                    data-modal-toggle={{ $item->penugasan_id }}
                                                     data-idpenugasan="{{ $item->penugasan_id }}"
                                                     data-tanggal="{{ $dataPengajuan->tanggal_audit }}"
                                                     data-jam="{{ $dataPengajuan->jam }}"
@@ -195,7 +192,7 @@
 
                                     {{-- MODAL LIHAT PENGAJUAN (Diletakkan di dalam loop agar status per item sesuai) --}}
                                     @if ($item->pengajuan_jadwal_audit->count() > 0)
-                                        <div id="modal-lihat-pengajuan" tabindex="-1" aria-hidden="true"
+                                        <div id="{{ $item->penugasan_id }}" tabindex="-1" aria-hidden="true"
                                             class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full">
                                             <div class="relative p-4 w-full max-w-lg">
                                                 <div
@@ -205,7 +202,7 @@
                                                         <h3 class="text-lg font-medium text-heading">Detail Pengajuan
                                                             Jadwal</h3>
                                                         <button type="button" class="text-body hover:text-heading"
-                                                            data-modal-hide="modal-lihat-pengajuan">
+                                                            data-modal-hide="{{ $item->penugasan_id }}">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -217,8 +214,10 @@
                                                         <form id="form-konfirmasi-jadwal" method="post"> @csrf
                                                             <input type="hidden" id="penugasan_id_detail"
                                                                 name="penugasan_id">
+                                                            <input type="text" id="tess" name="tes"
+                                                                value="{{ $statusUPT . '-' . $statusKetua . '-' . $statusAnggota }}">
                                                             <input type="hidden" id="auditor_id_detail"
-                                                                name="auditor_id" value="{{ $auditor_id }}">
+                                                                name="auditor_id_detail" value="{{ $auditor_id }}">
                                                             <div
                                                                 class="mb-6 p-3 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
                                                                 <p
@@ -250,7 +249,26 @@
                                                                     <label
                                                                         class="block mb-1 text-sm font-medium text-heading">Pengaju
                                                                         :</label>
+                                                                    @php
+                                                                        $namaPengaju = 'Tidak Ada'; // Default jika dataPengajuan null
+                                                                        if ($dataPengajuan) {
+                                                                            if ($dataPengajuan->auditor) {
+                                                                                // Jika relasi auditor ada, ambil nama lengkap
+                                                                                $namaPengaju =
+                                                                                    $dataPengajuan->auditor
+                                                                                        ->nama_lengkap;
+                                                                            } elseif ($dataPengajuan->upt) {
+                                                                                // Jika relasi upt ada, ambil nama upt
+                                                                                $namaPengaju =
+                                                                                    $dataPengajuan->upt->nama_upt;
+                                                                            } else {
+                                                                                $namaPengaju =
+                                                                                    'Data Pengaju Tidak Ditemukan';
+                                                                            }
+                                                                        }
+                                                                    @endphp
                                                                     <input type="text" id="pengaju"
+                                                                        value="{{ $namaPengaju }}"
                                                                         class="bg-gray-50 border border-default text-gray-600 text-sm rounded-base block w-full px-3 py-2"
                                                                         readonly>
                                                                 </div>
@@ -438,7 +456,7 @@
                 let tanggal_old = $(this).data('tanggalold');
                 let jam_old = $(this).data('jamold');
                 let alasan = $(this).data('alasan');
-                let pengaju = $(this).data('pengaju');
+                // let pengaju = $(this).data('pengaju');
 
                 $('#penugasan_id_detail').val(id_penugasan);
                 $('#jam_detail').val(jam);
@@ -446,7 +464,7 @@
                 $('#jam_detail_old').val(jam_old);
                 $('#tanggal_detail_old').val(tanggal_old);
                 $('#alasan_detail').val(alasan);
-                $('#pengaju').val(pengaju);
+                // $('#pengaju').val(pengaju);
             });
         </script>
     @endpush
