@@ -47,7 +47,12 @@ return new class extends Migration
                 ->on('sub_standar_mutu')
                 ->nullOnDelete();
 
-            $table->unique(['upt_id', 'standar_mutu_id', 'nama_sub_standar', 'periode_id'], 'upt_standar_nama_sub_unique');
+            $table->unique([
+                'upt_id',
+                'periode_id',
+                'standar_mutu_id',
+                'sub_standar_master_id'
+            ], 'upt_sub_standar_unique');
         });
     }
 
