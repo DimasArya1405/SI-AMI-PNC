@@ -18,7 +18,7 @@ return new class extends Migration
             $table->uuid('item_sub_standar_master_id')->nullable();
             $table->uuid('parent_upt_item_id')->nullable();
             $table->uuid('periode_id');
-            $table->string('nama_item');
+            $table->text('nama_item');
             $table->string('tipe_item')->nullable();
             $table->integer('level')->default(1);
             $table->integer('urutan')->nullable();
@@ -31,7 +31,12 @@ return new class extends Migration
             $table->foreign('item_sub_standar_master_id')->references('item_sub_standar_id')->on('item_sub_standar')->nullOnDelete();
             $table->foreign('parent_upt_item_id')->references('upt_item_sub_standar_id')->on('upt_item_sub_standar_mutu')->onDelete('cascade');
 
-            $table->unique(['upt_sub_standar_id', 'nama_item'], 'upt_sub_nama_item_unique');
+            $table->unique([
+                'upt_id',
+                'periode_id',
+                'upt_sub_standar_id',
+                'item_sub_standar_master_id'
+            ], 'upt_item_sub_standar_unique');
         });
     }
 
