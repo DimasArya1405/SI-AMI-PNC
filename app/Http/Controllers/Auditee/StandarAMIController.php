@@ -35,6 +35,7 @@ class StandarAMIController extends Controller
 
         $upt = UPT::findOrFail($upt_id);
         $periode = Periode::findOrFail($periode_id);
+        $status_periode = $periode->status == 0;
 
         $pemetaanStandar = UptStandarMutu::with('standar_mutu')
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
@@ -66,7 +67,8 @@ class StandarAMIController extends Controller
             'pemetaanStandar',
             'uptSubStandar',
             'uptItemSubStandar',
-            'buktiDukung'
+            'buktiDukung',
+            'status_periode'
         ));
     }
 
@@ -85,6 +87,12 @@ class StandarAMIController extends Controller
             'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
+
+        $periode = Periode::findOrFail($validated['periode_id']);
+
+        if ($periode->status == 0) {
+            return back()->with('error', 'Periode sudah tidak aktif. Upload dokumen tidak diperbolehkan.');
+        }
 
         $auditee = Auditee::with('upt')
             ->where('user_id', Auth::id())
@@ -131,6 +139,12 @@ class StandarAMIController extends Controller
         $dokumen = Dokumen::where('dokumen_id', $id)
             ->where('auditee_id', $auditee->auditee_id)
             ->firstOrFail();
+
+        $periode = Periode::where('id', $dokumen->item->periode_id)->first();
+
+        if ($periode && $periode->status == 0) {
+            return back()->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.');
+        }
 
         // hapus file dari storage
         if ($dokumen->file_path && Storage::disk('public')->exists($dokumen->file_path)) {

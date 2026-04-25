@@ -7,6 +7,7 @@ use App\Models\Auditee;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class AuditeeController extends Controller
@@ -24,7 +25,12 @@ class AuditeeController extends Controller
         $penugasan = collect();
 
         if ($auditee && $periodeNow) {
-            $penugasan = Penugasan::with(['auditor', 'upt', 'periode'])
+            $penugasan = Penugasan::with([
+                'auditor1',
+                'auditor2',
+                'upt',
+                'periode'
+            ])
                 ->where('upt_id', $auditee->upt_id)
                 ->where('periode_id', $periodeNow->id)
                 ->get();
@@ -38,10 +44,15 @@ class AuditeeController extends Controller
         $penugasanSelesai = $penugasan->where('status_penugasan', 'selesai')->count();
         $isAssigned = $penugasan->isNotEmpty();
 
-        $namaAuditor = $penugasanTerbaru?->auditor?->nama_lengkap ?? '-';
+        $namaKetuaAuditor = $penugasanTerbaru?->auditor1?->nama_lengkap ?? '-';
+        $namaAnggotaAuditor = $penugasanTerbaru?->auditor2?->nama_lengkap ?? '-';
+
         $tanggalAudit = $penugasanTerbaru?->tanggal_audit
-            ? \Carbon\Carbon::parse($penugasanTerbaru->tanggal_audit)->translatedFormat('d F Y')
+            ? Carbon::parse($penugasanTerbaru->tanggal_audit)->translatedFormat('d F Y')
             : '-';
+
+        $jamAudit = $penugasanTerbaru?->jam ?? '-';
+
         $lokasiAudit = $penugasanTerbaru?->lokasi ?? '-';
 
         $currentStep = match ($statusPenugasan) {
@@ -66,8 +77,12 @@ class AuditeeController extends Controller
             'total_penugasan' => $totalPenugasan,
             'penugasan_aktif' => $penugasanAktif,
             'penugasan_selesai' => $penugasanSelesai,
-            'nama_auditor' => $namaAuditor,
+
+            'nama_ketua_auditor' => $namaKetuaAuditor,
+            'nama_anggota_auditor' => $namaAnggotaAuditor,
+
             'tanggal_audit' => $tanggalAudit,
+            'jam_audit' => $jamAudit,
             'lokasi_audit' => $lokasiAudit,
             'currentStep' => $currentStep,
             'currentStageLabel' => $currentStageLabel,
