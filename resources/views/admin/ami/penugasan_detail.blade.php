@@ -10,6 +10,10 @@
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <div class="font-semibold">Program Studi</div>
+                    <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
+                        class="bg-blue-500 text-sm font-semibold text-white px-4 py-1 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
+                        <i class="bi bi-download mr-2"></i>Export PDF
+                    </a>
                 </div>
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     <div
@@ -20,7 +24,7 @@
                                     <th scope="col" class="px-6 py-3 font-semibold">
                                         NO
                                     </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
+                                    <th scope="col" class="px-6 py-3 w-72 font-semibold">
                                         NAMA UPT
                                     </th>
                                     <th scope="col" class="px-6 py-3 font-semibold">
@@ -44,51 +48,131 @@
                                             {{ $item->nama_upt }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{-- Loop data penugasan untuk mengambil nama auditor --}}
-                                            @if ($item->penugasan->count() > 0)
+                                            @php $tugas = $item->penugasan->first(); @endphp
+
+                                            @if ($tugas)
                                                 <ul class="list-disc ml-4">
-                                                    @foreach ($item->penugasan as $tugas)
-                                                        <li>{{ $tugas->auditor->nama_lengkap ?? 'Nama tidak ditemukan' }}
-                                                        </li>
-                                                    @endforeach
+                                                    <li>
+                                                        <span class="font-semibold text-green-500"> Ketua
+                                                            Auditor:</span> <br>
+                                                        <span
+                                                            class="font-bold">{{ $tugas->auditor1->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
+                                                    </li>
+                                                    <li class="mt-2">
+                                                        <span class="font-semibold text-green-500"> Anggota
+                                                            Auditor:</span> <br>
+                                                        <span
+                                                            class="font-bold">{{ $tugas->auditor2->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
+                                                    </li>
                                                 </ul>
                                             @else
                                                 <span class="text-red-500 italic">Belum ada auditor</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4">
-                                            {{-- Contoh menampilkan jadwal dari data penugasan pertama --}}
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
-                                            {{ $item->penugasan->first()->lokasi ?? '-' }}
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            @php
+                                                $penugasan = $item->penugasan->first();
+                                                $pengajuan = $penugasan
+                                                    ? $penugasan->pengajuan_jadwal_audit->first()
+                                                    : null;
+                                            @endphp
+
+                                            @if ($penugasan)
+                                                <div class="flex flex-col gap-2">
+                                                    {{-- Kondisi jika ada pengajuan jadwal baru dan sudah disetujui semua pihak (1) --}}
+                                                    @if ($pengajuan && $pengajuan->ketua_auditor == 1 && $pengajuan->anggota_auditor == 1 && $pengajuan->upt == 1)
+                                                        {{-- Bagian Jadwal Awal --}}
+                                                        <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                                            <span
+                                                                class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Jadwal
+                                                                Awal</span>
+                                                            <div
+                                                                class="flex items-center gap-1.5 text-gray-500 line-through">
+                                                                <svg class="w-4 h-4" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <span
+                                                                class="text-xs ml-5 text-gray-400 italic">{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
+                                                        </div>
+
+                                                        {{-- Bagian Jadwal Baru (Revisi) --}}
+                                                        <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                                            <span
+                                                                class="block text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jadwal
+                                                                Akhir</span>
+                                                            <div
+                                                                class="flex items-center gap-1.5 text-blue-900 font-semibold">
+                                                                <svg class="w-4 h-4 text-blue-500" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $pengajuan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <span
+                                                                class="text-xs ml-5 text-blue-700">{{ $pengajuan->jam ? $pengajuan->jam . ' WIB' : '-' }}</span>
+                                                        </div>
+                                                    @else
+                                                        {{-- Tampilan Standar jika tidak ada perubahan jadwal --}}
+                                                        <div class="flex flex-col">
+                                                            <div
+                                                                class="flex items-center gap-1.5 font-medium text-gray-900">
+                                                                <svg class="w-4 h-4 text-gray-400" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <div
+                                                                class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5">
+                                                                <span>{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400 italic">Belum ada penugasan</span>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 flex flex-col gap-2">
-                                            @if ($item->penugasan->count() < 2)
+                                            @php $tugas = $item->penugasan->first(); @endphp
+
+                                            @if (!$tugas)
+                                                {{-- Tombol Buat Penugasan --}}
                                                 <button data-modal-target="modal-penugasan"
                                                     data-modal-toggle="modal-penugasan"
-                                                    data-uptId = "{{ $item->upt_id }}"
-                                                    data-periodeId = "{{ $periode_id }}
-                                                "
+                                                    data-uptId="{{ $item->upt_id }}"
+                                                    data-periodeId="{{ $periode_id }}"
                                                     class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    <i class="bi bi-edit text-xs"></i> Buat Penugasan
+                                                    Buat Penugasan
                                                 </button>
                                             @else
-                                                @if ($item->penugasan->first()->status_penugasan == 'pending')
+                                                @if ($tugas->status_penugasan == 'pending')
                                                     <button data-modal-target="modal-edit-penugasan"
                                                         data-modal-toggle="modal-edit-penugasan"
-                                                        data-uptId = "{{ $item->upt_id }}"
-                                                        data-periodeId = "{{ $periode_id }}"
-                                                        @php
-                                                            $penugasan_aktif = $penugasan_sekarang->toBase()->where('upt_id', $item->upt_id); 
-                                                        @endphp
-                                                        data-auditorId_1 = "{{ $penugasan_aktif->first()->auditor_id }}"
-                                                        data-auditorId_2 = "{{ $penugasan_aktif->last()->auditor_id }}"
-                                                        data-lokasi = "{{ $penugasan_aktif->first()->lokasi }}"
-                                                        data-tanggal = "{{ $penugasan_aktif->first()->tanggal_audit }}"
+                                                        data-uptId="{{ $item->upt_id }}"
+                                                        data-periodeId="{{ $periode_id }}"
+                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
+                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
+                                                        data-jam="{{ $tugas->jam }}"
+                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
                                                         class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
                                                         <i class="bi bi-edit text-xs"></i> Edit Penugasan
                                                     </button>
                                                 @else
-                                                    <span class="text-green-500">Penugasan sudah aktif</span>
+                                                    <span class="text-green-500 font-semibold">Penugasan sudah
+                                                        aktif</span>
                                                 @endif
                                             @endif
                                         </td>
@@ -110,7 +194,7 @@
                                     <th scope="col" class="px-6 py-3 font-semibold">
                                         NO
                                     </th>
-                                    <th scope="col" class="px-6 py-3 font-semibold">
+                                    <th scope="col" class="px-6 py-3 w-72 font-semibold">
                                         NAMA UPT
                                     </th>
                                     <th scope="col" class="px-6 py-3 font-semibold">
@@ -136,13 +220,22 @@
                                             {{ $item->nama_upt }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{-- Logika Auditor --}}
-                                            @if ($item->penugasan->count() > 0)
+                                            @php $tugas = $item->penugasan->first(); @endphp
+
+                                            @if ($tugas)
                                                 <ul class="list-disc ml-4">
-                                                    @foreach ($item->penugasan as $tugas)
-                                                        <li>{{ $tugas->auditor->nama_lengkap ?? 'Nama tidak ditemukan' }}
-                                                        </li>
-                                                    @endforeach
+                                                    <li>
+                                                        <span class="font-semibold text-green-500"> Ketua
+                                                            Auditor:</span> <br>
+                                                        <span
+                                                            class="font-bold">{{ $tugas->auditor1->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
+                                                    </li>
+                                                    <li class="mt-2">
+                                                        <span class="font-semibold text-green-500"> Anggota
+                                                            Auditor:</span> <br>
+                                                        <span
+                                                            class="font-bold">{{ $tugas->auditor2->nama_lengkap ?? 'Nama tidak ditemukan' }}</span>
+                                                    </li>
                                                 </ul>
                                             @else
                                                 <span class="text-red-500 italic">Belum ada auditor</span>
@@ -150,36 +243,40 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
-                                            {{ $item->penugasan->first()->lokasi ?? '-' }}
+                                            @if ($jam = $item->penugasan->first()?->jam)
+                                                {{ $jam }} WIB
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 flex flex-col gap-2">
-                                            @if ($item->penugasan->count() < 2)
+                                            @php $tugas = $item->penugasan->first(); @endphp
+
+                                            @if (!$tugas)
+                                                {{-- Tombol Buat Penugasan --}}
                                                 <button data-modal-target="modal-penugasan"
                                                     data-modal-toggle="modal-penugasan"
-                                                    data-uptId = "{{ $item->upt_id }}"
-                                                    data-periodeId = "{{ $periode_id }}
-                                                "
+                                                    data-uptId="{{ $item->upt_id }}"
+                                                    data-periodeId="{{ $periode_id }}"
                                                     class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    <i class="bi bi-edit text-xs"></i> Buat Penugasan
+                                                    Buat Penugasan
                                                 </button>
                                             @else
-                                                @if ($item->penugasan->first()->status_penugasan == 'pending')
+                                                @if ($tugas->status_penugasan == 'pending')
                                                     <button data-modal-target="modal-edit-penugasan"
                                                         data-modal-toggle="modal-edit-penugasan"
-                                                        data-uptId = "{{ $item->upt_id }}"
-                                                        data-periodeId = "{{ $periode_id }}"
-                                                        @php
-                                                            $penugasan_aktif = $penugasan_sekarang->toBase()->where('upt_id', $item->upt_id); 
-                                                        @endphp
-                                                        data-auditorId_1 = "{{ $penugasan_aktif->first()->auditor_id }}"
-                                                        data-auditorId_2 = "{{ $penugasan_aktif->last()->auditor_id }}"
-                                                        data-lokasi = "{{ $penugasan_aktif->first()->lokasi }}"
-                                                        data-tanggal = "{{ $penugasan_aktif->first()->tanggal_audit }}"
+                                                        data-uptId="{{ $item->upt_id }}"
+                                                        data-periodeId="{{ $periode_id }}"
+                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
+                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
+                                                        data-jam="{{ $tugas->jam }}"
+                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
                                                         class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
                                                         <i class="bi bi-edit text-xs"></i> Edit Penugasan
                                                     </button>
                                                 @else
-                                                    <span class="text-green-500">Penugasan sudah aktif</span>
+                                                    <span class="text-green-500 font-semibold">Penugasan sudah
+                                                        aktif</span>
                                                 @endif
                                             @endif
                                         </td>
@@ -202,8 +299,8 @@
                     <div class="flex justify-end">
                         @if ($penugasan_sekarang->count() > 0)
                             @if ($penugasan_sekarang->first()->status_penugasan == 'pending')
-                                <button data-modal-target="modal-konfirmasi-aktif" data-modal-toggle="modal-konfirmasi-aktif"
-                                    {{-- href="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" --}}
+                                <button data-modal-target="modal-konfirmasi-aktif"
+                                    data-modal-toggle="modal-konfirmasi-aktif" {{-- href="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" --}}
                                     class="hover:bg-blue-700 mb-2 px-4 py-2 transition button-penugasan duration-300 ease-in-out bg-blue-500 rounded text-white">
                                     <i class="bi bi-check-circle"></i> Aktifkan Penugasan
                                 </button>
@@ -250,8 +347,9 @@
                         <input type="hidden" id="periode_id" name="periode_id">
                         <input type="hidden" id="upt_id" name="upt_id">
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Auditor
-                                1</label>
+                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
+                                Ketua Auditor
+                            </label>
                             <select id="" name="auditor_1"
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
                                 <option selected="">Pilih Auditor</option>
@@ -262,8 +360,9 @@
                             </select>
                         </div>
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Auditor
-                                2</label>
+                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
+                                Anggota Auditor
+                            </label>
                             <select id="" name="auditor_2"
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
                                 <option selected="">Pilih Auditor</option>
@@ -281,10 +380,11 @@
                                 required="">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Tempat</label>
-                            <input type="text" name="tempat" id="price"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
+                            <label for="jam" class="block mb-2.5 text-sm font-medium text-heading">Waktu
+                                (Jam)</label>
+                            <input type="time" name="jam" id="jam"
+                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs"
+                                required>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
@@ -322,21 +422,26 @@
                 </div>
 
                 <div class="p-4 md:p-5">
-                    <p class="text-sm text-gray-500 mb-2">Pastikan setiap UPT memiliki 2 auditor (Tanda <span
+                    <p class="text-sm text-gray-500 mb-2">Pastikan setiap UPT telah memiliki penugasan (Tanda <span
                             class="text-green-600 font-bold">✔</span>).</p>
                     <p class="px-2 py-1 text-sm text-red-700 bg-red-100 mb-4 rounded-sm">Pastikan semua data penugasan
                         sudah benar!!!</p>
+
                     <ul class="max-h-60 overflow-y-auto divide-y divide-gray-100 border rounded-lg">
                         @foreach ($upts as $upt)
+                            {{-- Logika baru: Dianggap lengkap jika penugasan_count adalah 1 --}}
+                            @php $isLengkap = $upt->penugasan_count > 0; @endphp
+
                             <li
-                                class="flex items-center justify-between p-3 {{ $upt->penugasan_count == 2 ? 'bg-green-50/50' : 'bg-white' }}">
+                                class="flex items-center justify-between p-3 {{ $isLengkap ? 'bg-green-50/50' : 'bg-white' }}">
                                 <div class="flex flex-col">
                                     <span class="text-sm font-medium text-gray-800">{{ $upt->nama_upt }}</span>
-                                    <span class="text-xs text-gray-500">{{ $upt->penugasan_count }}/2 Auditor
-                                        Terdaftar</span>
+                                    <span class="text-xs {{ $isLengkap ? 'text-green-600' : 'text-red-500' }}">
+                                        {{ $isLengkap ? 'Penugasan Tersedia' : 'Belum Ada Penugasan' }}
+                                    </span>
                                 </div>
 
-                                @if ($upt->penugasan_count == 2)
+                                @if ($isLengkap)
                                     <div class="flex items-center justify-center w-6 h-6 bg-green-100 rounded-full">
                                         <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -355,7 +460,8 @@
 
                     <div class="mt-5 flex gap-3">
                         @php
-                            $siapAktif = $upts->every(fn($u) => $u->penugasan_count == 2);
+                            // Tombol aktif jika SEMUA UPT sudah punya minimal 1 baris penugasan
+                            $siapAktif = $upts->every(fn($u) => $u->penugasan_count > 0);
                         @endphp
 
                         @if ($siapAktif)
@@ -442,8 +548,8 @@
                                 required="">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Tempat</label>
-                            <input type="text" name="tempat" id="lokasi"
+                            <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Jam</label>
+                            <input type="time" name="jam" id="jam_2"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
                         </div>
@@ -469,17 +575,25 @@
     @push('js')
         <script>
             $(document).on('click', '.button-penugasan', function() {
-                let upt_id = $(this).data('uptid');
-                let periode_id = $(this).data('periodeid');
-                $('#periode_id').val(periode_id);
-                $('#upt_id').val(upt_id);
+                // Ambil nilai dari atribut tombol
+                // Kita gunakan .attr untuk memastikan data diambil sesuai tulisan di Blade
+                let valUpt = $(this).attr('data-uptId');
+                let valPeriode = $(this).attr('data-periodeId');
+
+                // Masukkan nilainya ke dalam input hidden
+                // .val() digunakan untuk mengisi value
+                $('#upt_id').val(valUpt);
+                $('#periode_id').val(valPeriode);
+
+                // Cek di console untuk memastikan (Tekan F12 di browser)
+                console.log("Isi UPT ID: " + valUpt);
             });
             $(document).on('click', '.button-edit-penugasan', function() {
                 let upt_id = $(this).data('uptid');
                 let periode_id = $(this).data('periodeid');
                 let auditor_1 = $(this).data('auditorid_1');
                 let auditor_2 = $(this).data('auditorid_2');
-                let lokasi = $(this).data('lokasi');
+                let jam = $(this).data('jam');
                 let tanggal = $(this).data('tanggal');
                 $('#periode_id_edit').val(periode_id);
                 $('#upt_id_edit').val(upt_id);
@@ -487,7 +601,7 @@
                 $('#auditor_2').val(auditor_2);
                 $('#auditor_1_old').val(auditor_1);
                 $('#auditor_2_old').val(auditor_2);
-                $('#lokasi').val(lokasi);
+                $('#jam_2').val(jam);
                 $('#tanggal').val(tanggal);
             });
         </script>

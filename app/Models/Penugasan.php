@@ -20,10 +20,11 @@ class Penugasan extends Model
         'penugasan_id',
         'periode_id',
         'upt_id',
-        'auditor_id',
+        'auditor_id_1',
+        'auditor_id_2',
         'auditee_id',
         'tanggal_audit',
-        'lokasi',
+        'jam',
         'status_penugasan'
     ];
 
@@ -32,9 +33,14 @@ class Penugasan extends Model
         return $this->belongsTo(Periode::class, 'periode_id', 'id');
     }
 
-    public function auditor()
+    public function auditor1()
     {
-        return $this->belongsTo(Auditor::class, 'auditor_id', 'auditor_id');
+        return $this->belongsTo(Auditor::class, 'auditor_id_1');
+    }
+
+    public function auditor2()
+    {
+        return $this->belongsTo(Auditor::class, 'auditor_id_2');
     }
 
     public function auditee()
@@ -45,5 +51,10 @@ class Penugasan extends Model
     public function upt()
     {
         return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
+    }
+
+    public function pengajuan_jadwal_audit()
+    {
+        return $this->hasMany(PengajuanJadwalAudit::class, 'penugasan_id', 'penugasan_id');
     }
 }

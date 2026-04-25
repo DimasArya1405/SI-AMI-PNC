@@ -8,12 +8,12 @@
                     <h2 class="text-2xl font-bold text-gray-800 tracking-tight">
                         {{ __('Dashboard Auditor') }}
                     </h2>
-                    <p class="text-sm text-gray-500 mt-1">Selamat datang kembali,{{$auditor->nama_lengkap}} <span class="font-semibold"> {{ Auth::user()->name }} </span>. Berikut progres tugas Anda.</p>
+                    <p class="text-sm text-gray-500 mt-1">Selamat datang kembali,<span class="font-semibold">{{$auditor->nama_lengkap}} </span>. Berikut progres tugas Anda.</p>
                 </div>
                 
                 <div class="flex flex-col items-end">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Status Penugasan Periode Ini</span>
-                    @if($is_selected != null)
+                    @if($jumlah_upt > 0)
                         <div class="flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-full border border-green-200 shadow-sm">
                             <i class="bi bi-check-circle-fill mr-2"></i>
                             <span class="text-sm font-bold">Terpilih Sebagai Auditor</span>
@@ -34,7 +34,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Unit Audit (UPT)</p>
-                        <p class="text-2xl font-bold text-gray-900">20</p>
+                        <p class="text-2xl font-bold text-gray-900">{{$jumlah_upt}}</p>
                         <p class="text-xs text-gray-400">Ditugaskan kepada Anda</p>
                     </div>
                 </div>

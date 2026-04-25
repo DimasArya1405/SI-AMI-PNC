@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
+use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,10 +105,17 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/ami/penugasan/tambah', [PenugasanController::class, 'tambah'])->name('admin.ami.penugasan.tambah');
     Route::put('/admin/ami/penugasan/edit', [PenugasanController::class, 'edit'])->name('admin.ami.penugasan.edit');
     Route::put('/admin/ami/penugasan/aktifkan/{id}', [PenugasanController::class, 'aktifkan'])->name('admin.ami.penugasan.aktifkan');
+    Route::get('/admin/ami/penugasan/export/{id}', [PenugasanController::class, 'exportPdf'])->name('admin.ami.penugasan.export');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/dashboard', [AuditorController::class, 'index'])->name('auditor.dashboard');
+
+    // ROUTE PENUGASAN
+    Route::get('/auditor/penugasan', [AuditorPenugasanController::class, 'index'])->name('auditor.penugasan');
+    Route::get('/auditor/penugasan/ajukan', [AuditorPenugasanController::class, 'ajukan'])->name('auditor.penugasan.ajukan');
+    Route::post('/auditor/penugasan/setuju', [AuditorPenugasanController::class, 'setuju'])->name('auditor.penugasan.setuju');
+    Route::post('/auditor/penugasan/tolak', [AuditorPenugasanController::class, 'tolak'])->name('auditor.penugasan.tolak');
 });
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
