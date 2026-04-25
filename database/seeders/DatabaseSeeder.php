@@ -17,11 +17,13 @@ class DatabaseSeeder extends Seeder
     {
 
         $this->call([
+            PeriodeSeeder::class,
             UserSeeder::class,
             ProdiSeeder::class,
             UptSeeder::class,
             AuditeeSeeder::class,
-            AuditorSeeder::class
+            AuditorSeeder::class,
+            StandarMutuSeeder::class
         ]);
     }
 }
