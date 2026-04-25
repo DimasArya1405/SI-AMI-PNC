@@ -111,6 +111,9 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 
     // ROUTE PENUGASAN
     Route::get('/auditor/penugasan', [AuditorPenugasanController::class, 'index'])->name('auditor.penugasan');
+    Route::get('/auditor/penugasan/ajukan', [AuditorPenugasanController::class, 'ajukan'])->name('auditor.penugasan.ajukan');
+    Route::post('/auditor/penugasan/setuju', [AuditorPenugasanController::class, 'setuju'])->name('auditor.penugasan.setuju');
+    Route::post('/auditor/penugasan/tolak', [AuditorPenugasanController::class, 'tolak'])->name('auditor.penugasan.tolak');
 });
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {

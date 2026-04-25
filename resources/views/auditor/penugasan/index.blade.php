@@ -1,20 +1,9 @@
-<x-app-layout>
-    @include('auditor.sidebar')
-    <div class="py-6 ml-60">
+<x-app-layout> @include('auditor.sidebar') <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __('Data Penugasan') }}
-                </div>
+                <div class="p-6 text-gray-900"> {{ __('Data Penugasan') }} </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
-                <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
-                    <div class="font-semibold">Program Studi</div>
-                    <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
-                        class="bg-blue-500 text-sm font-semibold text-white px-4 py-1 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
-                        <i class="bi bi-download mr-2"></i>Export PDF
-                    </a>
-                </div>
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     <div
                         class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default">
@@ -30,41 +19,338 @@
                             </thead>
                             <tbody>
                                 @forelse ($penugasanProdi as $item)
+                                    @php
+                                        // Pindahkan logika ke sini agar variabel tersedia untuk baris table dan modal
+                                        $dataPengajuan = $item->pengajuan_jadwal_audit
+                                            ? $item->pengajuan_jadwal_audit->first()
+                                            : null;
+                                        $isPengaju = $dataPengajuan ? $dataPengajuan->id_pengaju == $auditor_id : false;
+                                        $sudahSetuju = false;
+
+                                        if ($dataPengajuan) {
+                                            if (
+                                                $item->auditor_id_1 == $auditor_id &&
+                                                $dataPengajuan->ketua_auditor == 1
+                                            ) {
+                                                $sudahSetuju = true;
+                                            } elseif (
+                                                $item->auditor_id_2 == $auditor_id &&
+                                                $dataPengajuan->anggota_auditor == 1
+                                            ) {
+                                                $sudahSetuju = true;
+                                            }
+                                        }
+
+                                        if ($item->pengajuan_jadwal_audit->count() > 0) {
+                                            $statusUPT = $item->pengajuan_jadwal_audit->first()->upt;
+                                            $statusKetua = $item->pengajuan_jadwal_audit->first()->ketua_auditor;
+                                            $statusAnggota = $item->pengajuan_jadwal_audit->first()->anggota_auditor;
+                                            $done = 0;
+                                            if ($statusUPT == 1 && $statusKetua == 1 && $statusAnggota == 1) {
+                                                $done = 1;
+                                            }
+                                        }
+                                        // $statusUPT = $dataPengajuan ? $dataPengajuan->upt == 1 : false;
+                                        // $statusKetua = $dataPengajuan ? $dataPengajuan->ketua_auditor == 1 : false;
+                                        // $statusAnggota = $dataPengajuan ? $dataPengajuan->anggota_auditor == 1 : false;
+                                        $pengaju = $dataPengajuan
+                                            ? $dataPengajuan->auditor->nama_lengkap ??
+                                                ($dataPengajuan->upt->nama_upt ?? 'Tidak Diketahui')
+                                            : 'Tidak Ada';
+                                    @endphp
                                     <tr class="bg-neutral-primary border-b border-default">
                                         <td class="px-6 py-4 font-medium text-center">{{ $loop->iteration }}</td>
                                         <td class="px-6 py-4 font-bold">{{ $item->upt->nama_upt }}</td>
                                         <td class="px-6 py-4">
-                                            <div class="flex flex-col gap-1">
-                                                <span
+                                            <div class="flex flex-col gap-1"> <span
                                                     class="text-xs text-green-600 font-semibold uppercase">Ketua:</span>
                                                 <span
                                                     class="font-bold">{{ $item->auditor1->nama_lengkap ?? '-' }}</span>
-                                                <hr class="w-full border-gray-100">
-                                                <span
+                                                <hr class="w-full border-gray-100"> <span
                                                     class="text-xs text-blue-600 font-semibold uppercase">Anggota:</span>
                                                 <span
                                                     class="font-bold">{{ $item->auditor2->nama_lengkap ?? '-' }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span
-                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span><br>
-                                            <span class="text-gray-500">{{ $item->jam }} WIB</span>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <div class="flex flex-col gap-2">
+                                                @if ($dataPengajuan && $statusUPT && $statusKetua && $statusAnggota)
+                                                    {{-- KONDISI 1: JADWAL SUDAH DISETUJUI SEMUA PIHAK --}}
+
+                                                    {{-- Tampilan Jadwal Awal (Dicoret) --}}
+                                                    <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                                        <span
+                                                            class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Jadwal
+                                                            Awal</span>
+                                                        <div
+                                                            class="flex items-center gap-1.5 text-gray-500 line-through">
+                                                            <svg class="w-3.5 h-3.5" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                </path>
+                                                            </svg>
+                                                            <span
+                                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                        </div>
+                                                        <span
+                                                            class="text-[11px] ml-5 text-gray-400 italic">{{ $item->jam }}
+                                                            WIB</span>
+                                                    </div>
+
+                                                    {{-- Tampilan Jadwal Akhir (Aktif/Baru) --}}
+                                                    <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                                        <span
+                                                            class="block text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jadwal
+                                                            Akhir (Revisi)</span>
+                                                        <div class="flex items-center gap-1.5 text-blue-900 font-bold">
+                                                            <svg class="w-3.5 h-3.5 text-blue-500" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                                </path>
+                                                            </svg>
+                                                            <span>{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->format('d M Y') }}</span>
+                                                        </div>
+                                                        <span
+                                                            class="text-[11px] ml-5 text-blue-700 font-medium">{{ $dataPengajuan->jam }}
+                                                            WIB</span>
+                                                    </div>
+                                                @elseif ($dataPengajuan)
+                                                    {{-- KONDISI 2: ADA PENGAJUAN TAPI BELUM DISIDANG/DISETUJUI SEMUA --}}
+                                                    <div class="flex flex-col">
+                                                        <div class="flex items-center gap-1.5 font-bold text-gray-900">
+                                                            <svg class="w-4 h-4 text-gray-400" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                </path>
+                                                            </svg>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                        </div>
+                                                        <div
+                                                            class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
+                                                            <span>{{ $item->jam }} WIB</span>
+                                                        </div>
+                                                        <div
+                                                            class="mt-2 inline-flex items-center text-[10px] text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-100 self-start">
+                                                            <span class="relative flex h-2 w-2 mr-1.5">
+                                                                <span
+                                                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                                                                <span
+                                                                    class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                                                            </span>
+                                                            Ada Pengajuan Perubahan
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    {{-- KONDISI 3: JADWAL NORMAL --}}
+                                                    <div class="flex flex-col">
+                                                        <div class="flex items-center gap-1.5 font-bold text-gray-800">
+                                                            <svg class="w-4 h-4 text-gray-400" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                </path>
+                                                            </svg>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                        </div>
+                                                        <div
+                                                            class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
+                                                            <span>{{ $item->jam }} WIB</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            {{-- Ganti URL ini sesuai route detail audit Anda --}}
-                                            <a href="#"
-                                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition">
-                                                <i class="bi bi-calendar-check mr-1"></i> Ajukan Jadwal
-                                            </a><br>
-                                            <a href="#"
-                                                class="inline-flex items-center px-3 mt-2 py-1.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition">
-                                                <i class="bi bi-check-circle mr-1"></i> Setujui Jadwal
-                                            </a>
+                                            @if ($dataPengajuan)
+                                                <button data-modal-target="modal-lihat-pengajuan"
+                                                    data-modal-toggle="modal-lihat-pengajuan"
+                                                    data-idpenugasan="{{ $item->penugasan_id }}"
+                                                    data-tanggal="{{ $dataPengajuan->tanggal_audit }}"
+                                                    data-jam="{{ $dataPengajuan->jam }}"
+                                                    data-alasan="{{ $dataPengajuan->alasan }}"
+                                                    data-idpengaju="{{ $dataPengajuan->id_pengaju }}"
+                                                    data-pengaju="{{ $pengaju }}"
+                                                    data-tanggalold="{{ $item->tanggal_audit }}"
+                                                    data-jamold="{{ $item->jam }}"
+                                                    class="inline-flex button-lihat-pengajuan items-center px-3 py-1.5 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition mb-2">
+                                                    <i class="bi bi-eye mr-1"></i> Lihat Pengajuan </button>
+                                            @else
+                                                <div data-modal-target="modal-ajukan" data-modal-toggle="modal-ajukan"
+                                                    data-idpenugasan="{{ $item->penugasan_id }}"
+                                                    data-tanggal="{{ $item->tanggal_audit }}"
+                                                    data-jam="{{ $item->jam }}"
+                                                    class="inline-flex ajukan-jadwal cursor-pointer items-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition">
+                                                    <i class="bi bi-calendar-check mr-1"></i> Ajukan Jadwal
+                                                </div>
+                                            @endif
                                         </td>
                                     </tr>
-                                @empty
-                                    <tr>
+
+                                    {{-- MODAL LIHAT PENGAJUAN (Diletakkan di dalam loop agar status per item sesuai) --}}
+                                    @if ($item->pengajuan_jadwal_audit->count() > 0)
+                                        <div id="modal-lihat-pengajuan" tabindex="-1" aria-hidden="true"
+                                            class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full">
+                                            <div class="relative p-4 w-full max-w-lg">
+                                                <div
+                                                    class="relative bg-white border border-default rounded-base shadow-sm flex flex-col max-h-[90vh]">
+                                                    <div
+                                                        class="flex items-center justify-between border-b border-default p-4 md:px-6 md:py-4">
+                                                        <h3 class="text-lg font-medium text-heading">Detail Pengajuan
+                                                            Jadwal</h3>
+                                                        <button type="button" class="text-body hover:text-heading"
+                                                            data-modal-hide="modal-lihat-pengajuan">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                    <div class="p-4 md:px-6 overflow-y-auto">
+                                                        <form id="form-konfirmasi-jadwal" method="post"> @csrf
+                                                            <input type="hidden" id="penugasan_id_detail"
+                                                                name="penugasan_id">
+                                                            <input type="hidden" id="auditor_id_detail"
+                                                                name="auditor_id" value="{{ $auditor_id }}">
+                                                            <div
+                                                                class="mb-6 p-3 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                                                                <p
+                                                                    class="text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-wider">
+                                                                    Status Konfirmasi :</p>
+                                                                <div class="flex flex-wrap gap-2">
+                                                                    <span
+                                                                        class="flex items-center px-2 py-1 rounded text-[11px] font-medium {{ $statusUPT ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500' }}">
+                                                                        <i
+                                                                            class="bi {{ $statusUPT ? 'bi-check-circle-fill' : 'bi-clock-history' }} mr-1"></i>
+                                                                        UPT / Auditee
+                                                                    </span>
+                                                                    <span
+                                                                        class="flex items-center px-2 py-1 rounded text-[11px] font-medium {{ $statusKetua ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500' }}">
+                                                                        <i
+                                                                            class="bi {{ $statusKetua ? 'bi-check-circle-fill' : 'bi-clock-history' }} mr-1"></i>
+                                                                        Ketua Auditor
+                                                                    </span>
+                                                                    <span
+                                                                        class="flex items-center px-2 py-1 rounded text-[11px] font-medium {{ $statusAnggota ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500' }}">
+                                                                        <i
+                                                                            class="bi {{ $statusAnggota ? 'bi-check-circle-fill' : 'bi-clock-history' }} mr-1"></i>
+                                                                        Anggota Auditor
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="grid gap-4 grid-cols-12">
+                                                                <div class="col-span-12">
+                                                                    <label
+                                                                        class="block mb-1 text-sm font-medium text-heading">Pengaju
+                                                                        :</label>
+                                                                    <input type="text" id="pengaju"
+                                                                        class="bg-gray-50 border border-default text-gray-600 text-sm rounded-base block w-full px-3 py-2"
+                                                                        readonly>
+                                                                </div>
+                                                                <div class="col-span-5">
+                                                                    <label
+                                                                        class="block mb-1 text-[10px] font-medium text-gray-400 uppercase">Tanggal
+                                                                        Lama</label>
+                                                                    <input type="date" id="tanggal_detail_old"
+                                                                        class="bg-gray-50 border border-default text-gray-400 text-sm rounded-base block w-full px-3 py-2"
+                                                                        readonly>
+                                                                </div>
+                                                                <div
+                                                                    class="col-span-2 flex items-center justify-center pt-5">
+                                                                    <i
+                                                                        class="bi bi-arrow-right text-blue-600 text-xl"></i>
+                                                                </div>
+                                                                <div class="col-span-5">
+                                                                    <label
+                                                                        class="block mb-1 text-[10px] font-medium text-blue-600 uppercase">Tanggal
+                                                                        Baru</label>
+                                                                    <input type="date" id="tanggal_detail"
+                                                                        class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-base block w-full px-3 py-2 font-bold"
+                                                                        readonly>
+                                                                </div>
+                                                                <div class="col-span-5">
+                                                                    <label
+                                                                        class="block mb-1 text-[10px] font-medium text-gray-400 uppercase">Jam
+                                                                        Lama</label>
+                                                                    <input type="time" id="jam_detail_old"
+                                                                        class="bg-gray-50 border border-default text-gray-400 text-sm rounded-base block w-full px-3 py-2"
+                                                                        readonly>
+                                                                </div>
+                                                                <div
+                                                                    class="col-span-2 flex items-center justify-center pt-5">
+                                                                    <i
+                                                                        class="bi bi-arrow-right text-blue-600 text-xl"></i>
+                                                                </div>
+                                                                <div class="col-span-5">
+                                                                    <label
+                                                                        class="block mb-1 text-[10px] font-medium text-blue-600 uppercase">Jam
+                                                                        Baru</label>
+                                                                    <input type="time" id="jam_detail"
+                                                                        class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-base block w-full px-3 py-2 font-bold"
+                                                                        readonly>
+                                                                </div>
+                                                                <div class="col-span-12 mb-4">
+                                                                    <label
+                                                                        class="block mb-1 text-sm font-medium text-heading">Alasan
+                                                                        Perubahan</label>
+                                                                    <textarea id="alasan_detail" rows="3"
+                                                                        class="bg-gray-50 border border-default text-sm text-gray-600 rounded-lg block w-full p-2.5 shadow-inner" readonly></textarea>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    <div
+                                                        class="p-4 md:px-6 border-t border-default bg-gray-50 rounded-b-base">
+                                                        <div class="flex items-center space-x-3">
+                                                            @if (!$isPengaju && !$sudahSetuju)
+                                                                <button type="submit" form="form-konfirmasi-jadwal"
+                                                                    formaction="{{ route('auditor.penugasan.setuju') }}"
+                                                                    class="flex-1 rounded-lg text-white bg-green-600 hover:bg-green-700 font-bold text-sm px-4 py-2.5 transition flex justify-center items-center">
+                                                                    <i class="bi bi-check-circle mr-2"></i> Setuju
+                                                                </button>
+                                                                <button type="submit" form="form-konfirmasi-jadwal"
+                                                                    formaction="{{ route('auditor.penugasan.tolak') }}"
+                                                                    onclick="document.getElementById('auditor_id_detail').disabled = true;"
+                                                                    class="flex-1 rounded-lg text-white bg-red-600 hover:bg-red-700 font-bold text-sm px-4 py-2.5 transition flex justify-center items-center">
+                                                                    <i class="bi bi-x-circle mr-2"></i> Tolak
+                                                                </button>
+                                                            @else
+                                                                @if ($done == 1)
+                                                                    <div
+                                                                        class="w-full p-2.5 bg-green-100 border border-green-200 text-green-800 rounded-lg text-center text-xs font-medium">
+                                                                        <i class="bi bi-check-all mr-1"></i> Jadwal
+                                                                        sudah disetujui oleh semua pihak
+                                                                    </div>
+                                                                @else
+                                                                    <div
+                                                                        class="w-full p-2.5 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-center text-xs font-medium">
+                                                                        @if ($isPengaju)
+                                                                            <i class="bi bi-info-circle mr-1"></i>
+                                                                            Menunggu
+                                                                            konfirmasi pihak terkait.
+                                                                        @else
+                                                                            <i class="bi bi-check-all mr-1"></i> Anda
+                                                                            telah
+                                                                            mengonfirmasi pengajuan ini.
+                                                                        @endif
+                                                                    </div>
+                                                                @endif
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                @empty <tr>
                                         <td colspan="5" class="px-6 py-10 text-center italic">Belum ada penugasan
                                             untuk Anda pada kategori ini.</td>
                                     </tr>
@@ -74,284 +360,94 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    {{-- MODAL TAMBAH --}}
-    <div id="modal-penugasan" tabindex="-1" aria-hidden="true"
+    {{-- MODAL AJUKAN (Di luar loop karena data diisi via JS) --}}
+    <div id="modal-ajukan" tabindex="-1" aria-hidden="true"
         class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
         <div class="relative p-4 w-full max-w-md max-h-full">
-            <!-- Modal content -->
             <div class="relative bg-white border border-default rounded-base shadow-sm p-4 md:p-6">
-                <!-- Modal header -->
                 <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
-                    <h3 class="text-lg font-medium text-heading">
-                        Buat Penugasan
-                    </h3>
+                    <h3 class="text-lg font-medium text-heading"> Form Pengajuan Ganti Jadwal </h3>
                     <button type="button"
                         class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
-                        data-modal-hide="modal-penugasan">
+                        data-modal-hide="modal-ajukan">
                         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
                             height="24" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
                         </svg>
-                        <span class="sr-only">Close modal</span>
                     </button>
                 </div>
-                <!-- Modal body -->
-                <form action="{{ route('admin.ami.penugasan.tambah') }}" method="post">
-                    @csrf
-                    @method('post')
+                <form action="{{ route('auditor.penugasan.ajukan') }}" method="post"> @csrf @method('get')
                     <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
-                        <input type="hidden" id="periode_id" name="periode_id">
-                        <input type="hidden" id="upt_id" name="upt_id">
-                        <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
-                                Ketua Auditor
-                            </label>
-                            <select id="" name="auditor_1"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
-                                @foreach ($auditor as $item)
-                                    <option value="{{ $item->auditor_id }}">{{ $item->nip }} -
-                                        {{ $item->nama_lengkap }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
-                                Anggota Auditor
-                            </label>
-                            <select id="" name="auditor_2"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
-                                @foreach ($auditor as $item)
-                                    <option value="{{ $item->auditor_id }}"> {{ $item->nip }} -
-                                        {{ $item->nama_lengkap }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <input type="hidden" id="penugasan_id" name="penugasan_id">
+                        <input type="hidden" id="auditor_id" name="auditor_id" value="{{ $auditor_id }}">
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="price"
-                                class="block mb-2.5 text-sm font-medium text-heading">Tanggal</label>
-                            <input type="date" name="tanggal" id="price"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
-                        </div>
-                        <div class="col-span-2 sm:col-span-1">
-                            <label for="jam" class="block mb-2.5 text-sm font-medium text-heading">Waktu
-                                (Jam)</label>
-                            <input type="time" name="jam" id="jam"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs"
-                                required>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
-                        <button type="submit"
-                            class="inline-flex items-center  text-white bg-blue-500 hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none hover:bg-blue-700 transition duration-200 ease-in-out">
-                            <svg class="w-4 h-4 me-1.5 -ms-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="M5 12h14m-7 7V5" />
-                            </svg>
-                            Simpan Penugasan
-                        </button>
-                        <button data-modal-hide="modal-penugasan" type="button"
-                            class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    {{-- MODAL AKTIF PENUGASAN --}}
-    <div id="modal-konfirmasi-aktif" tabindex="-1" aria-hidden="true"
-        class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
-        <div class="relative p-4 w-full max-w-md max-h-full">
-            <div class="relative bg-white rounded-lg shadow-sm border">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <h3 class="text-lg font-semibold text-gray-900">Status Kesiapan UPT</h3>
-                    <button type="button"
-                        class="text-gray-400 bg-transparent hover:bg-gray-200 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
-                        data-modal-toggle="modal-konfirmasi-aktif">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="p-4 md:p-5">
-                    <p class="text-sm text-gray-500 mb-2">Pastikan setiap UPT memiliki 2 auditor (Tanda <span
-                            class="text-green-600 font-bold">✔</span>).</p>
-                    <p class="px-2 py-1 text-sm text-red-700 bg-red-100 mb-4 rounded-sm">Pastikan semua data penugasan
-                        sudah benar!!!</p>
-                    <ul class="max-h-60 overflow-y-auto divide-y divide-gray-100 border rounded-lg">
-                        @foreach ($upts as $upt)
-                            <li
-                                class="flex items-center justify-between p-3 {{ $upt->penugasan_count == 2 ? 'bg-green-50/50' : 'bg-white' }}">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-gray-800">{{ $upt->nama_upt }}</span>
-                                    <span class="text-xs text-gray-500">{{ $upt->penugasan_count }}/2 Auditor
-                                        Terdaftar</span>
-                                </div>
-
-                                @if ($upt->penugasan_count == 2)
-                                    <div class="flex items-center justify-center w-6 h-6 bg-green-100 rounded-full">
-                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
-                                @else
-                                    <div class="flex items-center justify-center w-6 h-6 bg-red-100 rounded-full">
-                                        <span class="text-red-600 font-bold text-xs">!</span>
-                                    </div>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
-
-                    <div class="mt-5 flex gap-3">
-                        @php
-                            $siapAktif = $upts->every(fn($u) => $u->penugasan_count == 2);
-                        @endphp
-
-                        @if ($siapAktif)
-                            <form action="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" method="POST"
-                                class="w-full">
-                                @csrf
-                                @method('put')
-                                <button type="submit"
-                                    class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
-                                    Konfirmasi & Aktifkan Semua
-                                </button>
-                            </form>
-                        @else
-                            <button disabled
-                                class="w-full text-white bg-gray-400 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                                Penugasan Belum Lengkap
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {{-- MODAL EDIT PENUGASAN --}}
-    <div id="modal-edit-penugasan" tabindex="-1" aria-hidden="true"
-        class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
-        <div class="relative p-4 w-full max-w-md max-h-full">
-            <!-- Modal content -->
-            <div class="relative bg-white border border-default rounded-base shadow-sm p-4 md:p-6">
-                <!-- Modal header -->
-                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
-                    <h3 class="text-lg font-medium text-heading">
-                        Edit Penugasan
-                    </h3>
-                    <button type="button"
-                        class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
-                        data-modal-hide="modal-edit-penugasan">
-                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
-                            height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
-                </div>
-                <!-- Modal body -->
-                <form action="{{ route('admin.ami.penugasan.edit') }}" method="post">
-                    @csrf
-                    @method('put')
-                    <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
-                        <input type="hidden" id="periode_id_edit" name="periode_id">
-                        <input type="hidden" id="upt_id_edit" name="upt_id">
-                        <input type="hidden" id="auditor_1_old" name="auditor_1_old">
-                        <input type="hidden" id="auditor_2_old" name="auditor_2_old">
-                        <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Auditor
-                                1</label>
-                            <select id="auditor_1" name="auditor_1"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
-                                @foreach ($auditor as $item)
-                                    <option value="{{ $item->auditor_id }}">{{ $item->nip }} -
-                                        {{ $item->nama_lengkap }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Auditor
-                                2</label>
-                            <select id="auditor_2" name="auditor_2"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
-                                @foreach ($auditor as $item)
-                                    <option value="{{ $item->auditor_id }}"> {{ $item->nip }} -
-                                        {{ $item->nama_lengkap }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1">
-                            <label for="price"
-                                class="block mb-2.5 text-sm font-medium text-heading">Tanggal</label>
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Tanggal</label>
                             <input type="date" name="tanggal" id="tanggal"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Jam</label>
-                            <input type="time" name="jam" id="jam_2"
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Jam</label>
+                            <input type="time" name="jam" id="jam"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required="">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Alasan Perubahan
+                                Jadwal</label>
+                            <textarea id="alasan" name="alasan" rows="4"
+                                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Tuliskan alasan detail mengenai pengajuan perubahan jadwal di sini..." required></textarea>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
                         <button type="submit"
-                            class="inline-flex items-center  text-white bg-blue-500 hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none hover:bg-blue-700 transition duration-200 ease-in-out">
+                            class="inline-flex items-center text-white bg-blue-500 hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none hover:bg-blue-700 transition duration-200 ease-in-out">
                             <svg class="w-4 h-4 me-1.5 -ms-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                 width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="M5 12h14m-7 7V5" />
-                            </svg>
-                            Simpan Penugasan
+                            </svg> Ajukan Jadwal
                         </button>
-                        <button data-modal-hide="modal-edit-penugasan" type="button"
+                        <button data-modal-hide="modal-ajukan" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    {{-- JS --}}
+
     @push('js')
         <script>
-            $(document).on('click', '.button-penugasan', function() {
-                let upt_id = $(this).data('uptid');
-                let periode_id = $(this).data('periodeid');
-                $('#periode_id').val(periode_id);
-                $('#upt_id').val(upt_id);
-            });
-            $(document).on('click', '.button-edit-penugasan', function() {
-                let upt_id = $(this).data('uptid');
-                let periode_id = $(this).data('periodeid');
-                let auditor_1 = $(this).data('auditorid_1');
-                let auditor_2 = $(this).data('auditorid_2');
-                let jam = $(this).data('jam');
+            $(document).on('click', '.ajukan-jadwal', function() {
+                let id_penugasan = $(this).data('idpenugasan');
                 let tanggal = $(this).data('tanggal');
-                $('#periode_id_edit').val(periode_id);
-                $('#upt_id_edit').val(upt_id);
-                $('#auditor_1').val(auditor_1);
-                $('#auditor_2').val(auditor_2);
-                $('#auditor_1_old').val(auditor_1);
-                $('#auditor_2_old').val(auditor_2);
-                $('#jam_2').val(jam);
+                let jam = $(this).data('jam');
+                $('#penugasan_id').val(id_penugasan);
                 $('#tanggal').val(tanggal);
+                $('#jam').val(jam);
+            });
+            $(document).on('click', '.button-lihat-pengajuan', function() {
+                let id_penugasan = $(this).data('idpenugasan');
+                let tanggal = $(this).data('tanggal');
+                let jam = $(this).data('jam');
+                let tanggal_old = $(this).data('tanggalold');
+                let jam_old = $(this).data('jamold');
+                let alasan = $(this).data('alasan');
+                let pengaju = $(this).data('pengaju');
+
+                $('#penugasan_id_detail').val(id_penugasan);
+                $('#jam_detail').val(jam);
+                $('#tanggal_detail').val(tanggal);
+                $('#jam_detail_old').val(jam_old);
+                $('#tanggal_detail_old').val(tanggal_old);
+                $('#alasan_detail').val(alasan);
+                $('#pengaju').val(pengaju);
             });
         </script>
     @endpush
-    {{-- {!! $dataTable->scripts() !!} --}}
 </x-app-layout>
