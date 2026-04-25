@@ -69,13 +69,80 @@
                                                 <span class="text-red-500 italic">Belum ada auditor</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4">
-                                            {{-- Contoh menampilkan jadwal dari data penugasan pertama --}}
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
-                                            @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $jam }} WIB
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            @php
+                                                $penugasan = $item->penugasan->first();
+                                                $pengajuan = $penugasan
+                                                    ? $penugasan->pengajuan_jadwal_audit->first()
+                                                    : null;
+                                            @endphp
+
+                                            @if ($penugasan)
+                                                <div class="flex flex-col gap-2">
+                                                    {{-- Kondisi jika ada pengajuan jadwal baru dan sudah disetujui semua pihak (1) --}}
+                                                    @if ($pengajuan && $pengajuan->ketua_auditor == 1 && $pengajuan->anggota_auditor == 1 && $pengajuan->upt == 1)
+                                                        {{-- Bagian Jadwal Awal --}}
+                                                        <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                                            <span
+                                                                class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Jadwal
+                                                                Awal</span>
+                                                            <div
+                                                                class="flex items-center gap-1.5 text-gray-500 line-through">
+                                                                <svg class="w-4 h-4" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <span
+                                                                class="text-xs ml-5 text-gray-400 italic">{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
+                                                        </div>
+
+                                                        {{-- Bagian Jadwal Baru (Revisi) --}}
+                                                        <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                                            <span
+                                                                class="block text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jadwal
+                                                                Akhir</span>
+                                                            <div
+                                                                class="flex items-center gap-1.5 text-blue-900 font-semibold">
+                                                                <svg class="w-4 h-4 text-blue-500" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $pengajuan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <span
+                                                                class="text-xs ml-5 text-blue-700">{{ $pengajuan->jam ? $pengajuan->jam . ' WIB' : '-' }}</span>
+                                                        </div>
+                                                    @else
+                                                        {{-- Tampilan Standar jika tidak ada perubahan jadwal --}}
+                                                        <div class="flex flex-col">
+                                                            <div
+                                                                class="flex items-center gap-1.5 font-medium text-gray-900">
+                                                                <svg class="w-4 h-4 text-gray-400" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                            </div>
+                                                            <div
+                                                                class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5">
+                                                                <span>{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             @else
-                                                -
+                                                <span class="text-gray-400 italic">Belum ada penugasan</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 flex flex-col gap-2">
@@ -84,7 +151,8 @@
                                             @if (!$tugas)
                                                 {{-- Tombol Buat Penugasan --}}
                                                 <button data-modal-target="modal-penugasan"
-                                                    data-modal-toggle="modal-penugasan" data-uptId="{{ $item->upt_id }}"
+                                                    data-modal-toggle="modal-penugasan"
+                                                    data-uptId="{{ $item->upt_id }}"
                                                     data-periodeId="{{ $periode_id }}"
                                                     class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
                                                     Buat Penugasan

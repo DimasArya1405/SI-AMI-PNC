@@ -52,4 +52,9 @@ class Penugasan extends Model
     {
         return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
     }
+
+    public function pengajuan_jadwal_audit()
+    {
+        return $this->hasMany(PengajuanJadwalAudit::class, 'penugasan_id', 'penugasan_id');
+    }
 }

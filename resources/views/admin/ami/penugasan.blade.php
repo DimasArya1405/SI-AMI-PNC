@@ -15,7 +15,6 @@
                         <i class="bi bi-plus"></i> <span class="text-sm">Tambah Data</span>
                     </button>
                 </div>
-
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     {!! $dataTable->table(['class' => 'table table-striped table-bordered align-middle w-100'], true) !!}
                 </div>

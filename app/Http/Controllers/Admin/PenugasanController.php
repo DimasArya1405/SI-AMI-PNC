@@ -26,13 +26,13 @@ class PenugasanController extends Controller
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
                 // Load kedua auditor sekaligus
-                $query->where('periode_id', $id)->with(['auditor1', 'auditor2']);
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2','pengajuan_jadwal_audit']);
             }])
             ->get();
 
         $uptBagian = UPT::where('kategori_upt', 'Unit/Bagian')
             ->with(['penugasan' => function ($query) use ($id) {
-                $query->where('periode_id', $id)->with(['auditor1', 'auditor2']);
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2','pengajuan_jadwal_audit']);
             }])
             ->get();
         $penugasan = Penugasan::where('periode_id', $id)->get();
@@ -147,13 +147,13 @@ class PenugasanController extends Controller
         // 1. Ambil data berdasarkan ID periode yang dikirim
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
-                $query->where('periode_id', $id)->with('auditor');
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2']);
             }])
             ->get();
 
         $uptBagian = UPT::where('kategori_upt', 'Unit/Bagian')
             ->with(['penugasan' => function ($query) use ($id) {
-                $query->where('periode_id', $id)->with('auditor');
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2']);
             }])
             ->get();
         $periode = Periode::where('id', $id)->first();

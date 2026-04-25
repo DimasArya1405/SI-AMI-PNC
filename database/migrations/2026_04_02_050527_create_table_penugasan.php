@@ -20,9 +20,6 @@ return new class extends Migration
 
             // Jadwal Audit
             $table->date('tanggal_audit')->nullable();
-            $table->date('tanggal_audit_auditee')->nullable();
-            $table->date('tanggal_audit_auditor_1')->nullable();
-            $table->date('tanggal_audit_auditor_2')->nullable();
             $table->time('jam')->nullable();
 
             $table->enum('status_penugasan', ['pending','aktif', 'selesai'])

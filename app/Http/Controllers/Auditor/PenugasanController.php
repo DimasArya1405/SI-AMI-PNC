@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Auditor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Auditor;
+use App\Models\PengajuanJadwalAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\UPT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class PenugasanController extends Controller
 {
@@ -25,7 +27,7 @@ class PenugasanController extends Controller
                 $query->where('auditor_id_1', $auditor_id)
                     ->orWhere('auditor_id_2', $auditor_id);
             })
-            ->with(['upt', 'auditor1', 'auditor2'])
+            ->with(['upt', 'auditor1', 'auditor2','pengajuan_jadwal_audit'])
             ->get();        
 
 
@@ -45,5 +47,47 @@ class PenugasanController extends Controller
             'upts',
             'auditor_id'
         ));
+    }
+    public function ajukan(Request $request)
+    {
+        $penugasan = Penugasan::find($request->penugasan_id);
+
+        
+        $pengajuan_jadwal = new PengajuanJadwalAudit;
+        $pengajuan_jadwal->id = Str::uuid();
+        $pengajuan_jadwal->penugasan_id = $request->penugasan_id;
+        $pengajuan_jadwal->tanggal_audit = $request->tanggal;
+        $pengajuan_jadwal->jam = $request->jam;
+        $pengajuan_jadwal->id_pengaju = $request->auditor_id;
+        if($penugasan->auditor_id_1 == $request->auditor_id){
+            $pengajuan_jadwal->ketua_auditor = 1;
+        }else{
+            $pengajuan_jadwal->anggota_auditor = 1;
+        }
+        $pengajuan_jadwal->alasan = $request->alasan;
+        $pengajuan_jadwal->save();
+        
+        return back()->with('success', 'Penugasan berhasil disetujui');
+    }
+
+    public function setuju(Request $request)
+    {
+        $penugasan = Penugasan::find($request->penugasan_id);
+        $pengajuan_jadwal = PengajuanJadwalAudit::where('penugasan_id', $request->penugasan_id)->first();
+        if($penugasan->auditor_id_1 == $request->auditor_id_detail){
+            $pengajuan_jadwal->ketua_auditor = 1;
+            $pengajuan_jadwal->save();
+        }else{
+            $pengajuan_jadwal->anggota_auditor = 1;
+            $pengajuan_jadwal->save();
+        }
+        return back()->with('success', 'Penugasan berhasil disetujui');
+    }
+
+    public function tolak(Request $request)
+    {
+        $pengajuan_jadwal = PengajuanJadwalAudit::where('penugasan_id', $request->penugasan_id)->first();
+        $pengajuan_jadwal->delete();
+        return back()->with('success', 'Penugasan berhasil ditolak');
     }
 }
