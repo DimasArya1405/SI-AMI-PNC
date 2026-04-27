@@ -15,11 +15,11 @@
                             type="button">
                             <i class="bi bi-plus"></i> <span class="text-sm">Tambah Pemetaan</span>
                         </button>
-                        <button data-modal-target="modal-import" data-modal-toggle="modal-import"
-                            class="flex items-center gap-2 bg-purple-500 hover:bg-purple-700 text-white py-1 px-4 rounded"
-                            type="button">
-                            <i class="bi bi-upload"></i>
-                            <span class="text-sm">Import Excel</span>
+                        <button
+                            data-modal-target="modal-import"
+                            data-modal-toggle="modal-import"
+                            class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Import Excel
                         </button>
                         <button data-modal-target="modal-copy-periode" data-modal-toggle="modal-copy-periode"
                             class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded"
@@ -533,48 +533,114 @@
         </div>
     </div>
 
-    {{-- Modal Import --}}
-    <div id="modal-import" tabindex="-1" aria-hidden="true" class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">
-        <div class="relative p-4 w-full max-w-md">
-            <div class="bg-white shadow">
-                <form action="{{ route('admin.upt_standar_mutu.import') }}" method="POST" enctype="multipart/form-data">
+    {{-- MODAL IMPORT --}}
+    <div id="modal-import" tabindex="-1" aria-hidden="true"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+        <div class="relative w-full max-w-lg p-4">
+            <div class="relative bg-white rounded-2xl shadow-lg">
+
+                {{-- Header --}}
+                <div class="flex items-center justify-between p-5 border-b rounded-t">
+                    <h3 class="text-xl font-semibold text-gray-900">
+                        Import Excel Standar Mutu
+                    </h3>
+
+                    <button type="button"
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
+                        data-modal-hide="modal-import">
+                        ✕
+                    </button>
+                </div>
+
+                {{-- Form --}}
+                <form action="{{ route('admin.upt_standar_mutu.import') }}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="p-6 space-y-5">
                     @csrf
 
-                    <div class="p-4 border-b">
-                        <h3 class="text-lg font-semibold">Import Pemetaan Standar Mutu</h3>
+                    {{-- Periode --}}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Pilih Periode
+                        </label>
+                        <select name="periode_id"
+                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                            required>
+                            <option value="">-- Pilih Periode --</option>
+                            @foreach ($periodeList as $periode)
+                            <option value="{{ $periode->id }}">
+                                {{ $periode->tahun }}
+                            </option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <div class="p-4 space-y-4">
-                        <div>
-                            <label class="block mb-2 text-sm font-medium">Periode</label>
-                            <select name="periode_id" class="w-full border-gray-300 rounded-lg" required>
-                                @foreach ($periodeList as $item)
-                                <option value="{{ $item->periode_id }}">
-                                    {{ $item->tahun }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium">File Excel</label>
-                            <input type="file" name="file" accept=".xlsx,.xls"
-                                class="w-full border border-gray-300 rounded-lg p-2" required>
-                        </div>
+                    {{-- Target Import --}}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Target Import
+                        </label>
+                        <select name="target_type"
+                            id="target_type_import"
+                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                            required>
+                            <option value="all_prodi">Semua Prodi</option>
+                            <option value="unit_bagian">Unit / Bagian</option>
+                        </select>
                     </div>
 
-                    <div class="p-4 border-t flex justify-end gap-2">
-                        <button type="button" data-modal-hide="modal-import"
-                            class="px-4 py-2 bg-gray-200 rounded">
+                    {{-- Unit / Bagian --}}
+                    <div id="wrapper-upt-unit" class="hidden">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Pilih Unit / Bagian
+                        </label>
+
+                        <select name="upt_ids[]"
+                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">-- Pilih Unit / Bagian --</option>
+
+                            @foreach ($uptUnitBagian as $upt)
+                            <option value="{{ $upt->upt_id }}">
+                                {{ $upt->nama_upt }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- File Upload --}}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Upload File Excel
+                        </label>
+
+                        <input type="file"
+                            name="file_excel"
+                            accept=".xlsx,.xls"
+                            class="w-full border border-gray-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4
+                               file:rounded-lg file:border-0
+                               file:text-sm file:font-semibold
+                               file:bg-blue-50 file:text-blue-700
+                               hover:file:bg-blue-100"
+                            required>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button type="button"
+                            data-modal-hide="modal-import"
+                            class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">
                             Batal
                         </button>
 
                         <button type="submit"
-                            class="px-4 py-2 bg-purple-600 text-white rounded">
-                            Import
+                            class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                            Import Excel
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
@@ -582,6 +648,28 @@
     {{-- JS --}}
     @push('js')
     <script>
+        // JS MODAL IMPORT
+        document.addEventListener('DOMContentLoaded', function() {
+            const targetType = document.getElementById('target_type_import');
+            const wrapperUnit = document.getElementById('wrapper-upt-unit');
+            const selectUnit = wrapperUnit.querySelector('select');
+
+            function toggleUnit() {
+                if (targetType.value === 'unit_bagian') {
+                    wrapperUnit.classList.remove('hidden');
+                    selectUnit.disabled = false;
+                    selectUnit.required = true;
+                } else {
+                    wrapperUnit.classList.add('hidden');
+                    selectUnit.disabled = true;
+                    selectUnit.required = false;
+                    selectUnit.value = '';
+                }
+            }
+
+            targetType.addEventListener('change', toggleUnit);
+            toggleUnit();
+        });
         // JS MODAL TAMBAH
         document.addEventListener('DOMContentLoaded', function() {
             const radios = document.querySelectorAll('.target-type');

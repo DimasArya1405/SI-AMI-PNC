@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class UptStandarMutuController extends Controller
 {
@@ -410,16 +411,366 @@ class UptStandarMutuController extends Controller
     {
         $request->validate([
             'periode_id' => 'required|exists:periode,id',
-            'file' => 'required|mimes:xlsx,xls|max:10240',
+            'target_type' => 'required|in:all_prodi,unit_bagian',
+            'upt_ids' => 'exclude_unless:target_type,unit_bagian|required|array',
+            'upt_ids.*' => 'required|exists:upt,upt_id',
+            'file_excel' => 'required|file|mimes:xlsx,xls|max:10240',
         ]);
 
-        Excel::import(
-            new UptStandarMutuImport($request->periode_id),
-            $request->file('file')
+        try {
+            DB::transaction(function () use ($request) {
+                $spreadsheet = IOFactory::load($request->file('file_excel')->getPathname());
+
+                $uptIds = $this->getTargetUptIdsForImport($request);
+
+                $uptIds = array_values(array_filter($uptIds));
+
+                if (empty($uptIds)) {
+                    throw new \Exception('Target UPT belum dipilih.');
+                }
+
+                if ($request->target_type === 'unit_bagian') {
+                    $totalImport = 0;
+
+                    foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
+                        foreach ($uptIds as $uptId) {
+                            $totalImport += $this->importUnitBagianLangsung(
+                                $sheet,
+                                $uptId,
+                                $request->periode_id
+                            );
+                        }
+                    }
+
+                    if ($totalImport === 0) {
+                        throw new \Exception('Tidak ada data yang berhasil diimport dari Excel.');
+                    }
+
+                    return;
+                }
+
+                $standarMutuIds = [];
+                $urutanStandar = 1;
+
+                foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
+                    $namaStandar = trim((string) $sheet->getCell('E6')->getCalculatedValue());
+
+                    if ($namaStandar === '') {
+                        $namaStandar = trim($sheet->getTitle());
+                    }
+
+                    if ($namaStandar === '') {
+                        continue;
+                    }
+
+                    $standar = StandarMutu::updateOrCreate(
+                        [
+                            'nama_standar_mutu' => $namaStandar,
+                        ],
+                        [
+                            'urutan' => $urutanStandar,
+                        ]
+                    );
+
+                    $standarMutuIds[] = $standar->standar_mutu_id;
+
+                    $currentSubStandar = null;
+                    $lastLevel1Item = null;
+                    $lastLevel2Item = null;
+
+                    $subUrutan = 1;
+                    $itemUrutan = 1;
+
+                    for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
+                        $colA = trim((string) $sheet->getCell("A{$row}")->getCalculatedValue());
+                        $colB = trim((string) $sheet->getCell("B{$row}")->getCalculatedValue());
+
+                        if ($colA === '' && $colB === '') {
+                            continue;
+                        }
+
+                        if ($this->isImportHeaderRow($colA, $colB)) {
+                            continue;
+                        }
+
+                        // SUB STANDAR
+                        if ($colA !== '' && !is_numeric($colA) && $colB === '') {
+                            $currentSubStandar = SubStandarMutu::updateOrCreate(
+                                [
+                                    'standar_mutu_id' => $standar->standar_mutu_id,
+                                    'nama_sub_standar' => $colA,
+                                ],
+                                [
+                                    'urutan' => $subUrutan,
+                                ]
+                            );
+
+                            $lastLevel1Item = null;
+                            $lastLevel2Item = null;
+                            $subUrutan++;
+                            $itemUrutan = 1;
+
+                            continue;
+                        }
+
+                        if (!$currentSubStandar || $colB === '') {
+                            continue;
+                        }
+
+                        $namaItem = $colB;
+
+                        $level = 1;
+                        $parentItemId = null;
+
+                        if (is_numeric($colA)) {
+                            $level = 1;
+                            $parentItemId = null;
+                        } elseif (preg_match('/^[a-zA-Z]\./', $namaItem)) {
+                            $level = 2;
+                            $parentItemId = $lastLevel1Item?->item_sub_standar_id;
+                        } elseif (str_starts_with($namaItem, '-')) {
+                            $level = 3;
+                            $parentItemId = $lastLevel2Item?->item_sub_standar_id
+                                ?? $lastLevel1Item?->item_sub_standar_id;
+                        } else {
+                            $level = 2;
+                            $parentItemId = $lastLevel1Item?->item_sub_standar_id;
+                        }
+
+                        $tipeItem = $level === 1 ? 'pertanyaan' : 'sub_pertanyaan';
+
+                        $item = ItemSubStandarMutu::updateOrCreate(
+                            [
+                                'sub_standar_id' => $currentSubStandar->sub_standar_id,
+                                'parent_item_id' => $parentItemId,
+                                'nama_item' => $namaItem,
+                                'level' => $level,
+                            ],
+                            [
+                                'tipe_item' => $tipeItem,
+                                'urutan' => $itemUrutan,
+                            ]
+                        );
+
+                        if ($level === 1) {
+                            $lastLevel1Item = $item;
+                            $lastLevel2Item = null;
+                        }
+
+                        if ($level === 2) {
+                            $lastLevel2Item = $item;
+                        }
+
+                        $itemUrutan++;
+                    }
+
+                    $urutanStandar++;
+                }
+
+                if ($request->target_type === 'all_prodi') {
+                    foreach ($uptIds as $uptId) {
+                        foreach (array_unique($standarMutuIds) as $standarMutuId) {
+                            $this->sinkronisasiStandarDanTurunannya(
+                                $uptId,
+                                $standarMutuId,
+                                $request->periode_id
+                            );
+                        }
+                    }
+                }
+            });
+
+            return redirect()
+                ->route('admin.ami.upt_standar_mutu')
+                ->with('success', 'Import Excel berhasil. Data master dan pemetaan UPT berhasil disinkronkan.');
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Import gagal: ' . $e->getMessage());
+        }
+    }
+
+    private function importUnitBagianLangsung($sheet, $uptId, $periodeId): int
+    {
+        $totalInsert = 0;
+
+        $namaStandar = trim((string) $sheet->getCell('E6')->getCalculatedValue());
+
+        if ($namaStandar === '') {
+            $namaStandar = trim($sheet->getTitle());
+        }
+
+        if ($namaStandar === '') {
+            return 0;
+        }
+
+        $standar = StandarMutu::firstOrCreate(
+            ['nama_standar_mutu' => $namaStandar],
+            [
+                'standar_mutu_id' => (string) Str::uuid(),
+                'urutan' => 0,
+            ]
         );
 
-        return redirect()
-            ->back()
-            ->with('success', 'Data pemetaan berhasil diimport.');
+        $uptSubIds = DB::table('upt_sub_standar_mutu')
+            ->where('upt_id', $uptId)
+            ->where('periode_id', $periodeId)
+            ->where('standar_mutu_id', $standar->standar_mutu_id)
+            ->pluck('upt_sub_standar_id')
+            ->toArray();
+
+        if (!empty($uptSubIds)) {
+            DB::table('upt_item_sub_standar_mutu')
+                ->whereIn('upt_sub_standar_id', $uptSubIds)
+                ->delete();
+
+            DB::table('upt_sub_standar_mutu')
+                ->whereIn('upt_sub_standar_id', $uptSubIds)
+                ->delete();
+        }
+
+        $currentUptSubId = null;
+        $currentIndikatorItemId = null;
+
+        $subUrutan = 1;
+        $itemUrutan = 1;
+
+        for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
+            $colA = trim((string) $sheet->getCell("A{$row}")->getCalculatedValue());
+            $colB = trim((string) $sheet->getCell("B{$row}")->getCalculatedValue());
+
+            if ($colA === '' && $colB === '') {
+                continue;
+            }
+
+            $upperA = strtoupper($colA);
+            $upperB = strtoupper($colB);
+
+            if (
+                $upperA === 'NO' ||
+                $upperB === 'PERTANYAAN DAN PERNYATAAN' ||
+                $upperB === 'YA' ||
+                $upperB === 'TIDAK' ||
+                $upperB === 'URAIAN (BUKTI)' ||
+                $upperB === 'AUDITEE'
+            ) {
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | SUB STANDAR
+        |--------------------------------------------------------------------------
+        */
+            if (
+                $colA !== '' &&
+                $colB === '' &&
+                str_starts_with($upperA, 'STANDAR ') &&
+                !str_starts_with($upperA, 'INDIKATOR')
+            ) {
+                $currentUptSubId = (string) Str::uuid();
+
+                DB::table('upt_sub_standar_mutu')->insert([
+                    'upt_sub_standar_id' => $currentUptSubId,
+                    'upt_id' => $uptId,
+                    'standar_mutu_id' => $standar->standar_mutu_id,
+                    'periode_id' => $periodeId,
+                    'sub_standar_master_id' => null,
+                    'nama_sub_standar' => $colA,
+                    'urutan' => $subUrutan,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $totalInsert++;
+
+                $currentIndikatorItemId = null;
+                $subUrutan++;
+                $itemUrutan = 1;
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | ITEM UTAMA LEVEL 1: INDIKATOR KEBERHASILAN
+        |--------------------------------------------------------------------------
+        */
+            if (
+                $currentUptSubId &&
+                $colA !== '' &&
+                $colB === '' &&
+                str_starts_with($upperA, 'INDIKATOR KEBERHASILAN')
+            ) {
+                $currentIndikatorItemId = (string) Str::uuid();
+
+                DB::table('upt_item_sub_standar_mutu')->insert([
+                    'upt_item_sub_standar_id' => $currentIndikatorItemId,
+                    'upt_id' => $uptId,
+                    'periode_id' => $periodeId,
+                    'upt_sub_standar_id' => $currentUptSubId,
+                    'item_sub_standar_master_id' => null,
+                    'parent_upt_item_id' => null,
+                    'nama_item' => $colA,
+                    'tipe_item' => 'pertanyaan',
+                    'level' => 1,
+                    'urutan' => $itemUrutan,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $totalInsert++;
+                $itemUrutan++;
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | ANAK ITEM LEVEL 2: PERTANYAAN
+        |--------------------------------------------------------------------------
+        */
+            if ($currentUptSubId && $currentIndikatorItemId && is_numeric($colA) && $colB !== '') {
+                DB::table('upt_item_sub_standar_mutu')->insert([
+                    'upt_item_sub_standar_id' => (string) Str::uuid(),
+                    'upt_id' => $uptId,
+                    'periode_id' => $periodeId,
+                    'upt_sub_standar_id' => $currentUptSubId,
+                    'item_sub_standar_master_id' => null,
+                    'parent_upt_item_id' => $currentIndikatorItemId,
+                    'nama_item' => $colB,
+                    'tipe_item' => 'sub_pertanyaan',
+                    'level' => 2,
+                    'urutan' => $itemUrutan,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $totalInsert++;
+                $itemUrutan++;
+            }
+        }
+
+        return $totalInsert;
+    }
+
+    private function isImportHeaderRow($colA, $colB): bool
+    {
+        return strtoupper($colA) === 'NO'
+            || strtoupper($colB) === 'PERTANYAAN DAN PERNYATAAN'
+            || strtoupper($colB) === 'YA'
+            || strtoupper($colB) === 'TIDAK'
+            || strtoupper($colA) === 'INDIKATOR KEBERHASILAN';
+    }
+
+    private function getTargetUptIdsForImport(Request $request): array
+    {
+        if ($request->target_type === 'all_prodi') {
+            return UPT::where('kategori_upt', 'Prodi')
+                ->pluck('upt_id')
+                ->toArray();
+        }
+
+        return $request->upt_ids ?? [];
     }
 }

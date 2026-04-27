@@ -52,7 +52,7 @@
                                         }
                                         $pengaju = $dataPengajuan
                                             ? $dataPengajuan->auditor->nama_lengkap ??
-                                                ($dataPengajuan->upt->nama_upt ?? 'Tidak Diketahui')
+                                                ($dataPengajuan->upt == 1 ? ($item->upt->nama_upt ?? 'UPT / Auditee') : 'Tidak Diketahui')
                                             : 'Tidak Ada';
                                     @endphp
                                     <tr class="bg-neutral-primary border-b border-default">
@@ -211,10 +211,10 @@
                                                         </button>
                                                     </div>
                                                     <div class="p-4 md:px-6 overflow-y-auto">
-                                                        <form id="form-konfirmasi-jadwal" method="post"> @csrf
+                                                        <form id="form-konfirmasi-jadwal-{{ $item->penugasan_id }}" method="post"> @csrf
                                                             <input type="hidden" id="penugasan_id_detail"
-                                                                name="penugasan_id">
-                                                            <input type="text" id="tess" name="tes"
+                                                                name="penugasan_id" value="{{ $item->penugasan_id }}">
+                                                            <input type="hidden" id="tess" name="tes"
                                                                 value="{{ $statusUPT . '-' . $statusKetua . '-' . $statusAnggota }}">
                                                             <input type="hidden" id="auditor_id_detail"
                                                                 name="auditor_id_detail" value="{{ $auditor_id }}">
@@ -257,10 +257,10 @@
                                                                                 $namaPengaju =
                                                                                     $dataPengajuan->auditor
                                                                                         ->nama_lengkap;
-                                                                            } elseif ($dataPengajuan->upt) {
+                                                                            } elseif ($dataPengajuan->upt == 1) {
                                                                                 // Jika relasi upt ada, ambil nama upt
                                                                                 $namaPengaju =
-                                                                                    $dataPengajuan->upt->nama_upt;
+                                                                                    $item->upt->nama_upt;
                                                                             } else {
                                                                                 $namaPengaju =
                                                                                     'Data Pengaju Tidak Ditemukan';
@@ -276,7 +276,7 @@
                                                                     <label
                                                                         class="block mb-1 text-[10px] font-medium text-gray-400 uppercase">Tanggal
                                                                         Lama</label>
-                                                                    <input type="date" id="tanggal_detail_old"
+                                                                    <input type="date" id="tanggal_detail_old" value="{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('Y-m-d') }}"
                                                                         class="bg-gray-50 border border-default text-gray-400 text-sm rounded-base block w-full px-3 py-2"
                                                                         readonly>
                                                                 </div>
@@ -289,7 +289,7 @@
                                                                     <label
                                                                         class="block mb-1 text-[10px] font-medium text-blue-600 uppercase">Tanggal
                                                                         Baru</label>
-                                                                    <input type="date" id="tanggal_detail"
+                                                                    <input type="date" id="tanggal_detail" value="{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->format('Y-m-d') }}"
                                                                         class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-base block w-full px-3 py-2 font-bold"
                                                                         readonly>
                                                                 </div>
@@ -297,7 +297,7 @@
                                                                     <label
                                                                         class="block mb-1 text-[10px] font-medium text-gray-400 uppercase">Jam
                                                                         Lama</label>
-                                                                    <input type="time" id="jam_detail_old"
+                                                                    <input type="time" id="jam_detail_old" value="{{ \Carbon\Carbon::parse($item->jam)->format('H:i') }}"
                                                                         class="bg-gray-50 border border-default text-gray-400 text-sm rounded-base block w-full px-3 py-2"
                                                                         readonly>
                                                                 </div>
@@ -310,7 +310,7 @@
                                                                     <label
                                                                         class="block mb-1 text-[10px] font-medium text-blue-600 uppercase">Jam
                                                                         Baru</label>
-                                                                    <input type="time" id="jam_detail"
+                                                                    <input type="time" id="jam_detail" value="{{ \Carbon\Carbon::parse($dataPengajuan->jam)->format('H:i') }}"
                                                                         class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-base block w-full px-3 py-2 font-bold"
                                                                         readonly>
                                                                 </div>
@@ -319,7 +319,7 @@
                                                                         class="block mb-1 text-sm font-medium text-heading">Alasan
                                                                         Perubahan</label>
                                                                     <textarea id="alasan_detail" rows="3"
-                                                                        class="bg-gray-50 border border-default text-sm text-gray-600 rounded-lg block w-full p-2.5 shadow-inner" readonly></textarea>
+                                                                        class="bg-gray-50 border border-default text-sm text-gray-600 rounded-lg block w-full p-2.5 shadow-inner" readonly>{{ $dataPengajuan->alasan }}</textarea>
                                                                 </div>
                                                             </div>
                                                         </form>
@@ -328,12 +328,12 @@
                                                         class="p-4 md:px-6 border-t border-default bg-gray-50 rounded-b-base">
                                                         <div class="flex items-center space-x-3">
                                                             @if (!$isPengaju && !$sudahSetuju)
-                                                                <button type="submit" form="form-konfirmasi-jadwal"
+                                                                <button type="submit" form="form-konfirmasi-jadwal-{{ $item->penugasan_id }}"
                                                                     formaction="{{ route('auditor.penugasan.setuju') }}"
                                                                     class="flex-1 rounded-lg text-white bg-green-600 hover:bg-green-700 font-bold text-sm px-4 py-2.5 transition flex justify-center items-center">
                                                                     <i class="bi bi-check-circle mr-2"></i> Setuju
                                                                 </button>
-                                                                <button type="submit" form="form-konfirmasi-jadwal"
+                                                                <button type="submit" form="form-konfirmasi-jadwal-{{ $item->penugasan_id }}"
                                                                     formaction="{{ route('auditor.penugasan.tolak') }}"
                                                                     onclick="document.getElementById('auditor_id_detail').disabled = true;"
                                                                     class="flex-1 rounded-lg text-white bg-red-600 hover:bg-red-700 font-bold text-sm px-4 py-2.5 transition flex justify-center items-center">

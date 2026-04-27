@@ -95,7 +95,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/ami/upt-sub-standar-mutu/tambah', [UptSubStandarMutuController::class, 'tambah'])->name('admin.ami.upt_sub_standar_mutu.tambah');
     Route::post('/admin/ami/upt-sub-standar-mutu/edit', [UptSubStandarMutuController::class, 'edit'])->name('admin.ami.upt_sub_standar_mutu.edit');
     Route::post('/admin/ami/upt-sub-standar-mutu/hapus', [UptSubStandarMutuController::class, 'hapus'])->name('admin.ami.upt_sub_standar_mutu.hapus');
-    
+
     Route::post('/admin/ami/upt-item-sub-standar-mutu/tambah', [UptItemSubStandarMutuController::class, 'tambah'])->name('admin.ami.upt_item_sub_standar_mutu.tambah');
     Route::post('/admin/ami/upt-item-sub-standar-mutu/edit', [UptItemSubStandarMutuController::class, 'edit'])->name('admin.ami.upt_item_sub_standar_mutu.edit');
     Route::post('/admin/ami/upt-item-sub-standar-mutu/hapus', [UptItemSubStandarMutuController::class, 'hapus'])->name('admin.ami.upt_item_sub_standar_mutu.hapus');
