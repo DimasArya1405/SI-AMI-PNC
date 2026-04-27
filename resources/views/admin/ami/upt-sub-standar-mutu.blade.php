@@ -118,7 +118,7 @@
                             @endphp
 
                             @forelse ($subStandarPerStandar as $sub)
-                            <div class="bg-white border rounded-lg overflow-hidden">
+                            <div id="sub-{{ $sub->upt_sub_standar_id }}" class="bg-white border rounded-lg overflow-hidden">
                                 {{-- Header Sub Standar --}}
                                 <div class="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
                                     <div>
@@ -181,7 +181,7 @@
                                         };
                                         @endphp
 
-                                        <div class="border rounded-lg p-3 bg-white {{ $levelClass }}">
+                                        <div id="item-{{ $item->upt_item_sub_standar_id }}" class="border rounded-lg p-3 bg-white {{ $levelClass }}">
                                             <div class="flex items-start justify-between gap-4">
                                                 <div class="flex-1">
                                                     <div class="flex items-start gap-2">
@@ -246,6 +246,8 @@
 
                                                     <form action="{{ route('admin.ami.upt_item_sub_standar_mutu.tambah') }}" method="POST">
                                                         @csrf
+                                                        <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                        <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
                                                         <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                                         <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                                         <input type="hidden" name="parent_upt_item_id" value="{{ $item->upt_item_sub_standar_id }}">
@@ -296,6 +298,8 @@
 
                                                     <form action="{{ route('admin.ami.upt_item_sub_standar_mutu.edit') }}" method="POST">
                                                         @csrf
+                                                        <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                        <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
                                                         <input type="hidden" name="upt_item_sub_standar_id" value="{{ $item->upt_item_sub_standar_id }}">
 
                                                         <div class="p-4 space-y-4">
@@ -337,6 +341,13 @@
 
                                                         <form action="{{ route('admin.ami.upt_item_sub_standar_mutu.hapus') }}" method="POST">
                                                             @csrf
+                                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+
+                                                            @if ($item->parent_upt_item_id)
+                                                            <input type="hidden" name="target_scroll" value="item-{{ $item->parent_upt_item_id }}">
+                                                            @else
+                                                            <input type="hidden" name="target_scroll" value="sub-{{ $sub->upt_sub_standar_id }}">
+                                                            @endif
                                                             <input type="hidden" name="upt_item_sub_standar_id" value="{{ $item->upt_item_sub_standar_id }}">
 
                                                             <div class="flex justify-center gap-2">
@@ -381,6 +392,8 @@
 
                                         <form action="{{ route('admin.ami.upt_item_sub_standar_mutu.tambah') }}" method="POST">
                                             @csrf
+                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                            <input type="hidden" name="target_scroll" value="sub-{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                             <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="parent_upt_item_id" value="">
@@ -427,6 +440,8 @@
 
                                         <form action="{{ route('admin.ami.upt_sub_standar_mutu.edit') }}" method="POST">
                                             @csrf
+                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                            <input type="hidden" name="target_scroll" value="sub-{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
 
                                             <div class="p-4 space-y-4">
@@ -469,6 +484,8 @@
 
                                             <form action="{{ route('admin.ami.upt_sub_standar_mutu.hapus') }}" method="POST">
                                                 @csrf
+                                                <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                <input type="hidden" name="target_scroll" value="content-{{ $standar->standar_mutu_id }}">
                                                 <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
 
                                                 <div class="flex justify-center gap-2">
@@ -510,6 +527,8 @@
 
                                     <form action="{{ route('admin.ami.upt_sub_standar_mutu.tambah') }}" method="POST">
                                         @csrf
+                                        <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                        <input type="hidden" name="target_scroll" value="content-{{ $standar->standar_mutu_id }}">
                                         <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                         <input type="hidden" name="standar_mutu_id" value="{{ $standar->standar_mutu_id }}">
                                         <input type="hidden" name="periode_id" value="{{ $periode_id }}">
@@ -551,4 +570,45 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = @json(session('active_tab'));
+            const targetScroll = @json(session('target_scroll'));
+
+            function scrollToTarget() {
+                if (!targetScroll) return;
+
+                const target = document.getElementById(targetScroll);
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    target.classList.add('ring-2', 'ring-blue-400', 'ring-offset-2');
+
+                    setTimeout(() => {
+                        target.classList.remove('ring-2', 'ring-blue-400', 'ring-offset-2');
+                    }, 1800);
+                }
+            }
+
+            if (activeTab) {
+                const tabButton = document.querySelector(`[data-tabs-target="#${activeTab}"]`);
+
+                if (tabButton) {
+                    setTimeout(() => {
+                        tabButton.click();
+                        setTimeout(scrollToTarget, 500);
+                    }, 300);
+                } else {
+                    setTimeout(scrollToTarget, 500);
+                }
+            } else {
+                setTimeout(scrollToTarget, 500);
+            }
+        });
+    </script>
 </x-app-layout>

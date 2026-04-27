@@ -20,6 +20,7 @@ class StandarMutuSeeder extends Seeder
 
         DB::transaction(function () use ($filePath) {
             $spreadsheet = IOFactory::load($filePath);
+            $urutanStandar = 1;
 
             foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
                 $standarName = trim((string) $sheet->getCell('E6')->getValue());
@@ -39,22 +40,33 @@ class StandarMutuSeeder extends Seeder
                     DB::table('standar_mutu')->insert([
                         'standar_mutu_id' => $standarId,
                         'nama_standar_mutu' => $standarName,
+                        'urutan' => $urutanStandar,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
                 } else {
                     $standarId = $standar->standar_mutu_id;
+
+                    DB::table('standar_mutu')
+                        ->where('standar_mutu_id', $standarId)
+                        ->update([
+                            'urutan' => $urutanStandar,
+                            'updated_at' => now(),
+                        ]);
                 }
 
-                $currentSubStandarId = null;
-                $lastParentItemId = null;
-                $subUrutan = 1;
-                $itemUrutan = 1;
-                $childUrutan = 1;
+                $urutanStandar++;
 
-                for ($row = 11; $row <= $sheet->getHighestRow(); $row++) {
-                    $colA = trim((string) $sheet->getCell("A{$row}")->getValue());
-                    $colB = trim((string) $sheet->getCell("B{$row}")->getValue());
+                $currentSubStandarId = null;
+                $lastLevel1ItemId = null;
+                $lastLevel2ItemId = null;
+
+                $subUrutan = 1;
+                $urutanGlobal = 1;
+
+                for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
+                    $colA = trim((string) $sheet->getCell("A{$row}")->getCalculatedValue());
+                    $colB = trim((string) $sheet->getCell("B{$row}")->getCalculatedValue());
 
                     if ($colA === '' && $colB === '') {
                         continue;
@@ -62,16 +74,17 @@ class StandarMutuSeeder extends Seeder
 
                     if (
                         strtoupper($colA) === 'NO' ||
-                        strtoupper($colB) === 'PERTANYAAN DAN PERNYATAAN'
+                        strtoupper($colB) === 'PERTANYAAN DAN PERNYATAAN' ||
+                        strtoupper($colB) === 'YA'
                     ) {
                         continue;
                     }
 
-                    if ($colA !== '' && !is_numeric($colA)) {
-                        $subStandarId = (string) Str::uuid();
+                    if ($colA !== '' && !is_numeric($colA) && $colB === '') {
+                        $currentSubStandarId = (string) Str::uuid();
 
                         DB::table('sub_standar_mutu')->insert([
-                            'sub_standar_id' => $subStandarId,
+                            'sub_standar_id' => $currentSubStandarId,
                             'standar_mutu_id' => $standarId,
                             'nama_sub_standar' => $colA,
                             'urutan' => $subUrutan++,
@@ -79,51 +92,56 @@ class StandarMutuSeeder extends Seeder
                             'updated_at' => now(),
                         ]);
 
-                        $currentSubStandarId = $subStandarId;
-                        $lastParentItemId = null;
-                        $itemUrutan = 1;
-                        $childUrutan = 1;
+                        $lastLevel1ItemId = null;
+                        $lastLevel2ItemId = null;
+                        $urutanGlobal = 1;
 
                         continue;
                     }
 
-                    if (!$currentSubStandarId) {
+                    if (!$currentSubStandarId || $colB === '') {
                         continue;
                     }
 
-                    if (is_numeric($colA) && $colB !== '') {
-                        $itemId = (string) Str::uuid();
+                    $text = $colB;
+                    $level = 1;
+                    $parentItemId = null;
 
-                        DB::table('item_sub_standar')->insert([
-                            'item_sub_standar_id' => $itemId,
-                            'sub_standar_id' => $currentSubStandarId,
-                            'parent_item_id' => null,
-                            'nama_item' => $colB,
-                            'tipe_item' => 'pertanyaan',
-                            'level' => 1,
-                            'urutan' => $itemUrutan++,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        $lastParentItemId = $itemId;
-                        $childUrutan = 1;
-
-                        continue;
+                    if (is_numeric($colA)) {
+                        $level = 1;
+                        $parentItemId = null;
+                    } elseif (preg_match('/^[a-zA-Z]\./', $text)) {
+                        $level = 2;
+                        $parentItemId = $lastLevel1ItemId;
+                    } elseif (preg_match('/^-/', $text)) {
+                        $level = 3;
+                        $parentItemId = $lastLevel2ItemId ?: $lastLevel1ItemId;
+                    } else {
+                        $level = 2;
+                        $parentItemId = $lastLevel1ItemId;
                     }
 
-                    if ($colA === '' && $colB !== '' && $lastParentItemId) {
-                        DB::table('item_sub_standar')->insert([
-                            'item_sub_standar_id' => (string) Str::uuid(),
-                            'sub_standar_id' => $currentSubStandarId,
-                            'parent_item_id' => $lastParentItemId,
-                            'nama_item' => $colB,
-                            'tipe_item' => 'sub_pertanyaan',
-                            'level' => 2,
-                            'urutan' => $childUrutan++,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                    $itemId = (string) Str::uuid();
+
+                    DB::table('item_sub_standar')->insert([
+                        'item_sub_standar_id' => $itemId,
+                        'sub_standar_id' => $currentSubStandarId,
+                        'parent_item_id' => $parentItemId,
+                        'nama_item' => $text,
+                        'tipe_item' => $level === 1 ? 'pertanyaan' : 'sub_pertanyaan',
+                        'level' => $level,
+                        'urutan' => $urutanGlobal++,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    if ($level === 1) {
+                        $lastLevel1ItemId = $itemId;
+                        $lastLevel2ItemId = null;
+                    }
+
+                    if ($level === 2) {
+                        $lastLevel2ItemId = $itemId;
                     }
                 }
             }
