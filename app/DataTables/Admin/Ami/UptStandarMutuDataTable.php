@@ -41,6 +41,13 @@ class UptStandarMutuDataTable extends DataTable
                             data-periode-id="' . $row->periode_id . '">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
+                        <a href="' . route('admin.upt_standar_mutu.export', [
+                            'upt_id' => $row->upt_id,
+                            'periode_id' => $row->periode_id
+                                            ]) . '"
+                            class="hover:bg-green-700 transition duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
+                                <i class="bi bi-file-earmark-excel text-xs"></i>
+                        </a>
                     </div>
                 ';
             })

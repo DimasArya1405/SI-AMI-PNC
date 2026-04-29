@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Ami;
 
 use App\DataTables\Admin\Ami\UptStandarMutuDataTable;
+use App\Exports\UptStandarMutuExport;
 use App\Http\Controllers\Controller;
 use App\Imports\UptStandarMutuImport;
 use App\Models\ItemSubStandarMutu;
@@ -599,5 +600,18 @@ class UptStandarMutuController extends Controller
 
             return back()->with('error', 'Import gagal: ' . $e->getMessage());
         }
+    }
+
+    public function export($upt_id, $periode_id)
+    {
+        $upt = Upt::findOrFail($upt_id);
+        $periode = Periode::findOrFail($periode_id);
+
+        $filename = 'Formulir AMI ' . $upt->nama_upt . ' ' . $periode->tahun . '.xlsx';
+
+        return Excel::download(
+            new UptStandarMutuExport($upt_id, $periode_id),
+            $filename
+        );
     }
 }
