@@ -517,6 +517,85 @@
                         </div>
                     </div>
 
+                    {{-- Multi Select UPT --}}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Pilih UPT / Unit / Bagian
+                        </label>
+
+                        <button id="dropdownSearchButtonUpt"
+                            data-dropdown-toggle="dropdownSearchUpt"
+                            data-dropdown-placement="bottom"
+                            type="button"
+                            class="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300">
+                            <span id="upt-selected-text">Pilih UPT</span>
+
+                            <svg class="w-2.5 h-2.5 ms-2" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 10 6">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m1 1 4 4 4-4" />
+                            </svg>
+                        </button>
+
+                        <div id="dropdownSearchUpt"
+                            class="z-50 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+
+                            <div class="p-3 border-b border-gray-200">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 20 20">
+                                            <path stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" stroke-width="2"
+                                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                        </svg>
+                                    </div>
+
+                                    <input type="text" id="input-group-search-upt"
+                                        class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Cari UPT">
+                                </div>
+                            </div>
+
+                            <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
+                                id="upt-list">
+
+                                <li class="py-2 border-b border-gray-100">
+                                    <div class="flex items-center">
+                                        <input id="checkbox-all-upt" type="checkbox"
+                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                                        <label for="checkbox-all-upt"
+                                            class="ms-2 text-sm font-medium text-gray-900">
+                                            Pilih Semua
+                                        </label>
+                                    </div>
+                                </li>
+
+                                @foreach ($uptList as $item)
+                                <li class="py-2 upt-item">
+                                    <div class="flex items-center">
+                                        <input id="upt-{{ $item->upt_id }}"
+                                            type="checkbox"
+                                            name="upt_ids[]"
+                                            value="{{ $item->upt_id }}"
+                                            class="upt-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                                        <label for="upt-{{ $item->upt_id }}"
+                                            class="ms-2 text-sm font-medium text-gray-900 upt-label">
+                                            {{ $item->upt?->nama_upt ?? 'UPT tidak ditemukan' }}
+                                        </label>
+                                    </div>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+                        <p class="mt-2 text-sm text-gray-500">
+                            Bisa pilih lebih dari satu UPT.
+                        </p>
+                    </div>
+
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
                         <button type="submit"
                             class="inline-flex items-center text-white bg-blue-500 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-xs font-medium rounded-base text-sm px-4 py-2.5 focus:outline-none transition duration-200 ease-in-out">
@@ -752,6 +831,57 @@
     {{-- JS --}}
     @push('js')
     <script>
+        // JS MODAL COPY PERIODE
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('input-group-search-upt');
+            const uptItems = document.querySelectorAll('.upt-item');
+            const uptCheckboxes = document.querySelectorAll('.upt-checkbox');
+            const checkboxAll = document.getElementById('checkbox-all-upt');
+            const selectedText = document.getElementById('upt-selected-text');
+
+            function updateSelectedText() {
+                const checked = document.querySelectorAll('.upt-checkbox:checked');
+
+                if (checked.length === 0) {
+                    selectedText.textContent = 'Pilih UPT';
+                } else if (checked.length === uptCheckboxes.length) {
+                    selectedText.textContent = 'Semua UPT dipilih';
+                } else {
+                    selectedText.textContent = checked.length + ' UPT dipilih';
+                }
+
+                checkboxAll.checked = checked.length === uptCheckboxes.length;
+            }
+
+            searchInput.addEventListener('keyup', function() {
+                const keyword = this.value.toLowerCase();
+
+                uptItems.forEach(function(item) {
+                    const label = item.querySelector('.upt-label').textContent.toLowerCase();
+
+                    if (label.includes(keyword)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+
+            checkboxAll.addEventListener('change', function() {
+                uptCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = checkboxAll.checked;
+                });
+
+                updateSelectedText();
+            });
+
+            uptCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateSelectedText);
+            });
+
+            updateSelectedText();
+        });
+
         // JS MODAL IMPORT
         document.addEventListener('DOMContentLoaded', function() {
             const standarCheckboxes = document.querySelectorAll('.standar-checkbox');

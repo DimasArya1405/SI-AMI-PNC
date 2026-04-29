@@ -25,9 +25,13 @@ class UptStandarMutuController extends Controller
     {
         $standarMutu = StandarMutu::all();
         $uptUnitBagian = UPT::where('kategori_upt', 'Unit/Bagian')->get();
+        $uptList = UptStandarMutu::with('upt')
+            ->select('upt_id')
+            ->distinct()
+            ->get();
         $periodeList = Periode::whereNull('deleted_at')->orderBy('tahun', 'desc')->get();
 
-        return $dataTable->render('admin.ami.upt-standar-mutu', compact('standarMutu', 'uptUnitBagian', 'periodeList'));
+        return $dataTable->render('admin.ami.upt-standar-mutu', compact('standarMutu', 'uptUnitBagian', 'periodeList', 'uptList'));
     }
 
     public function tambah(Request $request)
@@ -168,17 +172,22 @@ class UptStandarMutuController extends Controller
         $request->validate([
             'periode_sumber_id' => 'required|exists:periode,id',
             'periode_tujuan_id' => 'required|exists:periode,id|different:periode_sumber_id',
+            'upt_ids' => 'required|array|min:1',
+            'upt_ids.*' => 'required|exists:upt,upt_id',
         ]);
 
         $periodeSumber = $request->periode_sumber_id;
         $periodeTujuan = $request->periode_tujuan_id;
+        $uptIds = $request->upt_ids;
 
-        DB::transaction(function () use ($periodeSumber, $periodeTujuan) {
+        DB::transaction(function () use ($periodeSumber, $periodeTujuan, $uptIds) {
 
-            // ambil semua mapping standar dari periode sumber
-            $standarList = UptStandarMutu::where('periode_id', $periodeSumber)->get();
+            $standarList = UptStandarMutu::where('periode_id', $periodeSumber)
+                ->whereIn('upt_id', $uptIds)
+                ->get();
 
             foreach ($standarList as $standar) {
+
                 $sudahAda = UptStandarMutu::where('upt_id', $standar->upt_id)
                     ->where('standar_mutu_id', $standar->standar_mutu_id)
                     ->where('periode_id', $periodeTujuan)
@@ -188,7 +197,6 @@ class UptStandarMutuController extends Controller
                     continue;
                 }
 
-                // copy header standar
                 UptStandarMutu::create([
                     'upt_standar_mutu_id' => Str::uuid(),
                     'upt_id' => $standar->upt_id,
@@ -196,7 +204,6 @@ class UptStandarMutuController extends Controller
                     'periode_id' => $periodeTujuan,
                 ]);
 
-                // ambil semua sub standar pada periode sumber
                 $subStandarList = UptSubStandarMutu::where('upt_id', $standar->upt_id)
                     ->where('standar_mutu_id', $standar->standar_mutu_id)
                     ->where('periode_id', $periodeSumber)
@@ -204,6 +211,7 @@ class UptStandarMutuController extends Controller
                     ->get();
 
                 foreach ($subStandarList as $subStandar) {
+
                     $subBaru = UptSubStandarMutu::create([
                         'upt_sub_standar_id' => Str::uuid(),
                         'upt_id' => $subStandar->upt_id,
@@ -225,7 +233,7 @@ class UptStandarMutuController extends Controller
             }
         });
 
-        return redirect()->back()->with('success', 'Pemetaan berhasil disalin ke periode tujuan');
+        return redirect()->back()->with('success', 'Pemetaan berhasil disalin untuk UPT yang dipilih');
     }
 
     private function getTargetUptIds(Request $request): array
