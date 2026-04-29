@@ -132,7 +132,7 @@ class StandarAMIController extends Controller
             ->with('active_tab', $request->active_tab);
     }
 
-    public function hapusBukti($id)
+    public function hapusBukti(Request $request, $id)
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
@@ -140,20 +140,26 @@ class StandarAMIController extends Controller
             ->where('auditee_id', $auditee->auditee_id)
             ->firstOrFail();
 
-        $periode = Periode::where('id', $dokumen->item->periode_id)->first();
+        $itemId = $dokumen->upt_item_sub_standar_id;
+
+        $periode = Periode::find($dokumen->item?->periode_id);
 
         if ($periode && $periode->status == 0) {
-            return back()->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.');
+            return redirect()
+                ->to(url()->previous() . '#item-' . $itemId)
+                ->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.')
+                ->with('active_tab', $request->active_tab);
         }
 
-        // hapus file dari storage
         if ($dokumen->file_path && Storage::disk('public')->exists($dokumen->file_path)) {
             Storage::disk('public')->delete($dokumen->file_path);
         }
 
-        // hapus dari database
         $dokumen->delete();
 
-        return back()->with('success', 'Bukti dukung berhasil dihapus.');
+        return redirect()
+            ->to(url()->previous() . '#item-' . $itemId)
+            ->with('success', 'Bukti dukung berhasil dihapus.')
+            ->with('active_tab', $request->active_tab);
     }
 }

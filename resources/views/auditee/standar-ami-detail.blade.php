@@ -177,7 +177,8 @@
                                                                     data-modal-toggle="modal-hapus-bukti"
                                                                     class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
                                                                     data-dokumen-id="{{ $bukti->dokumen_id }}"
-                                                                    data-nama-file="{{ $bukti->nama_file }}">
+                                                                    data-nama-file="{{ $bukti->nama_file }}"
+                                                                    data-active-tab="content-{{ $standar->standar_mutu_id }}">
                                                                     Hapus
                                                                 </button>
                                                                 @endif
@@ -325,6 +326,8 @@
                         @csrf
                         @method('delete')
 
+                        <input type="hidden" name="active_tab" id="active_tab_hapus_bukti">
+
                         <div class="flex items-center space-x-4 justify-center">
                             <button data-modal-hide="modal-hapus-bukti" type="submit"
                                 class="text-white transition duration-300 ease-in-out bg-blue-500 box-border border border-transparent hover:bg-blue-700 focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
@@ -347,17 +350,20 @@
             const buttons = document.querySelectorAll('.button-hapus-bukti');
             const form = document.getElementById('form-hapus-bukti');
             const namaFileText = document.getElementById('nama_file_hapus_bukti');
+            const activeTabInput = document.getElementById('active_tab_hapus_bukti');
 
             buttons.forEach(button => {
                 button.addEventListener('click', function() {
                     const dokumenId = this.dataset.dokumenId;
                     const namaFile = this.dataset.namaFile;
+                    const activeTab = this.dataset.activeTab;
 
                     let actionUrl = "{{ route('auditee.bukti_dukung.hapus', ':id') }}";
                     actionUrl = actionUrl.replace(':id', dokumenId);
 
-                    form.setAttribute('action', actionUrl);
+                    form.action = actionUrl;
                     namaFileText.textContent = namaFile;
+                    activeTabInput.value = activeTab;
                 });
             });
         });
