@@ -87,179 +87,180 @@
                             </p>
                         </div>
 
-                        @forelse ($subStandarList as $sub)
-                        <div class="mb-5 border rounded-xl overflow-hidden">
-                            <div class="bg-gray-100 px-4 py-3">
-                                <h3 class="font-semibold text-gray-800">
-                                    {{ $sub->nama_sub_standar }}
-                                </h3>
-                            </div>
+                        <div id="accordion-auditee-{{ $standar->standar_mutu_id }}"
+                            data-accordion="collapse"
+                            class="space-y-4">
 
-                            <div class="p-4">
-                                @php
-                                $items = ($uptItemSubStandar[$sub->upt_sub_standar_id] ?? collect())
-                                ->sortBy([
-                                ['urutan', 'asc'],
-                                ['created_at', 'asc'],
-                                ]);
+                            @forelse ($subStandarList as $sub)
+                            @php
+                            $items = ($uptItemSubStandar[$sub->upt_sub_standar_id] ?? collect())->sortBy([
+                            ['urutan', 'asc'],
+                            ['created_at', 'asc'],
+                            ]);
 
-                                $nomorLevel1 = 0;
-                                @endphp
+                            $headingId = 'heading-auditee-' . $sub->upt_sub_standar_id;
+                            $bodyId = 'body-auditee-' . $sub->upt_sub_standar_id;
+                            @endphp
 
-                                @forelse ($items as $item)
-                                @php
-                                $level = $item->level ?? 1;
+                            <div id="sub-{{ $sub->upt_sub_standar_id }}"
+                                class="border rounded-xl overflow-hidden bg-white">
 
-                                $levelClass = match ($level) {
-                                1 => '',
-                                2 => 'ml-6',
-                                3 => 'ml-12',
-                                4 => 'ml-16',
-                                default => 'ml-20',
-                                };
+                                {{-- Header Accordion --}}
+                                <h2 id="{{ $headingId }}">
+                                    <button type="button"
+                                        class="flex items-center justify-between w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-left"
+                                        data-accordion-target="#{{ $bodyId }}"
+                                        aria-expanded="false"
+                                        aria-controls="{{ $bodyId }}">
 
-                                $buktiList = $buktiDukung[$item->upt_item_sub_standar_id] ?? collect();
-                                @endphp
-
-                                <div class="mb-4 rounded-lg border bg-white p-4 {{ $levelClass }}">
-                                    <div class="flex items-start gap-3">
-                                        <div class="text-sm font-semibold text-gray-500 min-w-[28px]">
-                                            @if ($level == 1)
-                                            @php $nomorLevel1++; @endphp
-                                            {{ $nomorLevel1 }}.
-                                            @else
-                                            ↳
-                                            @endif
+                                        <div>
+                                            <h3 class="font-semibold text-gray-800">
+                                                {{ $sub->nama_sub_standar }}
+                                            </h3>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Total item: {{ $items->count() }}
+                                            </p>
                                         </div>
 
-                                        <div id="item-{{ $item->upt_item_sub_standar_id }}" class="flex-1">
-                                            <p class="text-md font-medium text-gray-800">
-                                                {{ $item->nama_item }}
-                                            </p>
+                                        <i data-accordion-icon class="bi bi-chevron-down transition-transform"></i>
+                                    </button>
+                                </h2>
 
-                                            <div class="mt-4 rounded-lg border bg-gray-50 p-4">
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <h4 class="text-sm font-semibold text-gray-700">
-                                                        Bukti Dukung
-                                                    </h4>
+                                {{-- Body Accordion --}}
+                                <div id="{{ $bodyId }}"
+                                    class="hidden"
+                                    aria-labelledby="{{ $headingId }}">
 
-                                                    <span class="text-xs px-2 py-1 rounded-full {{ $buktiList->count() > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                                        {{ $buktiList->count() > 0 ? $buktiList->count() . ' file' : 'Belum ada' }}
-                                                    </span>
+                                    <div class="p-4">
+                                        @php
+                                        $nomorLevel1 = 0;
+                                        @endphp
+
+                                        @forelse ($items as $item)
+                                        @php
+                                        $level = $item->level ?? 1;
+
+                                        $levelClass = match ($level) {
+                                        1 => '',
+                                        2 => 'ml-6',
+                                        3 => 'ml-12',
+                                        4 => 'ml-16',
+                                        default => 'ml-20',
+                                        };
+
+                                        $buktiList = $buktiDukung[$item->upt_item_sub_standar_id] ?? collect();
+                                        @endphp
+
+                                        <div id="item-{{ $item->upt_item_sub_standar_id }}"
+                                            class="mb-4 rounded-lg border bg-white p-4 {{ $levelClass }}">
+
+                                            <div class="flex items-start gap-3">
+                                                <div class="text-sm font-semibold text-gray-500 min-w-[28px]">
+                                                    @if ($level == 1)
+                                                    @php $nomorLevel1++; @endphp
+                                                    {{ $nomorLevel1 }}.
+                                                    @else
+                                                    ↳
+                                                    @endif
                                                 </div>
 
-                                                @if ($buktiList->count() > 0)
-                                                <div class="space-y-2 mb-4">
-                                                    @foreach ($buktiList as $bukti)
-                                                    <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
-                                                        <div>
-                                                            <p class="text-sm font-medium text-gray-800">
-                                                                {{ $bukti->nama_file }}
-                                                            </p>
-                                                        </div>
-
-                                                        <div class="flex items-center gap-2">
-                                                            <a href="{{ asset('storage/' . $bukti->file_path) }}"
-                                                                target="_blank"
-                                                                class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
-                                                                Lihat
-                                                            </a>
-
-                                                            <form action="{{ route('auditee.bukti_dukung.hapus', $bukti->dokumen_id) }}"
-                                                                method="POST"
-                                                                onsubmit="return confirm('Yakin ingin menghapus file ini?')">
-                                                                @csrf
-                                                                @method('DELETE')
-
-                                                                @if(!$status_periode)
-                                                                <button type="button"
-                                                                    data-modal-target="modal-hapus-bukti"
-                                                                    data-modal-toggle="modal-hapus-bukti"
-                                                                    class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
-                                                                    data-dokumen-id="{{ $bukti->dokumen_id }}"
-                                                                    data-nama-file="{{ $bukti->nama_file }}"
-                                                                    data-active-tab="content-{{ $standar->standar_mutu_id }}">
-                                                                    Hapus
-                                                                </button>
-                                                                @endif
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                    @endforeach
-                                                </div>
-                                                @else
-                                                <p class="text-xs text-gray-500 mb-4">
-                                                    Belum ada bukti dukung untuk item ini.
-                                                </p>
-                                                @endif
-
-                                                @if (!$status_periode)
-                                                <form action="{{ route('auditee.bukti_dukung.upload') }}"
-                                                    method="POST"
-                                                    enctype="multipart/form-data"
-                                                    class="space-y-3">
-                                                    @csrf
-
-                                                    <input type="hidden"
-                                                        name="upt_item_sub_standar_id"
-                                                        value="{{ $item->upt_item_sub_standar_id }}">
-
-                                                    <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
-
-                                                    <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-
-                                                    <div>
-                                                        <label class="block mb-1 text-sm font-medium text-gray-700">
-                                                            Upload File Bukti
-                                                        </label>
-                                                        <input type="file"
-                                                            name="file_bukti[]"
-                                                            multiple
-                                                            class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
-                                                            required>
-                                                        <p class="mt-1 text-xs text-gray-400">
-                                                            Bisa upload lebih dari satu file. Format: PDF, Word, Excel, JPG, PNG. Maksimal 5MB.
-                                                        </p>
-                                                    </div>
-
-                                                    <div>
-                                                        <label class="block mb-1 text-sm font-medium text-gray-700">
-                                                            Keterangan
-                                                        </label>
-                                                        <textarea name="keterangan"
-                                                            rows="2"
-                                                            class="w-full text-sm border-gray-300 rounded-lg"
-                                                            placeholder=""></textarea>
-                                                    </div>
-
-                                                    <button type="submit"
-                                                        class="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                                                        Upload Bukti
-                                                    </button>
-                                                </form>
-                                                @else
-                                                <div class="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
-                                                    <p class="text-sm text-yellow-700">
-                                                        Periode ini sudah tidak aktif. Data hanya dapat dilihat.
+                                                <div class="flex-1">
+                                                    <p class="text-md font-medium text-gray-800">
+                                                        {{ $item->nama_item }}
                                                     </p>
+
+                                                    <div class="mt-4 rounded-lg border bg-gray-50 p-4">
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <h4 class="text-sm font-semibold text-gray-700">
+                                                                Bukti Dukung
+                                                            </h4>
+
+                                                            <span class="text-xs px-2 py-1 rounded-full {{ $buktiList->count() > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                                                {{ $buktiList->count() > 0 ? $buktiList->count() . ' file' : 'Belum ada' }}
+                                                            </span>
+                                                        </div>
+
+                                                        @if ($buktiList->count() > 0)
+                                                        <div class="space-y-2 mb-4">
+                                                            @foreach ($buktiList as $bukti)
+                                                            <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
+                                                                <p class="text-sm font-medium text-gray-800">
+                                                                    {{ $bukti->nama_file }}
+                                                                </p>
+
+                                                                <div class="flex items-center gap-2">
+                                                                    <a href="{{ asset('storage/' . $bukti->file_path) }}"
+                                                                        target="_blank"
+                                                                        class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
+                                                                        Lihat
+                                                                    </a>
+
+                                                                    @if (!$status_periode)
+                                                                    <button type="button"
+                                                                        data-modal-target="modal-hapus-bukti"
+                                                                        data-modal-toggle="modal-hapus-bukti"
+                                                                        class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
+                                                                        data-dokumen-id="{{ $bukti->dokumen_id }}"
+                                                                        data-nama-file="{{ $bukti->nama_file }}"
+                                                                        data-active-tab="content-{{ $standar->standar_mutu_id }}"
+                                                                        data-open-accordion="{{ $bodyId }}"
+                                                                        data-target-scroll="item-{{ $item->upt_item_sub_standar_id }}">
+                                                                        Hapus
+                                                                    </button>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
+                                                        @else
+                                                        <p class="text-xs text-gray-500 mb-4">
+                                                            Belum ada bukti dukung untuk item ini.
+                                                        </p>
+                                                        @endif
+
+                                                        @if (!$status_periode)
+                                                        <form action="{{ route('auditee.bukti_dukung.upload') }}"
+                                                            method="POST"
+                                                            enctype="multipart/form-data"
+                                                            class="space-y-3">
+                                                            @csrf
+
+                                                            <input type="hidden" name="upt_item_sub_standar_id" value="{{ $item->upt_item_sub_standar_id }}">
+                                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                            <input type="hidden" name="open_accordion" value="{{ $bodyId }}">
+                                                            <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
+                                                            <input type="hidden" name="periode_id" value="{{ $periode->id }}">
+
+                                                            <input type="file"
+                                                                name="file_bukti[]"
+                                                                multiple
+                                                                class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
+                                                                required>
+
+                                                            <button type="submit"
+                                                                class="bg-green-500 hover:bg-green-700 text-white text-sm px-4 py-2 rounded">
+                                                                Upload Bukti
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
                                                 </div>
-                                                @endif
                                             </div>
                                         </div>
+                                        @empty
+                                        <div class="bg-yellow-50 text-yellow-800 text-sm rounded-lg p-4">
+                                            Belum ada item pada sub standar ini.
+                                        </div>
+                                        @endforelse
                                     </div>
                                 </div>
-                                @empty
-                                <div class="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg">
-                                    Belum ada item pada sub standar ini.
-                                </div>
-                                @endforelse
                             </div>
+                            @empty
+                            <div class="bg-yellow-50 text-yellow-800 text-sm rounded-lg p-4">
+                                Belum ada sub standar pada standar ini.
+                            </div>
+                            @endforelse
                         </div>
-                        @empty
-                        <div class="p-4 text-sm text-yellow-800 bg-yellow-50 rounded-lg">
-                            Belum ada sub standar pada standar ini.
-                        </div>
-                        @endforelse
                     </div>
                     @endforeach
                 </div>
@@ -326,6 +327,8 @@
                         @csrf
                         @method('delete')
 
+                        <input type="hidden" name="open_accordion" id="open_accordion_hapus_bukti">
+                        <input type="hidden" name="target_scroll" id="target_scroll_hapus_bukti">
                         <input type="hidden" name="active_tab" id="active_tab_hapus_bukti">
 
                         <div class="flex items-center space-x-4 justify-center">
@@ -346,24 +349,88 @@
     </div>
 
     <script>
+        // JS ACORDION
+        document.addEventListener('DOMContentLoaded', function() {
+            const openAccordion = @json(session('open_accordion'));
+            const targetScroll = @json(session('target_scroll'));
+
+            function openTargetAccordion() {
+                if (!openAccordion) return;
+
+                const body = document.getElementById(openAccordion);
+
+                if (body) {
+                    body.classList.remove('hidden');
+
+                    const triggers = document.querySelectorAll(
+                        `[data-accordion-target="#${openAccordion}"]`
+                    );
+
+                    triggers.forEach(btn => {
+                        btn.setAttribute('aria-expanded', 'true');
+
+                        const icon = btn.querySelector('[data-accordion-icon]');
+                        if (icon) {
+                            icon.classList.add('rotate-180');
+                        }
+                    });
+                }
+            }
+
+            function scrollToTarget() {
+                if (!targetScroll) return;
+
+                const target = document.getElementById(targetScroll);
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    target.classList.add('ring-2', 'ring-blue-400');
+
+                    setTimeout(() => {
+                        target.classList.remove('ring-2', 'ring-blue-400');
+                    }, 2000);
+                }
+            }
+
+            // penting: kasih delay supaya Flowbite selesai init
+            setTimeout(() => {
+                openTargetAccordion();
+
+                setTimeout(() => {
+                    scrollToTarget();
+                }, 300);
+
+            }, 400);
+        });
+
+        // JS Modal Hapus Bukti
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('.button-hapus-bukti');
+
             const form = document.getElementById('form-hapus-bukti');
             const namaFileText = document.getElementById('nama_file_hapus_bukti');
             const activeTabInput = document.getElementById('active_tab_hapus_bukti');
+            const openAccordionInput = document.getElementById('open_accordion_hapus_bukti');
+            const targetScrollInput = document.getElementById('target_scroll_hapus_bukti');
 
             buttons.forEach(button => {
                 button.addEventListener('click', function() {
                     const dokumenId = this.dataset.dokumenId;
                     const namaFile = this.dataset.namaFile;
-                    const activeTab = this.dataset.activeTab;
 
                     let actionUrl = "{{ route('auditee.bukti_dukung.hapus', ':id') }}";
                     actionUrl = actionUrl.replace(':id', dokumenId);
 
-                    form.action = actionUrl;
+                    form.setAttribute('action', actionUrl);
                     namaFileText.textContent = namaFile;
-                    activeTabInput.value = activeTab;
+
+                    activeTabInput.value = this.dataset.activeTab;
+                    openAccordionInput.value = this.dataset.openAccordion;
+                    targetScrollInput.value = this.dataset.targetScroll;
                 });
             });
         });

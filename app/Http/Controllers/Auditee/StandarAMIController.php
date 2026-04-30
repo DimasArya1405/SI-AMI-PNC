@@ -128,8 +128,12 @@ class StandarAMIController extends Controller
 
         return redirect()
             ->to(url()->previous() . '#item-' . $item->upt_item_sub_standar_id)
-            ->with('success', 'Bukti dukung berhasil diupload.')
-            ->with('active_tab', $request->active_tab);
+            ->with([
+                'success' => 'Bukti dukung berhasil diupload.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
     }
 
     public function hapusBukti(Request $request, $id)
@@ -159,7 +163,11 @@ class StandarAMIController extends Controller
 
         return redirect()
             ->to(url()->previous() . '#item-' . $itemId)
-            ->with('success', 'Bukti dukung berhasil dihapus.')
-            ->with('active_tab', $request->active_tab);
+            ->with([
+                'success' => 'Bukti dukung berhasil dihapus.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
     }
 }

@@ -81,6 +81,7 @@ class UptSubStandarMutuController extends Controller
     {
         $activeTab = $request->active_tab;
         $targetScroll = $target ?: $request->target_scroll;
+        $openAccordion = $request->open_accordion;
 
         $url = url()->previous();
 
@@ -92,6 +93,7 @@ class UptSubStandarMutuController extends Controller
             ->to($url)
             ->with('success', $message)
             ->with('active_tab', $activeTab)
-            ->with('target_scroll', $targetScroll);
+            ->with('target_scroll', $targetScroll)
+            ->with('open_accordion', $openAccordion);
     }
 }
