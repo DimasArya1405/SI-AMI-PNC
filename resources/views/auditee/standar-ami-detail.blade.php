@@ -189,11 +189,16 @@
                                                                 </p>
 
                                                                 <div class="flex items-center gap-2">
-                                                                    <a href="{{ asset('storage/' . $bukti->file_path) }}"
-                                                                        target="_blank"
+                                                                    <button type="button"
+                                                                        onclick="openSmartPreview(
+                                                                            '{{ route('auditee.bukti_dukung.preview', $bukti->dokumen_id) }}',
+                                                                            '{{ route('auditee.bukti_dukung.download', $bukti->dokumen_id) }}',
+                                                                            '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
+                                                                            '{{ $bukti->nama_file }}'
+                                                                        )"
                                                                         class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
                                                                         Lihat
-                                                                    </a>
+                                                                    </button>
 
                                                                     @if (!$status_periode)
                                                                     <button type="button"
@@ -222,7 +227,7 @@
                                                         <form action="{{ route('auditee.bukti_dukung.upload') }}"
                                                             method="POST"
                                                             enctype="multipart/form-data"
-                                                            class="space-y-3">
+                                                            class="formUploadBukti space-y-3">
                                                             @csrf
 
                                                             <input type="hidden" name="upt_item_sub_standar_id" value="{{ $item->upt_item_sub_standar_id }}">
@@ -238,8 +243,16 @@
                                                                 required>
 
                                                             <button type="submit"
-                                                                class="bg-green-500 hover:bg-green-700 text-white text-sm px-4 py-2 rounded">
-                                                                Upload Bukti
+                                                                class="btnUpload bg-green-500 hover:bg-green-700 text-white text-sm px-4 py-2 rounded flex items-center gap-2">
+
+                                                                <span class="textUpload">Upload Bukti</span>
+
+                                                                <svg class="spinnerUpload hidden animate-spin h-4 w-4 text-white"
+                                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                    <path class="opacity-75" fill="currentColor"
+                                                                        d="M4 12a8 8 0 018-8v8z"></path>
+                                                                </svg>
                                                             </button>
                                                         </form>
                                                         @endif
@@ -332,9 +345,18 @@
                         <input type="hidden" name="active_tab" id="active_tab_hapus_bukti">
 
                         <div class="flex items-center space-x-4 justify-center">
-                            <button data-modal-hide="modal-hapus-bukti" type="submit"
-                                class="text-white transition duration-300 ease-in-out bg-blue-500 box-border border border-transparent hover:bg-blue-700 focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
-                                Iya, saya yakin
+                            <button type="submit"
+                                class="btnHapus text-white transition duration-300 ease-in-out bg-blue-500 hover:bg-blue-700 rounded-base text-sm px-4 py-2.5 flex items-center gap-2">
+
+                                <span class="textHapus">Iya, saya yakin</span>
+
+                                <svg class="spinnerHapus hidden animate-spin h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v8z"></path>
+                                </svg>
+
                             </button>
 
                             <button data-modal-hide="modal-hapus-bukti" type="button"
@@ -348,7 +370,226 @@
         </div>
     </div>
 
+    {{-- Modal Preview Bukti --}}
+    <div id="previewModal" class="fixed inset-0 bg-black/70 hidden justify-center items-center z-50">
+        <div class="bg-white w-[90%] h-[90%] rounded-lg overflow-hidden relative">
+
+            <div class="flex justify-between items-center px-4 py-3 border-b">
+                <h3 id="previewTitle" class="font-semibold text-sm text-gray-700 truncate">
+                    Preview File
+                </h3>
+
+                <button onclick="closeSmartPreview()"
+                    class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded">
+                    X
+                </button>
+            </div>
+
+            <div id="previewLoading"
+                class="absolute inset-0 flex flex-col items-center justify-center bg-white">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                <p class="mt-3 text-gray-600 text-sm">Memuat preview...</p>
+            </div>
+
+            <div id="previewError"
+                class="hidden h-[calc(100%-52px)] flex flex-col items-center justify-center text-center px-4">
+                <p class="text-red-500 font-semibold mb-2">Preview tidak tersedia</p>
+                <p id="previewErrorText" class="text-gray-500 text-sm mb-4">
+                    File ini tidak bisa ditampilkan langsung.
+                </p>
+
+                <a id="previewDownloadLink"
+                    href="#"
+                    class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Download File
+                </a>
+            </div>
+
+            <iframe id="previewFrame"
+                class="hidden w-full h-[calc(100%-52px)]"></iframe>
+
+            <div id="previewImageWrapper"
+                class="hidden w-full h-[calc(100%-52px)] bg-gray-100 items-center justify-center overflow-auto">
+                <img id="previewImage"
+                    src=""
+                    class="max-w-full max-h-full object-contain">
+            </div>
+
+        </div>
+    </div>
+
+    {{-- Loading Overlay --}}
+    <div id="loadingOverlay"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white p-6 rounded-lg flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            <p id="loadingText" class="mt-3 text-gray-600">Memproses...</p>
+        </div>
+
+    </div>
+
     <script>
+        // JS LOADING HAPUS BUKTI
+        const formHapus = document.getElementById('form-hapus-bukti');
+
+        if (formHapus) {
+            formHapus.addEventListener('submit', function() {
+
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingText').textContent = 'Menghapus dokumen...';
+
+                const btn = formHapus.querySelector('.btnHapus');
+                const text = formHapus.querySelector('.textHapus');
+                const spinner = formHapus.querySelector('.spinnerHapus');
+
+                btn.disabled = true;
+                text.textContent = 'Menghapus...';
+                spinner.classList.remove('hidden');
+            });
+        }
+
+        // JS LOADING UPLOAD BUKTI
+        document.querySelectorAll('.formUploadBukti').forEach(function(form) {
+            form.addEventListener('submit', function() {
+
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingText').textContent = 'Mengupload dokumen...';
+
+                const btn = form.querySelector('.btnUpload');
+                const text = form.querySelector('.textUpload');
+                const spinner = form.querySelector('.spinnerUpload');
+
+                btn.disabled = true;
+                text.textContent = 'Mengupload...';
+                spinner.classList.remove('hidden');
+            });
+        });
+
+        // JS MODAL PREVIEW
+        let previewTimeout;
+
+        function openSmartPreview(previewUrl, downloadUrl, extension, fileName) {
+            const modal = document.getElementById('previewModal');
+            const title = document.getElementById('previewTitle');
+            const loading = document.getElementById('previewLoading');
+            const error = document.getElementById('previewError');
+            const errorText = document.getElementById('previewErrorText');
+            const downloadLink = document.getElementById('previewDownloadLink');
+            const frame = document.getElementById('previewFrame');
+            const imageWrapper = document.getElementById('previewImageWrapper');
+            const image = document.getElementById('previewImage');
+
+            clearTimeout(previewTimeout);
+
+            // reset event lama
+            frame.onload = null;
+            image.onload = null;
+            image.onerror = null;
+
+            // reset tampilan
+            title.textContent = fileName;
+            downloadLink.href = downloadUrl;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            frame.classList.add('hidden');
+            imageWrapper.classList.add('hidden');
+            imageWrapper.classList.remove('flex');
+
+            errorText.textContent = 'File ini tidak bisa ditampilkan langsung.';
+
+            frame.src = 'about:blank';
+            image.src = '';
+
+            const pdfFiles = ['pdf'];
+            const imageFiles = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const textFiles = ['txt', 'csv'];
+            const officeFiles = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+            if (pdfFiles.includes(extension) || textFiles.includes(extension)) {
+                frame.src = previewUrl;
+
+                // previewTimeout = setTimeout(() => {
+                //     loading.classList.add('hidden');
+                //     error.classList.remove('hidden');
+                //     errorText.textContent = 'Preview terlalu lama dimuat. Silakan download file.';
+                // }, 10000);
+
+                frame.onload = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    frame.classList.remove('hidden');
+                };
+
+                return;
+            }
+
+            if (imageFiles.includes(extension)) {
+                image.src = previewUrl;
+
+                // previewTimeout = setTimeout(() => {
+                //     loading.classList.add('hidden');
+                //     error.classList.remove('hidden');
+                //     errorText.textContent = 'Gambar terlalu lama dimuat. Silakan download file.';
+                // }, 10000);
+
+                image.onload = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    imageWrapper.classList.remove('hidden');
+                    imageWrapper.classList.add('flex');
+                };
+
+                image.onerror = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    error.classList.remove('hidden');
+                    errorText.textContent = 'Gambar gagal ditampilkan.';
+                };
+
+                return;
+            }
+
+            loading.classList.add('hidden');
+            error.classList.remove('hidden');
+
+            if (officeFiles.includes(extension)) {
+                errorText.textContent = 'File Word, Excel, atau PowerPoint tidak bisa dipreview langsung di browser.';
+            } else {
+                errorText.textContent = 'Format file ini tidak mendukung preview langsung.';
+            }
+        }
+
+        function closeSmartPreview() {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('previewFrame');
+            const image = document.getElementById('previewImage');
+            const loading = document.getElementById('previewLoading');
+            const error = document.getElementById('previewError');
+            const imageWrapper = document.getElementById('previewImageWrapper');
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            clearTimeout(previewTimeout);
+
+            frame.onload = null;
+            image.onload = null;
+            image.onerror = null;
+
+            frame.src = 'about:blank';
+            image.src = '';
+
+            loading.classList.add('hidden');
+            error.classList.add('hidden');
+            imageWrapper.classList.add('hidden');
+            imageWrapper.classList.remove('flex');
+        }
+
         // JS ACORDION
         document.addEventListener('DOMContentLoaded', function() {
             const openAccordion = @json(session('open_accordion'));
@@ -474,6 +715,7 @@
             }
         });
 
+        // JS ACTIVE TAB
         document.addEventListener('DOMContentLoaded', function() {
             const activeTab = @json(session('active_tab'));
 
@@ -501,6 +743,7 @@
             }
         });
 
+        // JS Back To Top
         document.addEventListener('DOMContentLoaded', function() {
             const backToTopButton = document.getElementById('backToTop');
 

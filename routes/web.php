@@ -133,6 +133,8 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/ami/detail/{upt_id}/{periode_id}', [StandarAMIController::class, 'detail'])->name('auditee.ami.detail');
     Route::post('/auditee/ami/bukti-dukung/upload', [StandarAMIController::class, 'uploadBukti'])->name('auditee.bukti_dukung.upload');
     Route::delete('/auditee/ami/bukti-dukung/{id}', [StandarAMIController::class, 'hapusBukti'])->name('auditee.bukti_dukung.hapus');
+    Route::get('/auditee/ami/bukti-dukung/{id}/download', [StandarAMIController::class, 'downloadBukti'])->name('auditee.bukti_dukung.download');
+    Route::get('/auditee/ami/bukti-dukung/{id}/preview', [StandarAMIController::class, 'previewBukti'])->name('auditee.bukti_dukung.preview');
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
