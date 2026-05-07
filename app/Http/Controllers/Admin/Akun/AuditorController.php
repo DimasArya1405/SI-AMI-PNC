@@ -36,7 +36,7 @@ class AuditorController extends Controller
         $newUser->id = Str::uuid();
         $newUser->name = $request->nama;
         $newUser->email = $request->email;
-        $newUser->password = Hash::make($request->nama);
+        $newUser->password = Hash::make($request->nip);
         $newUser->role = 'auditor';
         $newUser->save();
 

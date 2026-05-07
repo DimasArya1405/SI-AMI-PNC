@@ -20,6 +20,7 @@ use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
+use App\Http\Controllers\Auditor\PelaksanaanAuditController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,13 +28,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 // Route umum setelah login
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return view('template_dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grouping berdasarkan role
@@ -118,6 +115,12 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/penugasan/ajukan', [AuditorPenugasanController::class, 'ajukan'])->name('auditor.penugasan.ajukan');
     Route::post('/auditor/penugasan/setuju', [AuditorPenugasanController::class, 'setuju'])->name('auditor.penugasan.setuju');
     Route::post('/auditor/penugasan/tolak', [AuditorPenugasanController::class, 'tolak'])->name('auditor.penugasan.tolak');
+    
+    // ROUTE PELAKSANAN AUDIT
+    Route::get('/auditor/pelaksanaan-audit', [PelaksanaanAuditController::class, 'index'])->name('auditor.pelaksanaan_audit');
+    Route::get('/auditor/pelaksanaan-audit/detail/{id}', [PelaksanaanAuditController::class, 'detail'])->name('auditor.pelaksanaan_audit.detail');
+    Route::post('/auditor/pelaksanaan-audit/penilaian/{id}', [PelaksanaanAuditController::class, 'penilaian'])->name('auditor.pelaksanaan_audit.penilaian');
+    
 });
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
