@@ -3,6 +3,7 @@
 namespace App\DataTables\Auditee;
 
 use App\Models\Auditee;
+use App\Models\Penugasan;
 use App\Models\StandarAMI;
 use App\Models\UptStandarMutu;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
@@ -42,7 +43,7 @@ class StandarAMIDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(UptStandarMutu $model): QueryBuilder
+    public function query(Penugasan $model): QueryBuilder
     {
         $user = Auth::user();
 
@@ -50,22 +51,27 @@ class StandarAMIDataTable extends DataTable
         $uptId = $auditee?->upt_id;
 
         return $model->newQuery()
-            ->join('upt', 'upt_standar_mutu.upt_id', '=', 'upt.upt_id')
+            ->join('upt', 'penugasan.upt_id', '=', 'upt.upt_id')
+            ->join('periode', 'penugasan.periode_id', '=', 'periode.id')
+            ->join('upt_standar_mutu', function ($join) {
+                $join->on('penugasan.upt_id', '=', 'upt_standar_mutu.upt_id')
+                    ->on('penugasan.periode_id', '=', 'upt_standar_mutu.periode_id');
+            })
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
-            ->join('periode', 'upt_standar_mutu.periode_id', '=', 'periode.id')
-            ->where('upt_standar_mutu.upt_id', $uptId)
+            ->where('penugasan.upt_id', $uptId)
+            ->where('penugasan.status_penugasan', 'aktif')
             ->select(
-                'upt_standar_mutu.upt_id',
+                'penugasan.upt_id as upt_id',
                 'upt.nama_upt',
-                'periode.id as periode_id',
+                'penugasan.periode_id as periode_id',
                 'periode.tahun as periode_tahun',
-                DB::raw("GROUP_CONCAT(DISTINCT standar_mutu.standar_mutu_id ORDER BY standar_mutu.nama_standar_mutu SEPARATOR ',') as standar_mutu_ids"),
-                DB::raw("GROUP_CONCAT(DISTINCT standar_mutu.nama_standar_mutu ORDER BY standar_mutu.nama_standar_mutu SEPARATOR ', ') as nama_standar_mutu")
+                DB::raw("GROUP_CONCAT(DISTINCT standar_mutu.standar_mutu_id ORDER BY standar_mutu.urutan ASC SEPARATOR ',') as standar_mutu_ids"),
+                DB::raw("GROUP_CONCAT(DISTINCT standar_mutu.nama_standar_mutu ORDER BY standar_mutu.urutan ASC SEPARATOR ', ') as nama_standar_mutu")
             )
             ->groupBy(
-                'upt_standar_mutu.upt_id',
+                'penugasan.upt_id',
                 'upt.nama_upt',
-                'periode.id',
+                'penugasan.periode_id',
                 'periode.tahun'
             );
     }

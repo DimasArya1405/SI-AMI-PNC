@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dokumen', function (Blueprint $table) {
-            $table->uuid('dokumen_id')->primary();
+        Schema::create('jawaban_ami', function (Blueprint $table) {
+            $table->uuid('jawaban_id')->primary();
 
             $table->uuid('upt_item_sub_standar_id');
-            $table->uuid('auditee_id');
+            $table->uuid('penugasan_id');
 
             $table->string('nama_file');
             $table->string('file_path');
@@ -29,9 +29,9 @@ return new class extends Migration
                 ->on('upt_item_sub_standar_mutu')
                 ->cascadeOnDelete();
 
-            $table->foreign('auditee_id')
-                ->references('auditee_id')
-                ->on('auditee')
+            $table->foreign('penugasan_id')
+                ->references('penugasan_id')
+                ->on('penugasan')
                 ->cascadeOnDelete();
         });
     }
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dokumen');
+        Schema::dropIfExists('jawaban_ami');
     }
 };

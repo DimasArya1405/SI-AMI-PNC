@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Auditee;
 use App\DataTables\Auditee\StandarAMIDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
-use App\Models\Dokumen;
+use App\Models\JawabanAMI;
+use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\UPT;
 use App\Models\UptItemSubStandarMutu;
@@ -57,7 +58,11 @@ class StandarAMIController extends Controller
             ->get()
             ->groupBy('upt_sub_standar_id');
 
-        $buktiDukung = Dokumen::where('auditee_id', $auditee->auditee_id)
+        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+            ->where('periode_id', $periode_id)
+            ->firstOrFail();
+
+        $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
             ->get()
             ->groupBy('upt_item_sub_standar_id');
 
@@ -68,7 +73,8 @@ class StandarAMIController extends Controller
             'uptSubStandar',
             'uptItemSubStandar',
             'buktiDukung',
-            'status_periode'
+            'status_periode',
+            'penugasan'
         ));
     }
 
@@ -96,6 +102,10 @@ class StandarAMIController extends Controller
 
         $auditee = Auditee::with('upt')
             ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+            ->where('periode_id', $validated['periode_id'])
             ->firstOrFail();
 
         $item = UptItemSubStandarMutu::with('upt_sub_standar.standar_mutu')
@@ -126,10 +136,10 @@ class StandarAMIController extends Controller
                 file_get_contents($file->getRealPath())
             );
 
-            Dokumen::create([
-                'dokumen_id' => Str::uuid()->toString(),
+            JawabanAMI::create([
+                'jawaban_id' => Str::uuid()->toString(),
                 'upt_item_sub_standar_id' => $item->upt_item_sub_standar_id,
-                'auditee_id' => $auditee->auditee_id,
+                'penugasan_id' => $penugasan->penugasan_id,
                 'nama_file' => $file->getClientOriginalName(),
                 'file_path' => $path,
                 'keterangan' => $validated['keterangan'] ?? null,
@@ -150,8 +160,10 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = Dokumen::where('dokumen_id', $id)
-            ->where('auditee_id', $auditee->auditee_id)
+        $dokumen = JawabanAMI::where('jawaban_id', $id)
+            ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
+                $query->where('auditee_id', $auditee->auditee_id);
+            })
             ->firstOrFail();
 
         $itemId = $dokumen->upt_item_sub_standar_id;
@@ -185,8 +197,10 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = Dokumen::where('dokumen_id', $id)
-            ->where('auditee_id', $auditee->auditee_id)
+        $dokumen = JawabanAMI::where('jawaban_id', $id)
+            ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
+                $query->where('auditee_id', $auditee->auditee_id);
+            })
             ->firstOrFail();
 
         if (!Storage::disk('google')->exists($dokumen->file_path)) {
@@ -202,8 +216,10 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = Dokumen::where('dokumen_id', $id)
-            ->where('auditee_id', $auditee->auditee_id)
+        $dokumen = JawabanAMI::where('jawaban_id', $id)
+            ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
+                $query->where('auditee_id', $auditee->auditee_id);
+            })
             ->firstOrFail();
 
         if (!Storage::disk('google')->exists($dokumen->file_path)) {
