@@ -517,6 +517,85 @@
                         </div>
                     </div>
 
+                    {{-- Multi Select UPT --}}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Pilih UPT / Unit / Bagian
+                        </label>
+
+                        <button id="dropdownSearchButtonUpt"
+                            data-dropdown-toggle="dropdownSearchUpt"
+                            data-dropdown-placement="bottom"
+                            type="button"
+                            class="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300">
+                            <span id="upt-selected-text">Pilih UPT</span>
+
+                            <svg class="w-2.5 h-2.5 ms-2" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 10 6">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m1 1 4 4 4-4" />
+                            </svg>
+                        </button>
+
+                        <div id="dropdownSearchUpt"
+                            class="z-50 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+
+                            <div class="p-3 border-b border-gray-200">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 20 20">
+                                            <path stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" stroke-width="2"
+                                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                        </svg>
+                                    </div>
+
+                                    <input type="text" id="input-group-search-upt"
+                                        class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Cari UPT">
+                                </div>
+                            </div>
+
+                            <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
+                                id="upt-list">
+
+                                <li class="py-2 border-b border-gray-100">
+                                    <div class="flex items-center">
+                                        <input id="checkbox-all-upt" type="checkbox"
+                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                                        <label for="checkbox-all-upt"
+                                            class="ms-2 text-sm font-medium text-gray-900">
+                                            Pilih Semua
+                                        </label>
+                                    </div>
+                                </li>
+
+                                @foreach ($uptList as $item)
+                                <li class="py-2 upt-item">
+                                    <div class="flex items-center">
+                                        <input id="upt-{{ $item->upt_id }}"
+                                            type="checkbox"
+                                            name="upt_ids[]"
+                                            value="{{ $item->upt_id }}"
+                                            class="upt-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                                        <label for="upt-{{ $item->upt_id }}"
+                                            class="ms-2 text-sm font-medium text-gray-900 upt-label">
+                                            {{ $item->upt?->nama_upt ?? 'UPT tidak ditemukan' }}
+                                        </label>
+                                    </div>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+                        <p class="mt-2 text-sm text-gray-500">
+                            Bisa pilih lebih dari satu UPT.
+                        </p>
+                    </div>
+
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
                         <button type="submit"
                             class="inline-flex items-center text-white bg-blue-500 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-xs font-medium rounded-base text-sm px-4 py-2.5 focus:outline-none transition duration-200 ease-in-out">
@@ -538,22 +617,20 @@
         class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 
         <div class="relative w-full max-w-lg p-4">
-            <div class="relative bg-white rounded-2xl shadow-lg">
+            <div class="relative bg-white shadow-lg">
 
-                {{-- Header --}}
                 <div class="flex items-center justify-between p-5 border-b rounded-t">
                     <h3 class="text-xl font-semibold text-gray-900">
                         Import Excel Standar Mutu
                     </h3>
 
                     <button type="button"
-                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
+                        class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8"
                         data-modal-hide="modal-import">
                         ✕
                     </button>
                 </div>
 
-                {{-- Form --}}
                 <form action="{{ route('admin.upt_standar_mutu.import') }}"
                     method="POST"
                     enctype="multipart/form-data"
@@ -566,7 +643,7 @@
                             Pilih Periode
                         </label>
                         <select name="periode_id"
-                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-3"
                             required>
                             <option value="">-- Pilih Periode --</option>
                             @foreach ($periodeList as $periode)
@@ -577,19 +654,130 @@
                         </select>
                     </div>
 
-                    {{-- Target Import --}}
+                    {{-- Standar Mutu Multi Select + Pilih Semua --}}
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-700">
+                            Pilih Standar Mutu
+                        </label>
+
+                        <button id="dropdownStandarButton"
+                            data-dropdown-toggle="dropdownStandar"
+                            data-dropdown-placement="bottom"
+                            type="button"
+                            class="w-full text-left border border-gray-300 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3 inline-flex items-center justify-between">
+
+                            <span id="selectedStandarText">
+                                -- Pilih Standar Mutu --
+                            </span>
+
+                            <svg class="w-2.5 h-2.5 ms-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 10 6">
+                                <path stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="m1 1 4 4 4-4" />
+                            </svg>
+                        </button>
+
+                        <div id="dropdownStandar"
+                            class="z-50 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+
+                            {{-- Search --}}
+                            <div class="p-3 border-b">
+                                <input type="text"
+                                    id="searchStandar"
+                                    placeholder="Cari standar mutu..."
+                                    class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            {{-- Pilih Semua --}}
+                            <div class="p-3 border-b bg-gray-50">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox"
+                                        id="checkAllStandar"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+
+                                    <span class="text-sm font-semibold text-gray-700">
+                                        Pilih Semua
+                                    </span>
+                                </label>
+                            </div>
+
+                            {{-- List Standar --}}
+                            <ul id="standarList"
+                                class="max-h-64 overflow-y-auto text-sm text-gray-700 p-3 space-y-2">
+
+                                @foreach ($standarMutu as $standar)
+                                <li class="standar-item">
+                                    <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+
+                                        <input type="checkbox"
+                                            name="standar_mutu_ids[]"
+                                            value="{{ $standar->standar_mutu_id }}"
+                                            class="standar-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded">
+
+                                        <span>
+                                            {{ $standar->nama_standar_mutu }}
+                                        </span>
+                                    </label>
+                                </li>
+                                @endforeach
+
+                            </ul>
+                        </div>
+
+                        <p class="mt-2 text-xs text-gray-500">
+                            Bisa pilih lebih dari satu standar mutu atau pilih semua.
+                        </p>
+                    </div>
+
+                    {{-- Target Import --}}
+                    <div>
+                        <label class="block mb-3 text-sm font-medium text-gray-700">
                             Target Import
                         </label>
-                        <select name="target_type"
-                            id="target_type_import"
-                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
-                            required>
-                            <option value="all_prodi">Semua Prodi</option>
-                            <option value="unit_bagian">Unit / Bagian</option>
-                        </select>
+
+                        <div class="flex flex-col gap-3">
+
+                            {{-- Radio Semua Prodi --}}
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio"
+                                    name="target_type"
+                                    id="target_all_prodi"
+                                    value="all_prodi"
+                                    checked
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+
+                                <span class="text-sm text-gray-700">
+                                    Semua Prodi
+                                </span>
+                            </label>
+
+                            {{-- Radio Unit / Bagian --}}
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio"
+                                    name="target_type"
+                                    id="target_unit_bagian"
+                                    value="unit_bagian"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+
+                                <span class="text-sm text-gray-700">
+                                    Unit / Bagian
+                                </span>
+                            </label>
+
+                        </div>
                     </div>
+
+                    {{-- Info Semua Prodi --}}
+                    {{-- <div id="info-prodi"
+                        class="p-4 text-sm text-blue-700 bg-blue-50 rounded-lg">
+                        Standar yang dipilih akan diterapkan ke semua UPT dengan kategori
+                        <strong>Prodi</strong>.
+                    </div> --}}
 
                     {{-- Unit / Bagian --}}
                     <div id="wrapper-upt-unit" class="hidden">
@@ -598,9 +786,9 @@
                         </label>
 
                         <select name="upt_ids[]"
-                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500">
+                            disabled
+                            class="w-full border border-gray-300 rounded-lg p-3">
                             <option value="">-- Pilih Unit / Bagian --</option>
-
                             @foreach ($uptUnitBagian as $upt)
                             <option value="{{ $upt->upt_id }}">
                                 {{ $upt->nama_upt }}
@@ -609,7 +797,7 @@
                         </select>
                     </div>
 
-                    {{-- File Upload --}}
+                    {{-- File --}}
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-700">
                             Upload File Excel
@@ -618,25 +806,20 @@
                         <input type="file"
                             name="file_excel"
                             accept=".xlsx,.xls"
-                            class="w-full border border-gray-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4
-                               file:rounded-lg file:border-0
-                               file:text-sm file:font-semibold
-                               file:bg-blue-50 file:text-blue-700
-                               hover:file:bg-blue-100"
+                            class="w-full border border-gray-300 rounded-lg p-2"
                             required>
                     </div>
 
-                    {{-- Footer --}}
-                    <div class="flex justify-end gap-3 pt-4 border-t">
-                        <button type="button"
-                            data-modal-hide="modal-import"
-                            class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">
-                            Batal
+                    <div class="flex justify-start gap-3 pt-4 border-t">
+                        <button type="submit"
+                            class="px-5 py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-700">
+                            Import Excel
                         </button>
 
-                        <button type="submit"
-                            class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                            Import Excel
+                        <button type="button"
+                            data-modal-hide="modal-import"
+                            class="px-5 py-2.5 text-sm border">
+                            Batal
                         </button>
                     </div>
                 </form>
@@ -648,28 +831,148 @@
     {{-- JS --}}
     @push('js')
     <script>
+        // JS MODAL COPY PERIODE
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('input-group-search-upt');
+            const uptItems = document.querySelectorAll('.upt-item');
+            const uptCheckboxes = document.querySelectorAll('.upt-checkbox');
+            const checkboxAll = document.getElementById('checkbox-all-upt');
+            const selectedText = document.getElementById('upt-selected-text');
+
+            function updateSelectedText() {
+                const checked = document.querySelectorAll('.upt-checkbox:checked');
+
+                if (checked.length === 0) {
+                    selectedText.textContent = 'Pilih UPT';
+                } else if (checked.length === uptCheckboxes.length) {
+                    selectedText.textContent = 'Semua UPT dipilih';
+                } else {
+                    selectedText.textContent = checked.length + ' UPT dipilih';
+                }
+
+                checkboxAll.checked = checked.length === uptCheckboxes.length;
+            }
+
+            searchInput.addEventListener('keyup', function() {
+                const keyword = this.value.toLowerCase();
+
+                uptItems.forEach(function(item) {
+                    const label = item.querySelector('.upt-label').textContent.toLowerCase();
+
+                    if (label.includes(keyword)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+
+            checkboxAll.addEventListener('change', function() {
+                uptCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = checkboxAll.checked;
+                });
+
+                updateSelectedText();
+            });
+
+            uptCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateSelectedText);
+            });
+
+            updateSelectedText();
+        });
+
         // JS MODAL IMPORT
         document.addEventListener('DOMContentLoaded', function() {
-            const targetType = document.getElementById('target_type_import');
+            const standarCheckboxes = document.querySelectorAll('.standar-checkbox');
+            const checkAllStandar = document.getElementById('checkAllStandar');
+            const selectedStandarText = document.getElementById('selectedStandarText');
+            const searchStandar = document.getElementById('searchStandar');
+            const standarItems = document.querySelectorAll('.standar-item');
+
+            function updateStandarText() {
+                const checked = document.querySelectorAll('.standar-checkbox:checked');
+
+                if (checked.length === 0) {
+                    selectedStandarText.textContent = '-- Pilih Standar Mutu --';
+                } else if (checked.length === standarCheckboxes.length) {
+                    selectedStandarText.textContent = 'Semua Standar Dipilih';
+                } else {
+                    selectedStandarText.textContent =
+                        checked.length + ' standar dipilih';
+                }
+            }
+
+            checkAllStandar.addEventListener('change', function() {
+                standarCheckboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+
+                updateStandarText();
+            });
+
+            standarCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const total = standarCheckboxes.length;
+                    const checked = document.querySelectorAll('.standar-checkbox:checked').length;
+
+                    checkAllStandar.checked = total === checked;
+
+                    updateStandarText();
+                });
+            });
+
+            searchStandar.addEventListener('keyup', function() {
+                const keyword = this.value.toLowerCase();
+
+                standarItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+
+                    if (text.includes(keyword)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+
+            updateStandarText();
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioAllProdi = document.getElementById('target_all_prodi');
+            const radioUnitBagian = document.getElementById('target_unit_bagian');
             const wrapperUnit = document.getElementById('wrapper-upt-unit');
+            const infoProdi = document.getElementById('info-prodi');
             const selectUnit = wrapperUnit.querySelector('select');
 
-            function toggleUnit() {
-                if (targetType.value === 'unit_bagian') {
+            function toggleUnitBagian() {
+                if (radioUnitBagian.checked) {
+                    // tampilkan dropdown unit/bagian
                     wrapperUnit.classList.remove('hidden');
                     selectUnit.disabled = false;
                     selectUnit.required = true;
+
+                    // sembunyikan info prodi
+                    infoProdi.classList.add('hidden');
+
                 } else {
+                    // sembunyikan dropdown unit/bagian
                     wrapperUnit.classList.add('hidden');
                     selectUnit.disabled = true;
                     selectUnit.required = false;
                     selectUnit.value = '';
+
+                    // tampilkan info prodi
+                    infoProdi.classList.remove('hidden');
                 }
             }
 
-            targetType.addEventListener('change', toggleUnit);
-            toggleUnit();
+            radioAllProdi.addEventListener('change', toggleUnitBagian);
+            radioUnitBagian.addEventListener('change', toggleUnitBagian);
+
+            toggleUnitBagian();
         });
+
         // JS MODAL TAMBAH
         document.addEventListener('DOMContentLoaded', function() {
             const radios = document.querySelectorAll('.target-type');

@@ -87,178 +87,193 @@
                             </p>
                         </div>
 
-                        @forelse ($subStandarList as $sub)
-                        <div class="mb-5 border rounded-xl overflow-hidden">
-                            <div class="bg-gray-100 px-4 py-3">
-                                <h3 class="font-semibold text-gray-800">
-                                    {{ $sub->nama_sub_standar }}
-                                </h3>
-                            </div>
+                        <div id="accordion-auditee-{{ $standar->standar_mutu_id }}"
+                            data-accordion="collapse"
+                            class="space-y-4">
 
-                            <div class="p-4">
-                                @php
-                                $items = ($uptItemSubStandar[$sub->upt_sub_standar_id] ?? collect())
-                                ->sortBy([
-                                ['urutan', 'asc'],
-                                ['created_at', 'asc'],
-                                ]);
+                            @forelse ($subStandarList as $sub)
+                            @php
+                            $items = ($uptItemSubStandar[$sub->upt_sub_standar_id] ?? collect())->sortBy([
+                            ['urutan', 'asc'],
+                            ['created_at', 'asc'],
+                            ]);
 
-                                $nomorLevel1 = 0;
-                                @endphp
+                            $headingId = 'heading-auditee-' . $sub->upt_sub_standar_id;
+                            $bodyId = 'body-auditee-' . $sub->upt_sub_standar_id;
+                            @endphp
 
-                                @forelse ($items as $item)
-                                @php
-                                $level = $item->level ?? 1;
+                            <div id="sub-{{ $sub->upt_sub_standar_id }}"
+                                class="border rounded-xl overflow-hidden bg-white">
 
-                                $levelClass = match ($level) {
-                                1 => '',
-                                2 => 'ml-6',
-                                3 => 'ml-12',
-                                4 => 'ml-16',
-                                default => 'ml-20',
-                                };
+                                {{-- Header Accordion --}}
+                                <h2 id="{{ $headingId }}">
+                                    <button type="button"
+                                        class="flex items-center justify-between w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-left"
+                                        data-accordion-target="#{{ $bodyId }}"
+                                        aria-expanded="false"
+                                        aria-controls="{{ $bodyId }}">
 
-                                $buktiList = $buktiDukung[$item->upt_item_sub_standar_id] ?? collect();
-                                @endphp
-
-                                <div class="mb-4 rounded-lg border bg-white p-4 {{ $levelClass }}">
-                                    <div class="flex items-start gap-3">
-                                        <div class="text-sm font-semibold text-gray-500 min-w-[28px]">
-                                            @if ($level == 1)
-                                            @php $nomorLevel1++; @endphp
-                                            {{ $nomorLevel1 }}.
-                                            @else
-                                            ↳
-                                            @endif
+                                        <div>
+                                            <h3 class="font-semibold text-gray-800">
+                                                {{ $sub->nama_sub_standar }}
+                                            </h3>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Total item: {{ $items->count() }}
+                                            </p>
                                         </div>
 
-                                        <div id="item-{{ $item->upt_item_sub_standar_id }}" class="flex-1">
-                                            <p class="text-md font-medium text-gray-800">
-                                                {{ $item->nama_item }}
-                                            </p>
+                                        <i data-accordion-icon class="bi bi-chevron-down transition-transform"></i>
+                                    </button>
+                                </h2>
 
-                                            <div class="mt-4 rounded-lg border bg-gray-50 p-4">
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <h4 class="text-sm font-semibold text-gray-700">
-                                                        Bukti Dukung
-                                                    </h4>
+                                {{-- Body Accordion --}}
+                                <div id="{{ $bodyId }}"
+                                    class="hidden"
+                                    aria-labelledby="{{ $headingId }}">
 
-                                                    <span class="text-xs px-2 py-1 rounded-full {{ $buktiList->count() > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                                        {{ $buktiList->count() > 0 ? $buktiList->count() . ' file' : 'Belum ada' }}
-                                                    </span>
+                                    <div class="p-4">
+                                        @php
+                                        $nomorLevel1 = 0;
+                                        @endphp
+
+                                        @forelse ($items as $item)
+                                        @php
+                                        $level = $item->level ?? 1;
+
+                                        $levelClass = match ($level) {
+                                        1 => '',
+                                        2 => 'ml-6',
+                                        3 => 'ml-12',
+                                        4 => 'ml-16',
+                                        default => 'ml-20',
+                                        };
+
+                                        $buktiList = $buktiDukung[$item->upt_item_sub_standar_id] ?? collect();
+                                        @endphp
+
+                                        <div id="item-{{ $item->upt_item_sub_standar_id }}"
+                                            class="mb-4 rounded-lg border bg-white p-4 {{ $levelClass }}">
+
+                                            <div class="flex items-start gap-3">
+                                                <div class="text-sm font-semibold text-gray-500 min-w-[28px]">
+                                                    @if ($level == 1)
+                                                    @php $nomorLevel1++; @endphp
+                                                    {{ $nomorLevel1 }}.
+                                                    @else
+                                                    ↳
+                                                    @endif
                                                 </div>
 
-                                                @if ($buktiList->count() > 0)
-                                                <div class="space-y-2 mb-4">
-                                                    @foreach ($buktiList as $bukti)
-                                                    <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
-                                                        <div>
-                                                            <p class="text-sm font-medium text-gray-800">
-                                                                {{ $bukti->nama_file }}
-                                                            </p>
-                                                        </div>
-
-                                                        <div class="flex items-center gap-2">
-                                                            <a href="{{ asset('storage/' . $bukti->file_path) }}"
-                                                                target="_blank"
-                                                                class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
-                                                                Lihat
-                                                            </a>
-
-                                                            <form action="{{ route('auditee.bukti_dukung.hapus', $bukti->dokumen_id) }}"
-                                                                method="POST"
-                                                                onsubmit="return confirm('Yakin ingin menghapus file ini?')">
-                                                                @csrf
-                                                                @method('DELETE')
-
-                                                                @if(!$status_periode)
-                                                                <button type="button"
-                                                                    data-modal-target="modal-hapus-bukti"
-                                                                    data-modal-toggle="modal-hapus-bukti"
-                                                                    class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
-                                                                    data-dokumen-id="{{ $bukti->dokumen_id }}"
-                                                                    data-nama-file="{{ $bukti->nama_file }}">
-                                                                    Hapus
-                                                                </button>
-                                                                @endif
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                    @endforeach
-                                                </div>
-                                                @else
-                                                <p class="text-xs text-gray-500 mb-4">
-                                                    Belum ada bukti dukung untuk item ini.
-                                                </p>
-                                                @endif
-
-                                                @if (!$status_periode)
-                                                <form action="{{ route('auditee.bukti_dukung.upload') }}"
-                                                    method="POST"
-                                                    enctype="multipart/form-data"
-                                                    class="space-y-3">
-                                                    @csrf
-
-                                                    <input type="hidden"
-                                                        name="upt_item_sub_standar_id"
-                                                        value="{{ $item->upt_item_sub_standar_id }}">
-
-                                                    <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
-
-                                                    <input type="hidden" name="periode_id" value="{{ $periode->id }}">
-
-                                                    <div>
-                                                        <label class="block mb-1 text-sm font-medium text-gray-700">
-                                                            Upload File Bukti
-                                                        </label>
-                                                        <input type="file"
-                                                            name="file_bukti[]"
-                                                            multiple
-                                                            class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
-                                                            required>
-                                                        <p class="mt-1 text-xs text-gray-400">
-                                                            Bisa upload lebih dari satu file. Format: PDF, Word, Excel, JPG, PNG. Maksimal 5MB.
-                                                        </p>
-                                                    </div>
-
-                                                    <div>
-                                                        <label class="block mb-1 text-sm font-medium text-gray-700">
-                                                            Keterangan
-                                                        </label>
-                                                        <textarea name="keterangan"
-                                                            rows="2"
-                                                            class="w-full text-sm border-gray-300 rounded-lg"
-                                                            placeholder=""></textarea>
-                                                    </div>
-
-                                                    <button type="submit"
-                                                        class="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                                                        Upload Bukti
-                                                    </button>
-                                                </form>
-                                                @else
-                                                <div class="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
-                                                    <p class="text-sm text-yellow-700">
-                                                        Periode ini sudah tidak aktif. Data hanya dapat dilihat.
+                                                <div class="flex-1">
+                                                    <p class="text-md font-medium text-gray-800">
+                                                        {{ $item->nama_item }}
                                                     </p>
+
+                                                    <div class="mt-4 rounded-lg border bg-gray-50 p-4">
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <h4 class="text-sm font-semibold text-gray-700">
+                                                                Bukti Dukung
+                                                            </h4>
+
+                                                            <span class="text-xs px-2 py-1 rounded-full {{ $buktiList->count() > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                                                {{ $buktiList->count() > 0 ? $buktiList->count() . ' file' : 'Belum ada' }}
+                                                            </span>
+                                                        </div>
+
+                                                        @if ($buktiList->count() > 0)
+                                                        <div class="space-y-2 mb-4">
+                                                            @foreach ($buktiList as $bukti)
+                                                            <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
+                                                                <p class="text-sm font-medium text-gray-800">
+                                                                    {{ $bukti->nama_file }}
+                                                                </p>
+
+                                                                <div class="flex items-center gap-2">
+                                                                    <button type="button"
+                                                                        onclick="openSmartPreview(
+                                                                            '{{ route('auditee.bukti_dukung.preview', $bukti->dokumen_id) }}',
+                                                                            '{{ route('auditee.bukti_dukung.download', $bukti->dokumen_id) }}',
+                                                                            '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
+                                                                            '{{ $bukti->nama_file }}'
+                                                                        )"
+                                                                        class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
+                                                                        Lihat
+                                                                    </button>
+
+                                                                    @if (!$status_periode)
+                                                                    <button type="button"
+                                                                        data-modal-target="modal-hapus-bukti"
+                                                                        data-modal-toggle="modal-hapus-bukti"
+                                                                        class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
+                                                                        data-dokumen-id="{{ $bukti->dokumen_id }}"
+                                                                        data-nama-file="{{ $bukti->nama_file }}"
+                                                                        data-active-tab="content-{{ $standar->standar_mutu_id }}"
+                                                                        data-open-accordion="{{ $bodyId }}"
+                                                                        data-target-scroll="item-{{ $item->upt_item_sub_standar_id }}">
+                                                                        Hapus
+                                                                    </button>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
+                                                        @else
+                                                        <p class="text-xs text-gray-500 mb-4">
+                                                            Belum ada bukti dukung untuk item ini.
+                                                        </p>
+                                                        @endif
+
+                                                        @if (!$status_periode)
+                                                        <form action="{{ route('auditee.bukti_dukung.upload') }}"
+                                                            method="POST"
+                                                            enctype="multipart/form-data"
+                                                            class="formUploadBukti space-y-3">
+                                                            @csrf
+
+                                                            <input type="hidden" name="upt_item_sub_standar_id" value="{{ $item->upt_item_sub_standar_id }}">
+                                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                            <input type="hidden" name="open_accordion" value="{{ $bodyId }}">
+                                                            <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
+                                                            <input type="hidden" name="periode_id" value="{{ $periode->id }}">
+
+                                                            <input type="file"
+                                                                name="file_bukti[]"
+                                                                multiple
+                                                                class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
+                                                                required>
+
+                                                            <button type="submit"
+                                                                class="btnUpload bg-green-500 hover:bg-green-700 text-white text-sm px-4 py-2 rounded flex items-center gap-2">
+
+                                                                <span class="textUpload">Upload Bukti</span>
+
+                                                                <svg class="spinnerUpload hidden animate-spin h-4 w-4 text-white"
+                                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                    <path class="opacity-75" fill="currentColor"
+                                                                        d="M4 12a8 8 0 018-8v8z"></path>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
                                                 </div>
-                                                @endif
                                             </div>
                                         </div>
+                                        @empty
+                                        <div class="bg-yellow-50 text-yellow-800 text-sm rounded-lg p-4">
+                                            Belum ada item pada sub standar ini.
+                                        </div>
+                                        @endforelse
                                     </div>
                                 </div>
-                                @empty
-                                <div class="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg">
-                                    Belum ada item pada sub standar ini.
-                                </div>
-                                @endforelse
                             </div>
+                            @empty
+                            <div class="bg-yellow-50 text-yellow-800 text-sm rounded-lg p-4">
+                                Belum ada sub standar pada standar ini.
+                            </div>
+                            @endforelse
                         </div>
-                        @empty
-                        <div class="p-4 text-sm text-yellow-800 bg-yellow-50 rounded-lg">
-                            Belum ada sub standar pada standar ini.
-                        </div>
-                        @endforelse
                     </div>
                     @endforeach
                 </div>
@@ -325,10 +340,23 @@
                         @csrf
                         @method('delete')
 
+                        <input type="hidden" name="open_accordion" id="open_accordion_hapus_bukti">
+                        <input type="hidden" name="target_scroll" id="target_scroll_hapus_bukti">
+                        <input type="hidden" name="active_tab" id="active_tab_hapus_bukti">
+
                         <div class="flex items-center space-x-4 justify-center">
-                            <button data-modal-hide="modal-hapus-bukti" type="submit"
-                                class="text-white transition duration-300 ease-in-out bg-blue-500 box-border border border-transparent hover:bg-blue-700 focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">
-                                Iya, saya yakin
+                            <button type="submit"
+                                class="btnHapus text-white transition duration-300 ease-in-out bg-blue-500 hover:bg-blue-700 rounded-base text-sm px-4 py-2.5 flex items-center gap-2">
+
+                                <span class="textHapus">Iya, saya yakin</span>
+
+                                <svg class="spinnerHapus hidden animate-spin h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v8z"></path>
+                                </svg>
+
                             </button>
 
                             <button data-modal-hide="modal-hapus-bukti" type="button"
@@ -342,11 +370,293 @@
         </div>
     </div>
 
+    {{-- Modal Preview Bukti --}}
+    <div id="previewModal" class="fixed inset-0 bg-black/70 hidden justify-center items-center z-50">
+        <div class="bg-white w-[90%] h-[90%] rounded-lg overflow-hidden relative">
+
+            <div class="flex justify-between items-center px-4 py-3 border-b">
+                <h3 id="previewTitle" class="font-semibold text-sm text-gray-700 truncate">
+                    Preview File
+                </h3>
+
+                <button onclick="closeSmartPreview()"
+                    class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded">
+                    X
+                </button>
+            </div>
+
+            <div id="previewLoading"
+                class="absolute inset-0 flex flex-col items-center justify-center bg-white">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                <p class="mt-3 text-gray-600 text-sm">Memuat preview...</p>
+            </div>
+
+            <div id="previewError"
+                class="hidden h-[calc(100%-52px)] flex flex-col items-center justify-center text-center px-4">
+                <p class="text-red-500 font-semibold mb-2">Preview tidak tersedia</p>
+                <p id="previewErrorText" class="text-gray-500 text-sm mb-4">
+                    File ini tidak bisa ditampilkan langsung.
+                </p>
+
+                <a id="previewDownloadLink"
+                    href="#"
+                    class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Download File
+                </a>
+            </div>
+
+            <iframe id="previewFrame"
+                class="hidden w-full h-[calc(100%-52px)]"></iframe>
+
+            <div id="previewImageWrapper"
+                class="hidden w-full h-[calc(100%-52px)] bg-gray-100 items-center justify-center overflow-auto">
+                <img id="previewImage"
+                    src=""
+                    class="max-w-full max-h-full object-contain">
+            </div>
+
+        </div>
+    </div>
+
+    {{-- Loading Overlay --}}
+    <div id="loadingOverlay"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white p-6 rounded-lg flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            <p id="loadingText" class="mt-3 text-gray-600">Memproses...</p>
+        </div>
+
+    </div>
+
     <script>
+        // JS LOADING HAPUS BUKTI
+        const formHapus = document.getElementById('form-hapus-bukti');
+
+        if (formHapus) {
+            formHapus.addEventListener('submit', function() {
+
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingText').textContent = 'Menghapus dokumen...';
+
+                const btn = formHapus.querySelector('.btnHapus');
+                const text = formHapus.querySelector('.textHapus');
+                const spinner = formHapus.querySelector('.spinnerHapus');
+
+                btn.disabled = true;
+                text.textContent = 'Menghapus...';
+                spinner.classList.remove('hidden');
+            });
+        }
+
+        // JS LOADING UPLOAD BUKTI
+        document.querySelectorAll('.formUploadBukti').forEach(function(form) {
+            form.addEventListener('submit', function() {
+
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingText').textContent = 'Mengupload dokumen...';
+
+                const btn = form.querySelector('.btnUpload');
+                const text = form.querySelector('.textUpload');
+                const spinner = form.querySelector('.spinnerUpload');
+
+                btn.disabled = true;
+                text.textContent = 'Mengupload...';
+                spinner.classList.remove('hidden');
+            });
+        });
+
+        // JS MODAL PREVIEW
+        let previewTimeout;
+
+        function openSmartPreview(previewUrl, downloadUrl, extension, fileName) {
+            const modal = document.getElementById('previewModal');
+            const title = document.getElementById('previewTitle');
+            const loading = document.getElementById('previewLoading');
+            const error = document.getElementById('previewError');
+            const errorText = document.getElementById('previewErrorText');
+            const downloadLink = document.getElementById('previewDownloadLink');
+            const frame = document.getElementById('previewFrame');
+            const imageWrapper = document.getElementById('previewImageWrapper');
+            const image = document.getElementById('previewImage');
+
+            clearTimeout(previewTimeout);
+
+            // reset event lama
+            frame.onload = null;
+            image.onload = null;
+            image.onerror = null;
+
+            // reset tampilan
+            title.textContent = fileName;
+            downloadLink.href = downloadUrl;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            frame.classList.add('hidden');
+            imageWrapper.classList.add('hidden');
+            imageWrapper.classList.remove('flex');
+
+            errorText.textContent = 'File ini tidak bisa ditampilkan langsung.';
+
+            frame.src = 'about:blank';
+            image.src = '';
+
+            const pdfFiles = ['pdf'];
+            const imageFiles = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const textFiles = ['txt', 'csv'];
+            const officeFiles = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+            if (pdfFiles.includes(extension) || textFiles.includes(extension)) {
+                frame.src = previewUrl;
+
+                // previewTimeout = setTimeout(() => {
+                //     loading.classList.add('hidden');
+                //     error.classList.remove('hidden');
+                //     errorText.textContent = 'Preview terlalu lama dimuat. Silakan download file.';
+                // }, 10000);
+
+                frame.onload = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    frame.classList.remove('hidden');
+                };
+
+                return;
+            }
+
+            if (imageFiles.includes(extension)) {
+                image.src = previewUrl;
+
+                // previewTimeout = setTimeout(() => {
+                //     loading.classList.add('hidden');
+                //     error.classList.remove('hidden');
+                //     errorText.textContent = 'Gambar terlalu lama dimuat. Silakan download file.';
+                // }, 10000);
+
+                image.onload = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    imageWrapper.classList.remove('hidden');
+                    imageWrapper.classList.add('flex');
+                };
+
+                image.onerror = function() {
+                    clearTimeout(previewTimeout);
+                    loading.classList.add('hidden');
+                    error.classList.remove('hidden');
+                    errorText.textContent = 'Gambar gagal ditampilkan.';
+                };
+
+                return;
+            }
+
+            loading.classList.add('hidden');
+            error.classList.remove('hidden');
+
+            if (officeFiles.includes(extension)) {
+                errorText.textContent = 'File Word, Excel, atau PowerPoint tidak bisa dipreview langsung di browser.';
+            } else {
+                errorText.textContent = 'Format file ini tidak mendukung preview langsung.';
+            }
+        }
+
+        function closeSmartPreview() {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('previewFrame');
+            const image = document.getElementById('previewImage');
+            const loading = document.getElementById('previewLoading');
+            const error = document.getElementById('previewError');
+            const imageWrapper = document.getElementById('previewImageWrapper');
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            clearTimeout(previewTimeout);
+
+            frame.onload = null;
+            image.onload = null;
+            image.onerror = null;
+
+            frame.src = 'about:blank';
+            image.src = '';
+
+            loading.classList.add('hidden');
+            error.classList.add('hidden');
+            imageWrapper.classList.add('hidden');
+            imageWrapper.classList.remove('flex');
+        }
+
+        // JS ACORDION
+        document.addEventListener('DOMContentLoaded', function() {
+            const openAccordion = @json(session('open_accordion'));
+            const targetScroll = @json(session('target_scroll'));
+
+            function openTargetAccordion() {
+                if (!openAccordion) return;
+
+                const body = document.getElementById(openAccordion);
+
+                if (body) {
+                    body.classList.remove('hidden');
+
+                    const triggers = document.querySelectorAll(
+                        `[data-accordion-target="#${openAccordion}"]`
+                    );
+
+                    triggers.forEach(btn => {
+                        btn.setAttribute('aria-expanded', 'true');
+
+                        const icon = btn.querySelector('[data-accordion-icon]');
+                        if (icon) {
+                            icon.classList.add('rotate-180');
+                        }
+                    });
+                }
+            }
+
+            function scrollToTarget() {
+                if (!targetScroll) return;
+
+                const target = document.getElementById(targetScroll);
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    target.classList.add('ring-2', 'ring-blue-400');
+
+                    setTimeout(() => {
+                        target.classList.remove('ring-2', 'ring-blue-400');
+                    }, 2000);
+                }
+            }
+
+            // penting: kasih delay supaya Flowbite selesai init
+            setTimeout(() => {
+                openTargetAccordion();
+
+                setTimeout(() => {
+                    scrollToTarget();
+                }, 300);
+
+            }, 400);
+        });
+
+        // JS Modal Hapus Bukti
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('.button-hapus-bukti');
+
             const form = document.getElementById('form-hapus-bukti');
             const namaFileText = document.getElementById('nama_file_hapus_bukti');
+            const activeTabInput = document.getElementById('active_tab_hapus_bukti');
+            const openAccordionInput = document.getElementById('open_accordion_hapus_bukti');
+            const targetScrollInput = document.getElementById('target_scroll_hapus_bukti');
 
             buttons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -358,6 +668,10 @@
 
                     form.setAttribute('action', actionUrl);
                     namaFileText.textContent = namaFile;
+
+                    activeTabInput.value = this.dataset.activeTab;
+                    openAccordionInput.value = this.dataset.openAccordion;
+                    targetScrollInput.value = this.dataset.targetScroll;
                 });
             });
         });
@@ -401,6 +715,7 @@
             }
         });
 
+        // JS ACTIVE TAB
         document.addEventListener('DOMContentLoaded', function() {
             const activeTab = @json(session('active_tab'));
 
@@ -428,6 +743,7 @@
             }
         });
 
+        // JS Back To Top
         document.addEventListener('DOMContentLoaded', function() {
             const backToTopButton = document.getElementById('backToTop');
 
