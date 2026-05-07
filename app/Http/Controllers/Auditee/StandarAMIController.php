@@ -98,23 +98,33 @@ class StandarAMIController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        $item = UptItemSubStandarMutu::where('upt_item_sub_standar_id', $validated['upt_item_sub_standar_id'])
+        $item = UptItemSubStandarMutu::with('upt_sub_standar.standar_mutu')
+            ->where('upt_item_sub_standar_id', $validated['upt_item_sub_standar_id'])
             ->where('upt_id', $auditee->upt_id)
             ->where('periode_id', $validated['periode_id'])
             ->firstOrFail();
 
-        $periode = Periode::findOrFail($validated['periode_id']);
+        $namaStandar = optional($item->upt_sub_standar->standar_mutu)->nama_standar_mutu ?? 'standar';
+        $standarSlug = Str::slug($namaStandar);
 
         $uptNama = Str::slug($auditee->upt->nama_upt ?? 'upt');
         $periodeTahun = $periode->tahun;
 
-        $folder = 'bukti-dukung/upt-' . $uptNama . '/periode-' . $periodeTahun;
+        $folder = 'bukti-dukung/upt-' . $uptNama . '/periode-' . $periodeTahun . '/' . $standarSlug;
 
         foreach ($request->file('file_bukti') as $file) {
+            $namaAsli = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
-            $namaFileBaru = Str::random(40) . '.' . $extension;
 
-            $path = $file->storeAs($folder, $namaFileBaru, 'public');
+            $namaBersih = Str::slug($namaAsli);
+            $namaFileBaru = $namaBersih . '-' . Str::random(5) . '.' . $extension;
+
+            $path = $folder . '/' . $namaFileBaru;
+
+            Storage::disk('google')->put(
+                $path,
+                file_get_contents($file->getRealPath())
+            );
 
             Dokumen::create([
                 'dokumen_id' => Str::uuid()->toString(),
@@ -128,11 +138,15 @@ class StandarAMIController extends Controller
 
         return redirect()
             ->to(url()->previous() . '#item-' . $item->upt_item_sub_standar_id)
-            ->with('success', 'Bukti dukung berhasil diupload.')
-            ->with('active_tab', $request->active_tab);
+            ->with([
+                'success' => 'Bukti dukung berhasil diupload.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
     }
 
-    public function hapusBukti($id)
+    public function hapusBukti(Request $request, $id)
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
@@ -140,20 +154,71 @@ class StandarAMIController extends Controller
             ->where('auditee_id', $auditee->auditee_id)
             ->firstOrFail();
 
-        $periode = Periode::where('id', $dokumen->item->periode_id)->first();
+        $itemId = $dokumen->upt_item_sub_standar_id;
+
+        $periode = Periode::find($dokumen->item?->periode_id);
 
         if ($periode && $periode->status == 0) {
-            return back()->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.');
+            return redirect()
+                ->to(url()->previous() . '#item-' . $itemId)
+                ->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.')
+                ->with('active_tab', $request->active_tab);
         }
 
-        // hapus file dari storage
-        if ($dokumen->file_path && Storage::disk('public')->exists($dokumen->file_path)) {
-            Storage::disk('public')->delete($dokumen->file_path);
+        if ($dokumen->file_path && Storage::disk('google')->exists($dokumen->file_path)) {
+            Storage::disk('google')->delete($dokumen->file_path);
         }
 
-        // hapus dari database
         $dokumen->delete();
 
-        return back()->with('success', 'Bukti dukung berhasil dihapus.');
+        return redirect()
+            ->to(url()->previous() . '#item-' . $itemId)
+            ->with([
+                'success' => 'Bukti dukung berhasil dihapus.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+    }
+
+    public function downloadBukti($id)
+    {
+        $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $dokumen = Dokumen::where('dokumen_id', $id)
+            ->where('auditee_id', $auditee->auditee_id)
+            ->firstOrFail();
+
+        if (!Storage::disk('google')->exists($dokumen->file_path)) {
+            abort(404, 'File tidak ditemukan di Google Drive.');
+        }
+
+        return response(Storage::disk('google')->get($dokumen->file_path), 200)
+            ->header('Content-Type', 'application/octet-stream')
+            ->header('Content-Disposition', 'attachment; filename="' . $dokumen->nama_file . '"');
+    }
+
+    public function previewBukti($id)
+    {
+        $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $dokumen = Dokumen::where('dokumen_id', $id)
+            ->where('auditee_id', $auditee->auditee_id)
+            ->firstOrFail();
+
+        if (!Storage::disk('google')->exists($dokumen->file_path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        $file = Storage::disk('google')->get($dokumen->file_path);
+
+        $mimeType = Storage::disk('google')->mimeType($dokumen->file_path)
+            ?? 'application/octet-stream';
+
+        $namaFile = str_replace('"', '', $dokumen->nama_file);
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 }
