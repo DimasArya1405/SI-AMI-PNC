@@ -12,7 +12,7 @@
             <i class="bi bi-calendar-check mr-2 text-xl"></i> Penugasan
         </a>
 
-        <a href="{{ route('admin.dashboard') }}"
+        <a href="{{ route('auditor.pelaksanaan_audit') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-pencil-square mr-2 text-xl"></i> Pelaksanaan Audit

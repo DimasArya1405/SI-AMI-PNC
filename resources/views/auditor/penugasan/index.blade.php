@@ -214,8 +214,6 @@
                                                         <form id="form-konfirmasi-jadwal" method="post"> @csrf
                                                             <input type="hidden" id="penugasan_id_detail"
                                                                 name="penugasan_id">
-                                                            <input type="text" id="tess" name="tes"
-                                                                value="{{ $statusUPT . '-' . $statusKetua . '-' . $statusAnggota }}">
                                                             <input type="hidden" id="auditor_id_detail"
                                                                 name="auditor_id_detail" value="{{ $auditor_id }}">
                                                             <div
