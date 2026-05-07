@@ -64,7 +64,12 @@ class UptItemSubStandarMutuController extends Controller
         $uptItem->urutan = $urutanBaru;
         $uptItem->save();
 
-        return redirect()->back()->with('success', 'Item berhasil ditambahkan');
+        // return redirect()->back()->with('success', 'Item berhasil ditambahkan');
+        return $this->redirectToPosition(
+            $request,
+            'Item berhasil ditambahkan.',
+            'item-' . $uptItem->upt_item_sub_standar_id
+        );
     }
 
     public function edit(Request $request)
@@ -78,7 +83,12 @@ class UptItemSubStandarMutuController extends Controller
         $upt_item->nama_item = $request->nama_item;
         $upt_item->save();
 
-        return redirect()->back()->with('success', 'Item berhasil diubah');
+        // return redirect()->back()->with('success', 'Item berhasil diubah');
+        return $this->redirectToPosition(
+            $request,
+            'Item berhasil diubah.',
+            'item-' . $upt_item->upt_item_sub_standar_id
+        );
     }
 
     public function hapus(Request $request)
@@ -95,6 +105,29 @@ class UptItemSubStandarMutuController extends Controller
         // lalu hapus item utama
         $upt_item->delete();
 
-        return redirect()->back()->with('success', 'Item berhasil dihapus');
+        // return redirect()->back()->with('success', 'Item berhasil dihapus');
+        return $this->redirectToPosition(
+            $request,
+            'Item berhasil dihapus.',
+            $request->target_scroll
+        );
+    }
+
+    private function redirectToPosition(Request $request, string $message, ?string $target = null)
+    {
+        $activeTab = $request->active_tab;
+        $targetScroll = $target ?: $request->target_scroll;
+
+        $url = url()->previous();
+
+        if ($targetScroll) {
+            $url .= '#' . $targetScroll;
+        }
+
+        return redirect()
+            ->to($url)
+            ->with('success', $message)
+            ->with('active_tab', $activeTab)
+            ->with('target_scroll', $targetScroll);
     }
 }

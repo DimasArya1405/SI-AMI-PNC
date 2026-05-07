@@ -28,7 +28,12 @@ class UptSubStandarMutuController extends Controller
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
 
-        return redirect()->back()->with('success', 'Sub standar berhasil ditambahkan');
+        // return redirect()->back()->with('success', 'Sub standar berhasil ditambahkan');
+        return $this->redirectToPosition(
+            $request,
+            'Sub standar berhasil ditambahkan.',
+            'sub-' . $upt_sub->upt_sub_standar_id
+        );
     }
 
     public function edit(Request $request)
@@ -42,7 +47,12 @@ class UptSubStandarMutuController extends Controller
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
 
-        return redirect()->back()->with('success', 'Sub standar berhasil diubah');
+        // return redirect()->back()->with('success', 'Sub standar berhasil diubah');
+        return $this->redirectToPosition(
+            $request,
+            'Sub standar berhasil diubah.',
+            'sub-' . $upt_sub->upt_sub_standar_id
+        );
     }
 
     public function hapus(Request $request)
@@ -50,7 +60,7 @@ class UptSubStandarMutuController extends Controller
         $request->validate([
             'upt_sub_standar_id' => 'required|exists:upt_sub_standar_mutu,upt_sub_standar_id',
         ]);
-        
+
         $uptSubStandarId = $request->upt_sub_standar_id;
 
         // hapus semua item yang ada di sub standar ini
@@ -59,6 +69,29 @@ class UptSubStandarMutuController extends Controller
         // hapus sub standarnya
         UptSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarId)->delete();
 
-        return redirect()->back()->with('success', 'Sub standar berhasil dihapus');
+        // return redirect()->back()->with('success', 'Sub standar berhasil dihapus');
+        return $this->redirectToPosition(
+            $request,
+            'Sub standar berhasil dihapus.',
+            $request->target_scroll ?: $request->active_tab
+        );
+    }
+
+    private function redirectToPosition(Request $request, string $message, ?string $target = null)
+    {
+        $activeTab = $request->active_tab;
+        $targetScroll = $target ?: $request->target_scroll;
+
+        $url = url()->previous();
+
+        if ($targetScroll) {
+            $url .= '#' . $targetScroll;
+        }
+
+        return redirect()
+            ->to($url)
+            ->with('success', $message)
+            ->with('active_tab', $activeTab)
+            ->with('target_scroll', $targetScroll);
     }
 }
