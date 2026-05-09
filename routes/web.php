@@ -29,9 +29,9 @@ Route::get('/', function () {
 });
 
 // Route umum setelah login
-Route::get('/dashboard', function () {
-    return view('template_dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('template_dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grouping berdasarkan role
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
