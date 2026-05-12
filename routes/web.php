@@ -21,6 +21,7 @@ use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
+use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -141,7 +142,7 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
-    Route::get('/dosen/dashboard', [DosenController::class, 'index'])->name('dosen.dashboard');
+    Route::get('/dosen/dashboard', [RoleDosenController::class, 'index'])->name('dosen.dashboard');
 });
 
 Route::middleware('auth')->group(function () {

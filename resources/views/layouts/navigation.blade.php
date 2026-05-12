@@ -10,6 +10,7 @@
                     'admin' => 'admin.dashboard',
                     'auditor' => 'auditor.dashboard',
                     'auditee' => 'auditee.dashboard',
+                    'dosen' => 'dosen.dashboard',
                     default => 'login',
                     };
                     @endphp

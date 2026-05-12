@@ -41,6 +41,7 @@
                         'admin' => route('admin.dashboard'),
                         'auditor' => route('auditor.dashboard'),
                         'auditee' => route('auditee.dashboard'),
+                        'dosen' => route('dosen.dashboard'),
                         default => url('/'),
                     };
                 @endphp
