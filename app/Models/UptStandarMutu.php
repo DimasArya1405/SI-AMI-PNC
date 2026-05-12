@@ -29,7 +29,9 @@ class UptStandarMutu extends Model
     {
         return $this->belongsTo(Upt::class, 'upt_id', 'upt_id');
     }
-    public function uptSubStandar(){
-        return $this->hasMany(UptSubStandarMutu::class, 'upt_sub_standar_id', 'upt_sub_standar_id');
+
+    public function subStandarUpt()
+    {
+        return $this->hasMany(UptSubStandarMutu::class, 'upt_standar_mutu_id', 'upt_standar_mutu_id');
     }
 }

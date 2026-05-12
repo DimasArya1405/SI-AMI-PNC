@@ -21,6 +21,7 @@ use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
+use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +30,9 @@ Route::get('/', function () {
 });
 
 // Route umum setelah login
-Route::get('/dashboard', function () {
-    return view('template_dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('template_dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grouping berdasarkan role
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
@@ -87,6 +88,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/ami/pemetaan-standar-mutu/edit', [UptStandarMutuController::class, 'edit'])->name('admin.upt_standar_mutu.edit');
     Route::delete('/admin/ami/pemetaan-standar-mutu/hapus', [UptStandarMutuController::class, 'hapus'])->name('admin.upt_standar_mutu.hapus');
     Route::post('/admin/ami/pemetaan-standar/copy-periode', [UptStandarMutuController::class, 'copyPeriode'])->name('admin.upt_standar_mutu.copy_periode');
+    Route::get('/admin/ami/upt-standar-mutu/get-upt-by-periode/{periode_id}', [UptStandarMutuController::class, 'getUptByPeriode'])->name('admin.upt_standar_mutu.get_upt_by_periode');
     Route::post('/admin/ami/pemetaan-standar/import', [UptStandarMutuController::class, 'import'])->name('admin.upt_standar_mutu.import');
     Route::get('/admin/ami/pemetaan-standar/export/{upt_id}/{periode_id}', [UptStandarMutuController::class, 'export'])->name('admin.upt_standar_mutu.export');
 
@@ -147,7 +149,7 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
-    Route::get('/dosen/dashboard', [DosenController::class, 'index'])->name('dosen.dashboard');
+    Route::get('/dosen/dashboard', [RoleDosenController::class, 'index'])->name('dosen.dashboard');
 });
 
 Route::middleware('auth')->group(function () {

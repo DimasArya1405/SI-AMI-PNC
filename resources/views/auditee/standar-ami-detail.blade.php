@@ -68,8 +68,8 @@
                     @foreach ($pemetaanStandar as $index => $standar)
                     @php
                     $subStandarList = $uptSubStandar
-                    ->where('standar_mutu_id', $standar->standar_mutu_id)
-                    ->sortBy('urutan');
+                        ->where('upt_standar_mutu_id', $standar->upt_standar_mutu_id)
+                        ->sortBy('urutan');
                     @endphp
 
                     <div
@@ -191,8 +191,8 @@
                                                                 <div class="flex items-center gap-2">
                                                                     <button type="button"
                                                                         onclick="openSmartPreview(
-                                                                            '{{ route('auditee.bukti_dukung.preview', $bukti->dokumen_id) }}',
-                                                                            '{{ route('auditee.bukti_dukung.download', $bukti->dokumen_id) }}',
+                                                                            '{{ route('auditee.bukti_dukung.preview', $bukti->jawaban_id) }}',
+                                                                            '{{ route('auditee.bukti_dukung.download', $bukti->jawaban_id) }}',
                                                                             '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
                                                                             '{{ $bukti->nama_file }}'
                                                                         )"
@@ -205,7 +205,7 @@
                                                                         data-modal-target="modal-hapus-bukti"
                                                                         data-modal-toggle="modal-hapus-bukti"
                                                                         class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
-                                                                        data-dokumen-id="{{ $bukti->dokumen_id }}"
+                                                                        data-jawaban-id="{{ $bukti->jawaban_id }}"
                                                                         data-nama-file="{{ $bukti->nama_file }}"
                                                                         data-active-tab="content-{{ $standar->standar_mutu_id }}"
                                                                         data-open-accordion="{{ $bodyId }}"
@@ -241,6 +241,12 @@
                                                                 multiple
                                                                 class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
                                                                 required>
+
+                                                            <textarea
+                                                                name="keterangan"
+                                                                rows="3"
+                                                                placeholder="Masukkan keterangan dokumen..."
+                                                                class="w-full border border-gray-300 rounded-lg text-sm p-3 focus:ring-blue-500 focus:border-blue-500"></textarea>
 
                                                             <button type="submit"
                                                                 class="btnUpload bg-green-500 hover:bg-green-700 text-white text-sm px-4 py-2 rounded flex items-center gap-2">
@@ -660,11 +666,11 @@
 
             buttons.forEach(button => {
                 button.addEventListener('click', function() {
-                    const dokumenId = this.dataset.dokumenId;
+                    const jawabanId = this.dataset.jawabanId;
                     const namaFile = this.dataset.namaFile;
 
                     let actionUrl = "{{ route('auditee.bukti_dukung.hapus', ':id') }}";
-                    actionUrl = actionUrl.replace(':id', dokumenId);
+                    actionUrl = actionUrl.replace(':id', jawabanId);
 
                     form.setAttribute('action', actionUrl);
                     namaFileText.textContent = namaFile;

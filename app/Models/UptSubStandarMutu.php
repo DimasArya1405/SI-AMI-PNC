@@ -15,25 +15,18 @@ class UptSubStandarMutu extends Model
 
     protected $fillable = [
         'upt_sub_standar_id',
-        'upt_id',
-        'standar_mutu_id',
+        'upt_standar_mutu_id',
         'sub_standar_master_id',
         'nama_sub_standar',
         'urutan',
-        'periode_id',
     ];
 
-    public function upt()
+    public function uptStandarMutu()
     {
-        return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
+        return $this->belongsTo(UptStandarMutu::class, 'upt_standar_mutu_id', 'upt_standar_mutu_id');
     }
 
-    public function standar_mutu()
-    {
-        return $this->belongsTo(StandarMutu::class, 'standar_mutu_id', 'standar_mutu_id');
-    }
-
-    public function sub_standar_master()
+    public function subStandarMaster()
     {
         return $this->belongsTo(SubStandarMutu::class, 'sub_standar_master_id', 'sub_standar_id');
     }

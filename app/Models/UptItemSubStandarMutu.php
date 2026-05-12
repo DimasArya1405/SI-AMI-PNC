@@ -15,7 +15,6 @@ class UptItemSubStandarMutu extends Model
 
     protected $fillable = [
         'upt_item_sub_standar_id',
-        'upt_id',
         'upt_sub_standar_id',
         'item_sub_standar_master_id',
         'parent_upt_item_id',
@@ -23,22 +22,26 @@ class UptItemSubStandarMutu extends Model
         'level',
         'nama_item',
         'urutan',
-        'periode_id',
     ];
 
-    public function upt()
-    {
-        return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
-    }
-
-    public function upt_sub_standar()
+    public function uptSubStandar()
     {
         return $this->belongsTo(UptSubStandarMutu::class, 'upt_sub_standar_id', 'upt_sub_standar_id');
     }
 
-    public function item_sub_standar_master()
+    public function itemMaster()
     {
         return $this->belongsTo(ItemSubStandarMutu::class, 'item_sub_standar_master_id', 'item_sub_standar_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(UptItemSubStandarMutu::class, 'parent_upt_item_id', 'upt_item_sub_standar_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(UptItemSubStandarMutu::class, 'parent_upt_item_id', 'upt_item_sub_standar_id');
     }
     public function jawaban_audit()
     {

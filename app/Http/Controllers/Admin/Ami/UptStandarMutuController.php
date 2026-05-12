@@ -112,19 +112,8 @@ class UptStandarMutuController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            $uptId = $request->upt_id;
-            $periodeId = $request->periode_id;
-
-            UptItemSubStandarMutu::where('upt_id', $uptId)
-                ->where('periode_id', $periodeId)
-                ->delete();
-
-            UptSubStandarMutu::where('upt_id', $uptId)
-                ->where('periode_id', $periodeId)
-                ->delete();
-
-            UptStandarMutu::where('upt_id', $uptId)
-                ->where('periode_id', $periodeId)
+            UptStandarMutu::where('upt_id', $request->upt_id)
+                ->where('periode_id', $request->periode_id)
                 ->delete();
         });
 
@@ -146,14 +135,16 @@ class UptStandarMutuController extends Controller
             ->select('upt_standar_mutu.*')
             ->get();
 
-        $uptSubStandar = UptSubStandarMutu::with('standar_mutu')
-            ->where('upt_id', $upt_id)
-            ->where('periode_id', $periode_id)
+        $uptStandarIds = $pemetaanStandar->pluck('upt_standar_mutu_id');
+
+        $uptSubStandar = UptSubStandarMutu::with('uptStandarMutu.standar_mutu')
+            ->whereIn('upt_standar_mutu_id', $uptStandarIds)
             ->orderBy('urutan', 'asc')
             ->get();
 
-        $uptItemSubStandar = UptItemSubStandarMutu::where('upt_id', $upt_id)
-            ->where('periode_id', $periode_id)
+        $uptSubStandarIds = $uptSubStandar->pluck('upt_sub_standar_id');
+
+        $uptItemSubStandar = UptItemSubStandarMutu::whereIn('upt_sub_standar_id', $uptSubStandarIds)
             ->orderBy('urutan', 'asc')
             ->get()
             ->groupBy('upt_sub_standar_id');
@@ -182,53 +173,38 @@ class UptStandarMutuController extends Controller
         $uptIds = $request->upt_ids;
 
         DB::transaction(function () use ($periodeSumber, $periodeTujuan, $uptIds) {
-
             $standarList = UptStandarMutu::where('periode_id', $periodeSumber)
                 ->whereIn('upt_id', $uptIds)
                 ->get();
 
             foreach ($standarList as $standar) {
+                $standarBaru = UptStandarMutu::firstOrCreate(
+                    [
+                        'upt_id' => $standar->upt_id,
+                        'standar_mutu_id' => $standar->standar_mutu_id,
+                        'periode_id' => $periodeTujuan,
+                    ],
+                    [
+                        'upt_standar_mutu_id' => (string) Str::uuid(),
+                    ]
+                );
 
-                $sudahAda = UptStandarMutu::where('upt_id', $standar->upt_id)
-                    ->where('standar_mutu_id', $standar->standar_mutu_id)
-                    ->where('periode_id', $periodeTujuan)
-                    ->exists();
-
-                if ($sudahAda) {
-                    continue;
-                }
-
-                UptStandarMutu::create([
-                    'upt_standar_mutu_id' => Str::uuid(),
-                    'upt_id' => $standar->upt_id,
-                    'standar_mutu_id' => $standar->standar_mutu_id,
-                    'periode_id' => $periodeTujuan,
-                ]);
-
-                $subStandarList = UptSubStandarMutu::where('upt_id', $standar->upt_id)
-                    ->where('standar_mutu_id', $standar->standar_mutu_id)
-                    ->where('periode_id', $periodeSumber)
+                $subStandarList = UptSubStandarMutu::where('upt_standar_mutu_id', $standar->upt_standar_mutu_id)
                     ->orderBy('urutan', 'asc')
                     ->get();
 
                 foreach ($subStandarList as $subStandar) {
-
                     $subBaru = UptSubStandarMutu::create([
-                        'upt_sub_standar_id' => Str::uuid(),
-                        'upt_id' => $subStandar->upt_id,
-                        'standar_mutu_id' => $subStandar->standar_mutu_id,
-                        'periode_id' => $periodeTujuan,
+                        'upt_sub_standar_id' => (string) Str::uuid(),
+                        'upt_standar_mutu_id' => $standarBaru->upt_standar_mutu_id,
                         'sub_standar_master_id' => $subStandar->sub_standar_master_id,
                         'nama_sub_standar' => $subStandar->nama_sub_standar,
                         'urutan' => $subStandar->urutan,
                     ]);
 
                     $this->copyItemUptPeriode(
-                        $subStandar->upt_id,
                         $subStandar->upt_sub_standar_id,
-                        $subBaru->upt_sub_standar_id,
-                        $periodeSumber,
-                        $periodeTujuan
+                        $subBaru->upt_sub_standar_id
                     );
                 }
             }
@@ -250,51 +226,28 @@ class UptStandarMutuController extends Controller
 
     private function hapusStandarDanTurunannya(string $uptId, string $standarMutuId, string $periodeId): void
     {
-        $uptSubStandarIds = UptSubStandarMutu::where('upt_id', $uptId)
-            ->where('standar_mutu_id', $standarMutuId)
-            ->where('periode_id', $periodeId)
-            ->pluck('upt_sub_standar_id');
-
-        UptItemSubStandarMutu::whereIn('upt_sub_standar_id', $uptSubStandarIds)
-            ->where('periode_id', $periodeId)
-            ->delete();
-
-        UptSubStandarMutu::where('upt_id', $uptId)
-            ->where('standar_mutu_id', $standarMutuId)
-            ->where('periode_id', $periodeId)
-            ->delete();
-
         UptStandarMutu::where('upt_id', $uptId)
             ->where('standar_mutu_id', $standarMutuId)
             ->where('periode_id', $periodeId)
             ->delete();
     }
 
-    private function copyItemUptPeriode(
-        string $uptId,
-        string $uptSubStandarSumberId,
-        string $uptSubStandarTujuanId,
-        string $periodeSumber,
-        string $periodeTujuan
-    ): void {
-        $itemSumber = UptItemSubStandarMutu::where('upt_id', $uptId)
-            ->where('upt_sub_standar_id', $uptSubStandarSumberId)
-            ->where('periode_id', $periodeSumber)
+    private function copyItemUptPeriode(string $uptSubStandarSumberId, string $uptSubStandarTujuanId): void
+    {
+        $itemSumber = UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarSumberId)
             ->orderBy('urutan', 'asc')
             ->get();
 
         $mappingItem = [];
 
-        // tahap 1: copy semua item dulu
         foreach ($itemSumber as $item) {
             $itemBaru = UptItemSubStandarMutu::create([
-                'upt_item_sub_standar_id' => Str::uuid(),
-                'upt_id' => $item->upt_id,
+                'upt_item_sub_standar_id' => (string) Str::uuid(),
                 'upt_sub_standar_id' => $uptSubStandarTujuanId,
-                'periode_id' => $periodeTujuan,
                 'item_sub_standar_master_id' => $item->item_sub_standar_master_id,
                 'parent_upt_item_id' => null,
                 'nama_item' => $item->nama_item,
+                'tipe_item' => $item->tipe_item,
                 'level' => $item->level,
                 'urutan' => $item->urutan,
             ]);
@@ -302,13 +255,9 @@ class UptStandarMutuController extends Controller
             $mappingItem[$item->upt_item_sub_standar_id] = $itemBaru->upt_item_sub_standar_id;
         }
 
-        // tahap 2: hubungkan parent baru
         foreach ($itemSumber as $item) {
             if ($item->parent_upt_item_id && isset($mappingItem[$item->parent_upt_item_id])) {
-                UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarTujuanId)
-                    ->where('periode_id', $periodeTujuan)
-                    ->where('nama_item', $item->nama_item)
-                    ->where('urutan', $item->urutan)
+                UptItemSubStandarMutu::where('upt_item_sub_standar_id', $mappingItem[$item->upt_item_sub_standar_id])
                     ->update([
                         'parent_upt_item_id' => $mappingItem[$item->parent_upt_item_id],
                     ]);
@@ -316,7 +265,7 @@ class UptStandarMutuController extends Controller
         }
     }
 
-    private function sinkronisasiItemUpt(string $uptId, string $uptSubStandarId, string $subStandarMasterId, string $periodeId): void
+    private function sinkronisasiItemUpt(string $uptSubStandarId, string $subStandarMasterId): void
     {
         $itemMasterList = ItemSubStandarMutu::where('sub_standar_id', $subStandarMasterId)
             ->orderBy('urutan', 'asc')
@@ -324,23 +273,19 @@ class UptStandarMutuController extends Controller
 
         $mappingItemBaru = [];
 
-        // tahap 1: tambahkan item yang belum ada
         foreach ($itemMasterList as $itemMaster) {
-            $uptItem = UptItemSubStandarMutu::where('upt_id', $uptId)
-                ->where('upt_sub_standar_id', $uptSubStandarId)
-                ->where('periode_id', $periodeId)
+            $uptItem = UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarId)
                 ->where('item_sub_standar_master_id', $itemMaster->item_sub_standar_id)
                 ->first();
 
             if (!$uptItem) {
                 $uptItem = UptItemSubStandarMutu::create([
-                    'upt_item_sub_standar_id' => Str::uuid(),
-                    'upt_id' => $uptId,
+                    'upt_item_sub_standar_id' => (string) Str::uuid(),
                     'upt_sub_standar_id' => $uptSubStandarId,
-                    'periode_id' => $periodeId,
                     'item_sub_standar_master_id' => $itemMaster->item_sub_standar_id,
                     'parent_upt_item_id' => null,
                     'nama_item' => $itemMaster->nama_item,
+                    'tipe_item' => $itemMaster->tipe_item ?? null,
                     'level' => $itemMaster->level ?? 1,
                     'urutan' => $itemMaster->urutan,
                 ]);
@@ -349,12 +294,9 @@ class UptStandarMutuController extends Controller
             $mappingItemBaru[$itemMaster->item_sub_standar_id] = $uptItem->upt_item_sub_standar_id;
         }
 
-        // tahap 2: update parent hanya untuk item yang parentnya belum tersambung
         foreach ($itemMasterList as $itemMaster) {
             if ($itemMaster->parent_item_id && isset($mappingItemBaru[$itemMaster->parent_item_id])) {
-                UptItemSubStandarMutu::where('upt_id', $uptId)
-                    ->where('upt_sub_standar_id', $uptSubStandarId)
-                    ->where('periode_id', $periodeId)
+                UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarId)
                     ->where('item_sub_standar_master_id', $itemMaster->item_sub_standar_id)
                     ->whereNull('parent_upt_item_id')
                     ->update([
@@ -366,52 +308,37 @@ class UptStandarMutuController extends Controller
 
     private function sinkronisasiStandarDanTurunannya(string $uptId, string $standarMutuId, string $periodeId): void
     {
-        // 1. pastikan header standar ada
-        $uptStandar = UptStandarMutu::where('upt_id', $uptId)
-            ->where('standar_mutu_id', $standarMutuId)
-            ->where('periode_id', $periodeId)
-            ->first();
-
-        if (!$uptStandar) {
-            UptStandarMutu::create([
-                'upt_standar_mutu_id' => Str::uuid(),
+        $uptStandar = UptStandarMutu::firstOrCreate(
+            [
                 'upt_id' => $uptId,
                 'standar_mutu_id' => $standarMutuId,
                 'periode_id' => $periodeId,
-            ]);
-        }
+            ],
+            [
+                'upt_standar_mutu_id' => (string) Str::uuid(),
+            ]
+        );
 
-        // 2. ambil semua sub standar master
         $subStandarList = SubStandarMutu::where('standar_mutu_id', $standarMutuId)
             ->orderBy('urutan', 'asc')
             ->get();
 
         foreach ($subStandarList as $subStandar) {
-            // cek sub standar di mapping UPT
-            $uptSubStandar = UptSubStandarMutu::where('upt_id', $uptId)
-                ->where('standar_mutu_id', $standarMutuId)
-                ->where('periode_id', $periodeId)
-                ->where('sub_standar_master_id', $subStandar->sub_standar_id)
-                ->first();
-
-            if (!$uptSubStandar) {
-                $uptSubStandar = UptSubStandarMutu::create([
-                    'upt_sub_standar_id' => Str::uuid(),
-                    'upt_id' => $uptId,
-                    'standar_mutu_id' => $standarMutuId,
-                    'periode_id' => $periodeId,
+            $uptSubStandar = UptSubStandarMutu::firstOrCreate(
+                [
+                    'upt_standar_mutu_id' => $uptStandar->upt_standar_mutu_id,
                     'sub_standar_master_id' => $subStandar->sub_standar_id,
+                ],
+                [
+                    'upt_sub_standar_id' => (string) Str::uuid(),
                     'nama_sub_standar' => $subStandar->nama_sub_standar,
                     'urutan' => $subStandar->urutan,
-                ]);
-            }
+                ]
+            );
 
-            // sinkron item per sub standar
             $this->sinkronisasiItemUpt(
-                $uptId,
                 $uptSubStandar->upt_sub_standar_id,
-                $subStandar->sub_standar_id,
-                $periodeId
+                $subStandar->sub_standar_id
             );
         }
     }
@@ -479,24 +406,12 @@ class UptStandarMutuController extends Controller
 
                     $standarMutuId = $standarDipilih[$keyStandar];
 
-                    $subLama = UptSubStandarMutu::where('upt_id', $uptId)
-                        ->where('standar_mutu_id', $standarMutuId)
-                        ->where('periode_id', $periodeId)
-                        ->pluck('upt_sub_standar_id');
-
-                    UptItemSubStandarMutu::whereIn('upt_sub_standar_id', $subLama)->delete();
-
-                    UptSubStandarMutu::where('upt_id', $uptId)
-                        ->where('standar_mutu_id', $standarMutuId)
-                        ->where('periode_id', $periodeId)
-                        ->delete();
-
                     UptStandarMutu::where('upt_id', $uptId)
                         ->where('standar_mutu_id', $standarMutuId)
                         ->where('periode_id', $periodeId)
                         ->delete();
 
-                    UptStandarMutu::create([
+                    $uptStandar = UptStandarMutu::create([
                         'upt_standar_mutu_id' => (string) Str::uuid(),
                         'upt_id' => $uptId,
                         'standar_mutu_id' => $standarMutuId,
@@ -530,9 +445,7 @@ class UptStandarMutuController extends Controller
 
                             UptSubStandarMutu::create([
                                 'upt_sub_standar_id' => $currentSubId,
-                                'upt_id' => $uptId,
-                                'standar_mutu_id' => $standarMutuId,
-                                'periode_id' => $periodeId,
+                                'upt_standar_mutu_id' => $uptStandar->upt_standar_mutu_id,
                                 'sub_standar_master_id' => null,
                                 'nama_sub_standar' => $colA,
                                 'urutan' => $urutanSub++,
@@ -569,9 +482,7 @@ class UptStandarMutuController extends Controller
 
                         UptItemSubStandarMutu::create([
                             'upt_item_sub_standar_id' => $uptItemId,
-                            'upt_id' => $uptId,
                             'upt_sub_standar_id' => $currentSubId,
-                            'periode_id' => $periodeId,
                             'item_sub_standar_master_id' => null,
                             'parent_upt_item_id' => $parentId,
                             'tipe_item' => 'pernyataan',
@@ -613,5 +524,22 @@ class UptStandarMutuController extends Controller
             new UptStandarMutuExport($upt_id, $periode_id),
             $filename
         );
+    }
+
+    public function getUptByPeriode($periode_id)
+    {
+        $uptList = UptStandarMutu::with('upt')
+            ->where('periode_id', $periode_id)
+            ->select('upt_id')
+            ->distinct()
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'upt_id' => $item->upt_id,
+                    'nama_upt' => $item->upt?->nama_upt ?? 'UPT tidak ditemukan',
+                ];
+            });
+
+        return response()->json($uptList);
     }
 }

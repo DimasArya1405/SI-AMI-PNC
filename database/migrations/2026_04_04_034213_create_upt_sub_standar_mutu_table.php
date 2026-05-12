@@ -13,9 +13,7 @@ return new class extends Migration
     {
         Schema::create('upt_sub_standar_mutu', function (Blueprint $table) {
             $table->uuid('upt_sub_standar_id')->primary();
-            $table->uuid('upt_id');
-            $table->uuid('periode_id');
-            $table->uuid('standar_mutu_id');
+            $table->uuid('upt_standar_mutu_id');
             $table->integer('urutan')->nullable();
 
             // referensi ke master, nullable supaya bisa bikin custom
@@ -27,19 +25,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('upt_id')
-                ->references('upt_id')
-                ->on('upt')
-                ->onDelete('cascade');
-
-            $table->foreign('periode_id')
-                ->references('id')
-                ->on('periode')
-                ->onDelete('cascade');
-
-            $table->foreign('standar_mutu_id')
-                ->references('standar_mutu_id')
-                ->on('standar_mutu')
+            $table->foreign('upt_standar_mutu_id')
+                ->references('upt_standar_mutu_id')
+                ->on('upt_standar_mutu')
                 ->onDelete('cascade');
 
             $table->foreign('sub_standar_master_id')
@@ -48,9 +36,7 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->unique([
-                'upt_id',
-                'periode_id',
-                'standar_mutu_id',
+                'upt_standar_mutu_id',
                 'sub_standar_master_id'
             ], 'upt_sub_standar_unique');
         });

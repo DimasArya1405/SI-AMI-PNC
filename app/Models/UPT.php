@@ -38,4 +38,9 @@ class UPT extends Model
     {
         return $this->hasMany(Penugasan::class, 'upt_id', 'upt_id');
     }
+
+    public function auditee()
+    {
+        return $this->hasMany(Auditee::class, 'upt_id', 'upt_id');
+    }
 }
