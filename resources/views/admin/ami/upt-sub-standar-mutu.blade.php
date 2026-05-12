@@ -86,7 +86,7 @@
                             <div class="bg-white border rounded-lg p-4">
                                 <p class="text-sm text-gray-500 mb-1">Jumlah Sub Standar</p>
                                 <p class="text-sm font-medium text-gray-900">
-                                    {{ $uptSubStandar->where('standar_mutu_id', $standar->standar_mutu_id)->count() }}
+                                    {{ $uptSubStandar->where('upt_standar_mutu_id', $standar->upt_standar_mutu_id)->count() }}
                                 </p>
                             </div>
                         </div>
@@ -113,7 +113,7 @@
 
                         {{-- List Sub Standar Accordion --}}
                         @php
-                        $subStandarPerStandar = $uptSubStandar->where('standar_mutu_id', $standar->standar_mutu_id);
+                        $subStandarPerStandar = $uptSubStandar->where('upt_standar_mutu_id', $standar->upt_standar_mutu_id);
                         @endphp
 
                         <div id="accordion-sub-{{ $standar->standar_mutu_id }}"
@@ -287,10 +287,8 @@
                                                             <input type="hidden" name="open_accordion" value="body-{{ $sub->upt_sub_standar_id }}">
                                                             <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
                                                             <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
-                                                            <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                                             <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                                             <input type="hidden" name="parent_upt_item_id" value="{{ $item->upt_item_sub_standar_id }}">
-                                                            <input type="hidden" name="periode_id" value="{{ $periode_id }}">
 
                                                             <div class="p-4 space-y-4">
                                                                 <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg p-3">
@@ -440,10 +438,8 @@
                                             <input type="hidden" name="target_scroll" value="sub-{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
                                             <input type="hidden" name="target_scroll" value="sub-{{ $sub->upt_sub_standar_id }}">
-                                            <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
                                             <input type="hidden" name="upt_sub_standar_id" value="{{ $sub->upt_sub_standar_id }}">
                                             <input type="hidden" name="parent_upt_item_id" value="">
-                                            <input type="hidden" name="periode_id" value="{{ $periode_id }}">
 
                                             <div class="p-4 space-y-4">
                                                 <div>
@@ -576,9 +572,7 @@
                                         @csrf
                                         <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
                                         <input type="hidden" name="target_scroll" value="content-{{ $standar->standar_mutu_id }}">
-                                        <input type="hidden" name="upt_id" value="{{ $upt->upt_id }}">
-                                        <input type="hidden" name="standar_mutu_id" value="{{ $standar->standar_mutu_id }}">
-                                        <input type="hidden" name="periode_id" value="{{ $periode_id }}">
+                                        <input type="hidden" name="upt_standar_mutu_id" value="{{ $standar->upt_standar_mutu_id }}">
 
                                         <div class="p-4 space-y-4">
                                             <div>

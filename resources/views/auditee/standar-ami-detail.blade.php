@@ -68,8 +68,8 @@
                     @foreach ($pemetaanStandar as $index => $standar)
                     @php
                     $subStandarList = $uptSubStandar
-                    ->where('standar_mutu_id', $standar->standar_mutu_id)
-                    ->sortBy('urutan');
+                        ->where('upt_standar_mutu_id', $standar->upt_standar_mutu_id)
+                        ->sortBy('urutan');
                     @endphp
 
                     <div

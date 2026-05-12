@@ -36,15 +36,24 @@
         @if (Route::has('login'))
         <nav class="flex gap-3">
             @auth
-            <a href="{{ url('/dashboard') }}"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                Dashboard
-            </a>
-            @else
-            <a href="{{ route('login') }}"
-                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
-                Login
-            </a>
+                @php
+                    $dashboardUrl = match (Auth::user()->role) {
+                        'admin' => route('admin.dashboard'),
+                        'auditor' => route('auditor.dashboard'),
+                        'auditee' => route('auditee.dashboard'),
+                        'dosen' => route('dosen.dashboard'),
+                        default => url('/'),
+                    };
+                @endphp
+                <a href="{{ $dashboardUrl }}"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Dashboard
+                </a>
+                @else
+                <a href="{{ route('login') }}"
+                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                    Login
+                </a>
             @endauth
         </nav>
         @endif

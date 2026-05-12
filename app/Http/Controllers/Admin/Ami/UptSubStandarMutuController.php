@@ -13,22 +13,17 @@ class UptSubStandarMutuController extends Controller
     public function tambah(Request $request)
     {
         $request->validate([
-            'upt_id' => 'required|exists:upt,upt_id',
-            'standar_mutu_id' => 'required|exists:standar_mutu,standar_mutu_id',
-            'periode_id' => 'required|exists:periode,id',
+            'upt_standar_mutu_id' => 'required|exists:upt_standar_mutu,upt_standar_mutu_id',
             'nama_sub_standar' => 'required|string|max:255',
         ]);
 
         $upt_sub = new UptSubStandarMutu();
-        $upt_sub->upt_sub_standar_id = Str::uuid();
-        $upt_sub->upt_id = $request->upt_id;
-        $upt_sub->standar_mutu_id = $request->standar_mutu_id;
-        $upt_sub->periode_id = $request->periode_id;
+        $upt_sub->upt_sub_standar_id = (string) Str::uuid();
+        $upt_sub->upt_standar_mutu_id = $request->upt_standar_mutu_id;
         $upt_sub->sub_standar_master_id = null;
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
 
-        // return redirect()->back()->with('success', 'Sub standar berhasil ditambahkan');
         return $this->redirectToPosition(
             $request,
             'Sub standar berhasil ditambahkan.',
@@ -47,7 +42,6 @@ class UptSubStandarMutuController extends Controller
         $upt_sub->nama_sub_standar = $request->nama_sub_standar;
         $upt_sub->save();
 
-        // return redirect()->back()->with('success', 'Sub standar berhasil diubah');
         return $this->redirectToPosition(
             $request,
             'Sub standar berhasil diubah.',
@@ -63,13 +57,10 @@ class UptSubStandarMutuController extends Controller
 
         $uptSubStandarId = $request->upt_sub_standar_id;
 
-        // hapus semua item yang ada di sub standar ini
         UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarId)->delete();
 
-        // hapus sub standarnya
         UptSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarId)->delete();
 
-        // return redirect()->back()->with('success', 'Sub standar berhasil dihapus');
         return $this->redirectToPosition(
             $request,
             'Sub standar berhasil dihapus.',

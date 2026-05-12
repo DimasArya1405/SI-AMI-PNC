@@ -491,6 +491,7 @@
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900">Periode Sumber</label>
                             <select name="periode_sumber_id"
+                                id="periode_sumber_id"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                                 required>
                                 <option value="">-- Pilih Periode Sumber --</option>
@@ -572,22 +573,9 @@
                                     </div>
                                 </li>
 
-                                @foreach ($uptList as $item)
-                                <li class="py-2 upt-item">
-                                    <div class="flex items-center">
-                                        <input id="upt-{{ $item->upt_id }}"
-                                            type="checkbox"
-                                            name="upt_ids[]"
-                                            value="{{ $item->upt_id }}"
-                                            class="upt-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
-
-                                        <label for="upt-{{ $item->upt_id }}"
-                                            class="ms-2 text-sm font-medium text-gray-900 upt-label">
-                                            {{ $item->upt?->nama_upt ?? 'UPT tidak ditemukan' }}
-                                        </label>
-                                    </div>
+                                <li id="upt-empty-text" class="py-3 text-sm text-gray-500">
+                                    Pilih periode sumber terlebih dahulu.
                                 </li>
-                                @endforeach
                             </ul>
                         </div>
 
@@ -833,13 +821,22 @@
     <script>
         // JS MODAL COPY PERIODE
         document.addEventListener('DOMContentLoaded', function() {
+            const periodeSumber = document.getElementById('periode_sumber_id');
             const searchInput = document.getElementById('input-group-search-upt');
-            const uptItems = document.querySelectorAll('.upt-item');
-            const uptCheckboxes = document.querySelectorAll('.upt-checkbox');
+            const uptList = document.getElementById('upt-list');
             const checkboxAll = document.getElementById('checkbox-all-upt');
             const selectedText = document.getElementById('upt-selected-text');
 
+            function getUptCheckboxes() {
+                return document.querySelectorAll('.upt-checkbox');
+            }
+
+            function getUptItems() {
+                return document.querySelectorAll('.upt-item');
+            }
+
             function updateSelectedText() {
+                const uptCheckboxes = getUptCheckboxes();
                 const checked = document.querySelectorAll('.upt-checkbox:checked');
 
                 if (checked.length === 0) {
@@ -850,13 +847,105 @@
                     selectedText.textContent = checked.length + ' UPT dipilih';
                 }
 
-                checkboxAll.checked = checked.length === uptCheckboxes.length;
+                checkboxAll.checked = uptCheckboxes.length > 0 && checked.length === uptCheckboxes.length;
             }
+
+            function renderUptList(data) {
+                uptList.innerHTML = `
+            <li class="py-2 border-b border-gray-100">
+                <div class="flex items-center">
+                    <input id="checkbox-all-upt" type="checkbox"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                    <label for="checkbox-all-upt"
+                        class="ms-2 text-sm font-medium text-gray-900">
+                        Pilih Semua
+                    </label>
+                </div>
+            </li>
+        `;
+
+                if (data.length === 0) {
+                    uptList.innerHTML += `
+                <li class="py-3 text-sm text-gray-500">
+                    Tidak ada UPT pada periode sumber ini.
+                </li>
+            `;
+                    selectedText.textContent = 'Pilih UPT';
+                    return;
+                }
+
+                data.forEach(function(item) {
+                    uptList.innerHTML += `
+                <li class="py-2 upt-item">
+                    <div class="flex items-center">
+                        <input id="upt-${item.upt_id}"
+                            type="checkbox"
+                            name="upt_ids[]"
+                            value="${item.upt_id}"
+                            class="upt-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500">
+
+                        <label for="upt-${item.upt_id}"
+                            class="ms-2 text-sm font-medium text-gray-900 upt-label">
+                            ${item.nama_upt}
+                        </label>
+                    </div>
+                </li>
+            `;
+                });
+
+                bindUptEvents();
+                updateSelectedText();
+            }
+
+            function bindUptEvents() {
+                const newCheckboxAll = document.getElementById('checkbox-all-upt');
+                const uptCheckboxes = getUptCheckboxes();
+
+                newCheckboxAll.addEventListener('change', function() {
+                    uptCheckboxes.forEach(function(checkbox) {
+                        checkbox.checked = newCheckboxAll.checked;
+                    });
+
+                    updateSelectedText();
+                });
+
+                uptCheckboxes.forEach(function(checkbox) {
+                    checkbox.addEventListener('change', updateSelectedText);
+                });
+            }
+
+            periodeSumber.addEventListener('change', function() {
+                const periodeId = this.value;
+
+                selectedText.textContent = 'Memuat UPT...';
+                searchInput.value = '';
+
+                if (!periodeId) {
+                    renderUptList([]);
+                    selectedText.textContent = 'Pilih UPT';
+                    return;
+                }
+
+                fetch(`/admin/ami/upt-standar-mutu/get-upt-by-periode/${periodeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        renderUptList(data);
+                    })
+                    .catch(() => {
+                        uptList.innerHTML = `
+                    <li class="py-3 text-sm text-red-500">
+                        Gagal memuat data UPT.
+                    </li>
+                `;
+                        selectedText.textContent = 'Pilih UPT';
+                    });
+            });
 
             searchInput.addEventListener('keyup', function() {
                 const keyword = this.value.toLowerCase();
 
-                uptItems.forEach(function(item) {
+                getUptItems().forEach(function(item) {
                     const label = item.querySelector('.upt-label').textContent.toLowerCase();
 
                     if (label.includes(keyword)) {
@@ -867,18 +956,7 @@
                 });
             });
 
-            checkboxAll.addEventListener('change', function() {
-                uptCheckboxes.forEach(function(checkbox) {
-                    checkbox.checked = checkboxAll.checked;
-                });
-
-                updateSelectedText();
-            });
-
-            uptCheckboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', updateSelectedText);
-            });
-
+            bindUptEvents();
             updateSelectedText();
         });
 
