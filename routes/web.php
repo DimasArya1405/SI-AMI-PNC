@@ -88,6 +88,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/ami/pemetaan-standar-mutu/edit', [UptStandarMutuController::class, 'edit'])->name('admin.upt_standar_mutu.edit');
     Route::delete('/admin/ami/pemetaan-standar-mutu/hapus', [UptStandarMutuController::class, 'hapus'])->name('admin.upt_standar_mutu.hapus');
     Route::post('/admin/ami/pemetaan-standar/copy-periode', [UptStandarMutuController::class, 'copyPeriode'])->name('admin.upt_standar_mutu.copy_periode');
+    Route::get('/admin/ami/upt-standar-mutu/get-upt-by-periode/{periode_id}', [UptStandarMutuController::class, 'getUptByPeriode'])->name('admin.upt_standar_mutu.get_upt_by_periode');
     Route::post('/admin/ami/pemetaan-standar/import', [UptStandarMutuController::class, 'import'])->name('admin.upt_standar_mutu.import');
     Route::get('/admin/ami/pemetaan-standar/export/{upt_id}/{periode_id}', [UptStandarMutuController::class, 'export'])->name('admin.upt_standar_mutu.export');
 

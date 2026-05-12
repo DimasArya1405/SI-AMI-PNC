@@ -46,14 +46,16 @@ class StandarAMIController extends Controller
             ->select('upt_standar_mutu.*')
             ->get();
 
-        $uptSubStandar = UptSubStandarMutu::with('standar_mutu')
-            ->where('upt_id', $upt_id)
-            ->where('periode_id', $periode_id)
+        $uptStandarIds = $pemetaanStandar->pluck('upt_standar_mutu_id');
+
+        $uptSubStandar = UptSubStandarMutu::with('uptStandarMutu.standar_mutu')
+            ->whereIn('upt_standar_mutu_id', $uptStandarIds)
             ->orderBy('urutan', 'asc')
             ->get();
 
-        $uptItemSubStandar = UptItemSubStandarMutu::where('upt_id', $upt_id)
-            ->where('periode_id', $periode_id)
+        $uptSubStandarIds = $uptSubStandar->pluck('upt_sub_standar_id');
+
+        $uptItemSubStandar = UptItemSubStandarMutu::whereIn('upt_sub_standar_id', $uptSubStandarIds)
             ->orderBy('urutan', 'asc')
             ->get()
             ->groupBy('upt_sub_standar_id');
@@ -108,13 +110,15 @@ class StandarAMIController extends Controller
             ->where('periode_id', $validated['periode_id'])
             ->firstOrFail();
 
-        $item = UptItemSubStandarMutu::with('upt_sub_standar.standar_mutu')
+        $item = UptItemSubStandarMutu::with('uptSubStandar.uptStandarMutu.standar_mutu')
             ->where('upt_item_sub_standar_id', $validated['upt_item_sub_standar_id'])
-            ->where('upt_id', $auditee->upt_id)
-            ->where('periode_id', $validated['periode_id'])
+            ->whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($auditee, $validated) {
+                $query->where('upt_id', $auditee->upt_id)
+                    ->where('periode_id', $validated['periode_id']);
+            })
             ->firstOrFail();
 
-        $namaStandar = optional($item->upt_sub_standar->standar_mutu)->nama_standar_mutu ?? 'standar';
+        $namaStandar = optional($item->uptSubStandar?->uptStandarMutu?->standar_mutu)->nama_standar_mutu ?? 'standar';
         $standarSlug = Str::slug($namaStandar);
 
         $uptNama = Str::slug($auditee->upt->nama_upt ?? 'upt');
@@ -160,7 +164,8 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = JawabanAMI::where('jawaban_id', $id)
+        $dokumen = JawabanAMI::with('item.uptSubStandar.uptStandarMutu')
+            ->where('jawaban_id', $id)
             ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
                 $query->where('auditee_id', $auditee->auditee_id);
             })
@@ -168,7 +173,8 @@ class StandarAMIController extends Controller
 
         $itemId = $dokumen->upt_item_sub_standar_id;
 
-        $periode = Periode::find($dokumen->item?->periode_id);
+        $periodeId = $dokumen->item?->uptSubStandar?->uptStandarMutu?->periode_id;
+        $periode = Periode::find($periodeId);
 
         if ($periode && $periode->status == 0) {
             return redirect()
