@@ -27,6 +27,6 @@ class JawabanAudit extends Model
 
     public function itemSubStandar()
     {
-        return $this->belongsTo(UptItemSubStandarMutu::class, 'upt_item_sub_standar_id');
+        return $this->belongsTo(UptItemSubStandarMutu::class, 'upt_item_sub_standar_id', 'upt_item_sub_standar_id');
     }
 }

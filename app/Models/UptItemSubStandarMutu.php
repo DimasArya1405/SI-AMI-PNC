@@ -40,4 +40,8 @@ class UptItemSubStandarMutu extends Model
     {
         return $this->belongsTo(ItemSubStandarMutu::class, 'item_sub_standar_master_id', 'item_sub_standar_id');
     }
+    public function jawaban_audit()
+    {
+        return $this->hasOne(JawabanAudit::class, 'upt_item_sub_standar_id', 'upt_item_sub_standar_id');
+    }
 }

@@ -13,8 +13,10 @@ use App\Models\UPT;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\UptStandarMutu;
 use App\Models\UptSubStandarMutu;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PelaksanaanAuditController extends Controller
@@ -84,7 +86,7 @@ class PelaksanaanAuditController extends Controller
             ->get()
             ->groupBy('upt_item_sub_standar_id');
 
-      $allItemIds = $uptItemSubStandar->flatten()->pluck('upt_item_sub_standar_id');
+        $allItemIds = $uptItemSubStandar->flatten()->pluck('upt_item_sub_standar_id');
         // Ambil data jawaban berdasarkan ID item tersebut
         $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $allItemIds)
             ->get()
@@ -103,23 +105,92 @@ class PelaksanaanAuditController extends Controller
             'jawabanAudit'
         ));
     }
-public function penilaian(Request $request, $id)
+    public function penilaian(Request $request, $id)
+    {
+
+        $nilaiJawaban = ($request->jawaban == 'Ya') ? 1 : 0;
+
+        JawabanAudit::updateOrCreate(
+            ['upt_item_sub_standar_id' => $id],
+            [
+                'jawaban' => $nilaiJawaban,
+                'catatan' => $request->catatan,
+                'id' => (string) Str::uuid()
+            ]
+        );
+
+        return redirect()->back()->with([
+            'success'        => 'Penilaian berhasil disimpan.',
+            'active_tab'     => $request->active_tab,
+            'open_accordion' => $request->open_accordion,
+            'target_scroll'  => $request->target_scroll,
+        ]);
+    }
+public function exportRka($id)
 {
+    $periode = Periode::where('status', '1')->first();
 
-    $nilaiJawaban = ($request->jawaban == 'Ya') ? 1 : 0;
+    $standarMutu = UptStandarMutu::with([
+        'uptSubStandar.items.jawaban_audit',
+        'standar_mutu'
+    ])
+    ->where('periode_id', $periode->id)
+    ->where('upt_id', $id)
+    ->get();
 
-    JawabanAudit::updateOrCreate(
-        ['upt_item_sub_standar_id' => $id], 
-        [
-            'jawaban' => $nilaiJawaban,
-            'catatan' => $request->catatan,
-            'id' => (string) Str::uuid() 
-        ]
-    );
+    // --- TAMBAHKAN DEBUG INI ---
+$semuaJawaban = $standarMutu->flatMap(function($s) {
+    return $s->uptSubStandar->flatMap(function($sub) {
+        return $sub->items->flatMap(function($item) {
+            return $item->jawaban_audit;
+        });
+    });
+});
 
-    return redirect()->back()->with([
-        'success' => 'Penilaian berhasil disimpan!',
-        'active_item' => $id, // ID item yang baru dinilai
-    ]);
+dd($standarMutu->first()->uptSubStandar);
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu'))
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->stream('Ringkasan-Kondisi-Audit.pdf');
 }
+    public function previewBukti($id)
+    {
+        // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $dokumen = Dokumen::where('dokumen_id', $id)
+            // ->where('auditee_id', $auditee->auditee_id)
+            ->firstOrFail();
+
+        if (!Storage::disk('google')->exists($dokumen->file_path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        $file = Storage::disk('google')->get($dokumen->file_path);
+
+        $mimeType = Storage::disk('google')->mimeType($dokumen->file_path)
+            ?? 'application/octet-stream';
+
+        $namaFile = str_replace('"', '', $dokumen->nama_file);
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
+    }
+    public function downloadBukti($id)
+    {
+        // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $dokumen = Dokumen::where('dokumen_id', $id)
+            // ->where('auditee_id', $auditee->auditee_id)
+            ->firstOrFail();
+
+        if (!Storage::disk('google')->exists($dokumen->file_path)) {
+            abort(404, 'File tidak ditemukan di Google Drive.');
+        }
+
+        return response(Storage::disk('google')->get($dokumen->file_path), 200)
+            ->header('Content-Type', 'application/octet-stream')
+            ->header('Content-Disposition', 'attachment; filename="' . $dokumen->nama_file . '"');
+    }
 }
