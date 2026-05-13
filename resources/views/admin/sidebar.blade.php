@@ -30,13 +30,13 @@
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Auditee
                 </a>
             </li>
-            <li>
+            <!-- <li>
                 <a href="{{ route('admin.akun.dosen') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
                     {{ request()->routeIs('admin.akun.dosen') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Dosen
                 </a>
-            </li>
+            </li> -->
         </ul>
         <div class="px-6 flex justify-between items-center py-2 rounded-md cursor-pointer transition duration-200 ease-in-out
             {{ request()->routeIs('admin.ami.*') ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-blue-500 hover:text-white' }}"

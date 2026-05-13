@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
+use App\Http\Controllers\Auditee\DataDosenController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
@@ -127,6 +128,12 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/dashboard', [RoleAuditeeController::class, 'index'])->name('auditee.dashboard');
+
+    // ROUTE KELOLA AKUN DOSEN
+    Route::get('/auditee/dosen', [DataDosenController::class, 'index'])->name('auditee.dosen');
+    Route::post('/auditee/dosen/tambah', [DataDosenController::class, 'tambah'])->name('auditee.dosen.tambah');
+    Route::put('/auditee/dosen/edit', [DataDosenController::class, 'edit'])->name('auditee.dosen.edit');
+    Route::delete('/auditee/dosen/hapus', [DataDosenController::class, 'hapus'])->name('auditee.dosen.hapus');
 
     // ROUTE PENUGASAN
     Route::get('/auditee/penugasan', [AuditeePenugasanController::class, 'index'])->name('auditee.penugasan');
