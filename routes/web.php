@@ -23,6 +23,7 @@ use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanControll
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -154,6 +155,8 @@ Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifikasi/{id}', [NotifikasiController::class, 'buka'])->name('notifikasi.buka');
+    Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca_semua');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
