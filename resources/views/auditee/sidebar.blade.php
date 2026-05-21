@@ -1,4 +1,4 @@
-<div x-data="{ sidebarOpen: false }" @toggle-sidebar.window="sidebarOpen = ! sidebarOpen">
+<div x-cloak x-data="{ sidebarOpen: false }" @toggle-sidebar.window="sidebarOpen = ! sidebarOpen">
     <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"
         class="fixed inset-0 top-16 z-30 bg-gray-900/40 md:hidden" style="display: none;"></div>
 

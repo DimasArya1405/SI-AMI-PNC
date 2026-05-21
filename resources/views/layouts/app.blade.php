@@ -33,6 +33,10 @@
             overflow-x: hidden;
         }
 
+        [x-cloak] {
+            display: none !important;
+        }
+
         table.dataTable tbody tr {
             border-bottom: 1px solid #e5e7eb;
         }
