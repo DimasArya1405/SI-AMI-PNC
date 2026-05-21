@@ -43,4 +43,8 @@ class UptItemSubStandarMutu extends Model
     {
         return $this->hasMany(UptItemSubStandarMutu::class, 'parent_upt_item_id', 'upt_item_sub_standar_id');
     }
+    public function jawaban_audit()
+    {
+        return $this->hasOne(JawabanAudit::class, 'upt_item_sub_standar_id', 'upt_item_sub_standar_id');
+    }
 }
