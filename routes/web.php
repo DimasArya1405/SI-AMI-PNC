@@ -16,12 +16,14 @@ use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
+use App\Http\Controllers\Auditee\DataDosenController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,7 +64,6 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::delete('/admin/periode/hapus', [PeriodeController::class, 'hapus'])->name('admin.periode.hapus');
 
     Route::get('/admin/data/upt', [UPTController::class, 'index'])->name('admin.data.upt');
-    Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
     Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
     Route::put('/admin/data/upt/edit', [UPTController::class, 'edit'])->name('admin.upt.edit');
     Route::delete('/admin/data/upt/hapus', [UPTController::class, 'hapus'])->name('admin.upt.hapus');
@@ -134,6 +135,12 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
 Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::get('/auditee/dashboard', [RoleAuditeeController::class, 'index'])->name('auditee.dashboard');
 
+    // ROUTE KELOLA AKUN DOSEN
+    Route::get('/auditee/dosen', [DataDosenController::class, 'index'])->name('auditee.dosen');
+    Route::post('/auditee/dosen/tambah', [DataDosenController::class, 'tambah'])->name('auditee.dosen.tambah');
+    Route::put('/auditee/dosen/edit', [DataDosenController::class, 'edit'])->name('auditee.dosen.edit');
+    Route::delete('/auditee/dosen/hapus', [DataDosenController::class, 'hapus'])->name('auditee.dosen.hapus');
+
     // ROUTE PENUGASAN
     Route::get('/auditee/penugasan', [AuditeePenugasanController::class, 'index'])->name('auditee.penugasan');
     Route::post('/auditee/penugasan/ajukan', [AuditeePenugasanController::class, 'ajukan'])->name('auditee.penugasan.ajukan');
@@ -153,6 +160,8 @@ Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifikasi/{id}', [NotifikasiController::class, 'buka'])->name('notifikasi.buka');
+    Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca_semua');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

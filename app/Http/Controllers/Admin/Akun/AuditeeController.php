@@ -19,7 +19,8 @@ class AuditeeController extends Controller
         return $dataTable->render('admin.akun.auditee', compact('upt'));
     }
 
-    public function tambah(Request $request) {
+    public function tambah(Request $request)
+    {
         $cek = Auditee::where('nip', $request->nip)->exists();
         if ($cek) {
             return redirect('/admin/akun/auditee')
@@ -30,6 +31,12 @@ class AuditeeController extends Controller
         if ($cekEmail) {
             return redirect('/admin/akun/auditee')
                 ->with('error', 'Email sudah terdaftar!');
+        }
+
+        $cekUpt = Auditee::where('upt_id', $request->upt)->exists();
+        if ($cekUpt) {
+            return redirect('/admin/akun/auditee')
+                ->with('error', 'UPT tersebut sudah memiliki akun auditee!');
         }
 
         $newUser = new User;
@@ -53,14 +60,39 @@ class AuditeeController extends Controller
         return redirect('/admin/akun/auditee')->with('success', 'Data Auditee Berhasil Ditambahkan!');
     }
 
-    public function edit(Request $request) {
-        $cekEmail = User::where('email', $request->email)->exists();
+    public function edit(Request $request)
+    {
+        $request->validate([
+            'auditee_id' => 'required',
+            'nip' => 'required',
+            'nama' => 'required',
+            'email' => 'required|email',
+            'upt' => 'required',
+            'no_telp' => 'nullable',
+        ], [
+            'upt.required' => 'UPT wajib dipilih!',
+        ]);
+
+        $auditee = Auditee::findOrFail($request->auditee_id);
+
+        $cekEmail = User::where('email', $request->email)
+            ->where('id', '!=', $auditee->user_id)
+            ->exists();
+
         if ($cekEmail) {
             return redirect('/admin/akun/auditee')
                 ->with('error', 'Email sudah terdaftar!');
         }
 
-        $auditee = Auditee::find($request->auditee_id);
+        $cekUpt = Auditee::where('upt_id', $request->upt)
+            ->where('auditee_id', '!=', $request->auditee_id)
+            ->exists();
+
+        if ($cekUpt) {
+            return redirect('/admin/akun/auditee')
+                ->with('error', 'UPT tersebut sudah memiliki akun auditee!');
+        }
+
         $auditee->nip = $request->nip;
         $auditee->nama_lengkap = $request->nama;
         $auditee->upt_id = $request->upt;
@@ -68,15 +100,18 @@ class AuditeeController extends Controller
         $auditee->email = $request->email;
         $auditee->save();
 
-        $user = User::find($auditee->user_id);
+        $user = User::findOrFail($auditee->user_id);
         $user->name = $request->nama;
         $user->email = $request->email;
         $user->password = Hash::make($request->nip);
         $user->save();
-        return redirect('/admin/akun/auditee')->with('success', 'Data Auditee Berhasil Diubah!');
+
+        return redirect('/admin/akun/auditee')
+            ->with('success', 'Data Auditee Berhasil Diubah!');
     }
 
-    public function hapus(Request $request) {
+    public function hapus(Request $request)
+    {
         $auditee = Auditee::find($request->auditee_id);
         $user = User::where('email', $request->email)->first();
         $user->delete();
@@ -84,16 +119,17 @@ class AuditeeController extends Controller
         return redirect('/admin/akun/auditee')->with('success', 'Data Auditee Berhasil Dihapus!');
     }
 
-    public function aktivasi(Request $request) {
-    $auditee = Auditee::find($request->auditee_id);
+    public function aktivasi(Request $request)
+    {
+        $auditee = Auditee::find($request->auditee_id);
 
-    if ($auditee->status_aktif == 1) {
-        $auditee->status_aktif = 0;
-    } else {
-        $auditee->status_aktif = 1;
-    }
+        if ($auditee->status_aktif == 1) {
+            $auditee->status_aktif = 0;
+        } else {
+            $auditee->status_aktif = 1;
+        }
 
-    $auditee->save();
-    return redirect('/admin/akun/auditee')->with('success','Status berhasil diubah!');
+        $auditee->save();
+        return redirect('/admin/akun/auditee')->with('success', 'Status berhasil diubah!');
     }
 }

@@ -16,7 +16,7 @@ class RoleManager
     public function handle(Request $request, Closure $next, $role): Response
     {
         if ($request->user()->role !== $role) {
-            return redirect('dashboard'); // Lempar ke dashboard umum jika salah role
+            return redirect('/'); // Lempar ke dashboard umum jika salah role
         }
         return $next($request);
     }

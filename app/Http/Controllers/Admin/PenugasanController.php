@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\DataTables\Admin\Ami\PenugasanDataTable;
 use App\DataTables\Admin\PeriodeDataTable;
 use App\Http\Controllers\Controller;
+use App\Models\Auditee;
 use App\Models\Auditor;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\Prodi;
 use App\Models\UPT;
+use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -118,6 +120,8 @@ class PenugasanController extends Controller
         $penugasan->status_penugasan = 'pending';
         $penugasan->save();
 
+        $this->kirimNotifikasiPenugasanDibuat($penugasan);
+
         return redirect()->back()->with('success', 'Penugasan Berhasil Ditambahkan!');
     }
     public function aktifkan($id)
@@ -139,6 +143,11 @@ class PenugasanController extends Controller
 
         // 4. Update status menjadi aktif
         $penugasan->update(['status_penugasan' => 'aktif']);
+
+        Penugasan::where('periode_id', $id)
+            ->with(['upt', 'auditor1.user', 'auditor2.user'])
+            ->get()
+            ->each(fn ($item) => $this->kirimNotifikasiAmiDibuka($item));
 
         return redirect()->back()->with('success', 'Semua penugasan berhasil diaktifkan. Auditor sekarang dapat memulai proses audit.');
     }
@@ -165,5 +174,52 @@ class PenugasanController extends Controller
 
         // 3. Download atau Stream
         return $pdf->stream('Jadwal-AMI-PNC.pdf');
+    }
+
+    private function kirimNotifikasiPenugasanDibuat(Penugasan $penugasan): void
+    {
+        $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesan = "Penugasan audit untuk {$namaUpt} telah dibuat. Silakan cek jadwal dan konfirmasi penugasan.";
+
+        $this->notifikasiAuditor($penugasan, 'Penugasan AMI Dibuat', $pesan, route('auditor.penugasan'));
+        $this->notifikasiAuditee($penugasan, 'Penugasan AMI Dibuat', $pesan, route('auditee.penugasan'));
+    }
+
+    private function kirimNotifikasiAmiDibuka(Penugasan $penugasan): void
+    {
+        $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesanAuditor = "Penugasan audit untuk {$namaUpt} telah aktif. Pelaksanaan AMI sudah dapat diakses.";
+        $pesanAuditee = "Penugasan audit untuk {$namaUpt} telah aktif. Formulir AMI sudah dapat diakses.";
+
+        $this->notifikasiAuditor($penugasan, 'AMI Sudah Dapat Diakses', $pesanAuditor, route('auditor.pelaksanaan_audit.detail', $penugasan->upt_id));
+        $this->notifikasiAuditee($penugasan, 'AMI Sudah Dapat Diakses', $pesanAuditee, route('auditee.ami.detail', [
+            'upt_id' => $penugasan->upt_id,
+            'periode_id' => $penugasan->periode_id,
+        ]));
+    }
+
+    private function notifikasiAuditor(Penugasan $penugasan, string $judul, string $pesan, string $url): void
+    {
+        collect([
+            $penugasan->auditor1?->user,
+            $penugasan->auditor2?->user,
+        ])
+            ->filter()
+            ->unique('id')
+            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+    }
+
+    private function notifikasiAuditee(Penugasan $penugasan, string $judul, string $pesan, string $url): void
+    {
+        Auditee::with('user')
+            ->where('upt_id', $penugasan->upt_id)
+            ->get()
+            ->pluck('user')
+            ->filter()
+            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
     }
 }

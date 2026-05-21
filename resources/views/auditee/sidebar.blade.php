@@ -7,21 +7,21 @@
             <i class="bi bi-grid-1x2-fill mr-2 text-xl"></i> Dashboard
         </a>
 
+        <a href="{{ route('auditee.dosen') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ request()->routeIs('auditee.dosen*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-person mr-2 text-xl"></i> Kelola Akun Dosen
+        </a>
+
         <a href="{{ route('auditee.penugasan') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('auditee.penugasan') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-calendar-check mr-2 text-xl"></i> Penugasan Audit
         </a>
 
-        <a href="{{ route('auditee.dashboard') }}"
-            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('auditee.dokumen*') ? 'bg-blue-500 text-white' : '' }}">
-            <i class="bi bi-cloud-arrow-up mr-2 text-xl"></i> Upload Dokumen
-        </a>
-
         <a href="{{ route('auditee.ami') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('auditee.ami.*') ? 'bg-blue-500 text-white' : '' }}">
+            {{ request()->routeIs('auditee.ami*') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-ui-checks-grid mr-2 text-xl"></i> Standar Mutu
         </a>
 

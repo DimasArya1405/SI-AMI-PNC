@@ -29,6 +29,68 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                @php
+                    $notifikasiAktif = \Illuminate\Support\Facades\Schema::hasTable('notifications');
+                    $notifikasiBelumDibaca = $notifikasiAktif ? Auth::user()->unreadNotifications()->count() : 0;
+                    $daftarNotifikasi = $notifikasiAktif
+                        ? Auth::user()->unreadNotifications()->latest()->limit(5)->get()
+                        : collect();
+                @endphp
+                <x-dropdown align="right" width="w-80" contentClasses="bg-white">
+                    <x-slot name="trigger">
+                        <button class="relative inline-flex items-center justify-center w-10 h-10 mr-3 text-gray-500 bg-white rounded-full hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition ease-in-out duration-150">
+                            <i class="bi bi-bell text-xl"></i>
+                            @if ($notifikasiBelumDibaca > 0)
+                                <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                                    {{ $notifikasiBelumDibaca > 9 ? '9+' : $notifikasiBelumDibaca }}
+                                </span>
+                            @endif
+                        </button>
+                    </x-slot>
+
+                    <x-slot name="content">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                            <div class="font-semibold text-sm text-gray-800">Notifikasi</div>
+                            @if ($notifikasiBelumDibaca > 0)
+                                <form method="POST" action="{{ route('notifikasi.baca_semua') }}">
+                                    @csrf
+                                    <button type="submit" class="text-xs text-blue-600 hover:text-blue-800">
+                                        Tandai semua dibaca
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div class="max-h-80 overflow-y-auto">
+                            @forelse ($daftarNotifikasi as $notifikasi)
+                                <a href="{{ route('notifikasi.buka', $notifikasi->id) }}"
+                                    class="block px-4 py-3 border-b border-gray-100 hover:bg-blue-50 transition">
+                                    <div class="flex gap-3">
+                                        <div class="mt-1 text-blue-600">
+                                            <i class="bi bi-info-circle-fill"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800">
+                                                {{ $notifikasi->data['judul'] ?? 'Notifikasi' }}
+                                            </p>
+                                            <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                                                {{ $notifikasi->data['pesan'] ?? '' }}
+                                            </p>
+                                            <p class="text-[11px] text-gray-400 mt-1">
+                                                {{ $notifikasi->created_at->diffForHumans() }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="px-4 py-6 text-center text-sm text-gray-500">
+                                    Belum ada notifikasi baru.
+                                </div>
+                            @endforelse
+                        </div>
+                    </x-slot>
+                </x-dropdown>
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">

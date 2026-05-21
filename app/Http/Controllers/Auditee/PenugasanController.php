@@ -9,6 +9,8 @@ use App\Models\PengajuanJadwalAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\UPT;
+use App\Models\User;
+use App\Notifications\PenugasanAuditNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -112,6 +114,9 @@ class PenugasanController extends Controller
         $pengajuan_jadwal->alasan = $request->alasan;
         $pengajuan_jadwal->save();
 
+        $this->kirimNotifikasiAdminPengajuanDibuat($penugasan, $auditee->nama_lengkap);
+        $this->kirimNotifikasiPihakTerkaitPengajuanDibuat($penugasan, $auditee->nama_lengkap, Auth::id());
+
         return back()->with('success', 'Pengajuan perubahan jadwal berhasil dikirim.');
     }
 
@@ -128,6 +133,7 @@ class PenugasanController extends Controller
             ->firstOrFail();
 
         $pengajuan_jadwal = PengajuanJadwalAudit::where('penugasan_id', $penugasan->penugasan_id)->firstOrFail();
+        $sudahLengkapSebelumnya = $this->pengajuanSudahLengkap($pengajuan_jadwal);
 
         // Auditee hanya mengisi konfirmasi UPT
         $pengajuan_jadwal->upt = 1;
@@ -142,6 +148,10 @@ class PenugasanController extends Controller
             $penugasan->tanggal_audit = $pengajuan_jadwal->tanggal_audit;
             $penugasan->jam = $pengajuan_jadwal->jam;
             $penugasan->save();
+
+            if (!$sudahLengkapSebelumnya) {
+                $this->kirimNotifikasiAdminPengajuanDisetujui($penugasan);
+            }
         }
 
         return back()->with('success', 'Pengajuan jadwal berhasil disetujui.');
@@ -164,5 +174,61 @@ class PenugasanController extends Controller
         $pengajuan_jadwal->delete();
 
         return back()->with('success', 'Pengajuan jadwal berhasil ditolak.');
+    }
+
+    private function pengajuanSudahLengkap(PengajuanJadwalAudit $pengajuan): bool
+    {
+        return $pengajuan->upt == 1 &&
+            $pengajuan->ketua_auditor == 1 &&
+            $pengajuan->anggota_auditor == 1;
+    }
+
+    private function kirimNotifikasiAdminPengajuanDibuat(Penugasan $penugasan, string $namaPengaju): void
+    {
+        $penugasan->load('upt');
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesan = "{$namaPengaju} mengajukan perubahan jadwal audit untuk {$namaUpt}.";
+
+        $this->kirimNotifikasiAdmin($penugasan, 'Pengajuan Jadwal Audit', $pesan);
+    }
+
+    private function kirimNotifikasiAdminPengajuanDisetujui(Penugasan $penugasan): void
+    {
+        $penugasan->load('upt');
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $tanggal = $penugasan->tanggal_audit ? date('d-m-Y', strtotime($penugasan->tanggal_audit)) : '-';
+        $jam = $penugasan->jam ? date('H:i', strtotime($penugasan->jam)) : '-';
+        $pesan = "Pengajuan jadwal audit untuk {$namaUpt} sudah disetujui semua pihak. Jadwal baru: {$tanggal} pukul {$jam}.";
+
+        $this->kirimNotifikasiAdmin($penugasan, 'Pengajuan Jadwal Disetujui', $pesan);
+    }
+
+    private function kirimNotifikasiAdmin(Penugasan $penugasan, string $judul, string $pesan): void
+    {
+        $url = route('admin.ami.penugasan.detail', $penugasan->periode_id);
+
+        User::where('role', 'admin')
+            ->get()
+            ->each(fn ($admin) => $admin->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+    }
+
+    private function kirimNotifikasiPihakTerkaitPengajuanDibuat(Penugasan $penugasan, string $namaPengaju, string $userPengajuId): void
+    {
+        $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesan = "{$namaPengaju} mengajukan perubahan jadwal audit untuk {$namaUpt}. Silakan cek dan berikan persetujuan.";
+        $url = route('auditor.penugasan');
+
+        collect([
+            $penugasan->auditor1?->user,
+            $penugasan->auditor2?->user,
+        ])
+            ->filter()
+            ->reject(fn ($user) => $user->id === $userPengajuId)
+            ->unique('id')
+            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification($penugasan, 'Pengajuan Jadwal Audit', $pesan, $url)));
     }
 }
