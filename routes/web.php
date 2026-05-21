@@ -65,7 +65,6 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 
     Route::get('/admin/data/upt', [UPTController::class, 'index'])->name('admin.data.upt');
     Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
-    Route::post('/admin/data/upt/tambah', [UPTController::class, 'tambah'])->name('admin.upt.tambah');
     Route::put('/admin/data/upt/edit', [UPTController::class, 'edit'])->name('admin.upt.edit');
     Route::delete('/admin/data/upt/hapus', [UPTController::class, 'hapus'])->name('admin.upt.hapus');
 
