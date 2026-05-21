@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\Auditor;
 use App\Models\Dokumen;
+use App\Models\JawabanAMI;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
@@ -26,7 +27,7 @@ class PelaksanaanAuditController extends Controller
         $user = Auth::user();
         $auditor = Auditor::where('user_id', $user->id)->firstOrFail();
         $periode = Periode::where('status', '1')->first();
-        $penugasan = Penugasan::where('periode_id', $periode->id)
+        $penugasan = Penugasan::where('periode_id', $periode?->id)
             ->where('status_penugasan', 'aktif')
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
@@ -43,7 +44,10 @@ class PelaksanaanAuditController extends Controller
 
         $auditor = Auditor::where('user_id', $user->id)->firstOrFail();
         $periode = Periode::where('status', '1')->first();
-        $penugasan = Penugasan::where('periode_id', $periode->id)
+        if ($periode == null) {
+            $adaPeriode = 0;
+        }
+        $penugasan = Penugasan::where('periode_id', $periode?->id)
             ->where('upt_id', $id) // Cari berdasarkan ID UPT yang dipassing
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
@@ -62,27 +66,38 @@ class PelaksanaanAuditController extends Controller
         $upt = UPT::findOrFail($id);
         $status_periode = $periode->status == 0;
 
+        $upt = UPT::findOrFail($id);
+        $periode = Periode::where('status', '1')->first();
+        $periode_id = $periode->id;
+        $status_periode = $periode->status == 0;
+
         $pemetaanStandar = UptStandarMutu::with('standar_mutu')
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
             ->where('upt_standar_mutu.upt_id', $id)
-            ->where('upt_standar_mutu.periode_id', $periode->id)
+            ->where('upt_standar_mutu.periode_id', $periode_id)
             ->orderBy('standar_mutu.urutan', 'asc')
             ->select('upt_standar_mutu.*')
             ->get();
 
-        $uptSubStandar = UptSubStandarMutu::with('standar_mutu')
-            ->where('upt_id', $id)
-            ->where('periode_id', $periode->id)
+        $uptStandarIds = $pemetaanStandar->pluck('upt_standar_mutu_id');
+
+        $uptSubStandar = UptSubStandarMutu::with('uptStandarMutu.standar_mutu')
+            ->whereIn('upt_standar_mutu_id', $uptStandarIds)
             ->orderBy('urutan', 'asc')
             ->get();
 
-        $uptItemSubStandar = UptItemSubStandarMutu::where('upt_id', $id)
-            ->where('periode_id', $periode->id)
+        $uptSubStandarIds = $uptSubStandar->pluck('upt_sub_standar_id');
+
+        $uptItemSubStandar = UptItemSubStandarMutu::whereIn('upt_sub_standar_id', $uptSubStandarIds)
             ->orderBy('urutan', 'asc')
             ->get()
             ->groupBy('upt_sub_standar_id');
 
-        $buktiDukung = Dokumen::where('auditee_id', $auditee->auditee_id)
+        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+            ->where('periode_id', $periode_id)
+            ->firstOrFail();
+
+        $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
             ->get()
             ->groupBy('upt_item_sub_standar_id');
 
@@ -102,63 +117,68 @@ class PelaksanaanAuditController extends Controller
             'status_periode',
             'auditee',
             'ketua',
-            'jawabanAudit'
+            'jawabanAudit',
+            // 'adaPeriode'
         ));
     }
-    public function penilaian(Request $request, $id)
-    {
-
-        $nilaiJawaban = ($request->jawaban == 'Ya') ? 1 : 0;
-
-        JawabanAudit::updateOrCreate(
-            ['upt_item_sub_standar_id' => $id],
-            [
-                'jawaban' => $nilaiJawaban,
-                'catatan' => $request->catatan,
-                'id' => (string) Str::uuid()
-            ]
-        );
-
-        return redirect()->back()->with([
-            'success'        => 'Penilaian berhasil disimpan.',
-            'active_tab'     => $request->active_tab,
-            'open_accordion' => $request->open_accordion,
-            'target_scroll'  => $request->target_scroll,
-        ]);
-    }
-public function exportRka($id)
+public function penilaian(Request $request, $id)
 {
-    $periode = Periode::where('status', '1')->first();
+    $request->validate([
+        'jawaban' => 'required',
+        'kategori_temuan' => 'required_if:jawaban,Tidak|in:KTS,OB',
+    ]);
 
-    $standarMutu = UptStandarMutu::with([
-        'uptSubStandar.items.jawaban_audit',
-        'standar_mutu'
-    ])
-    ->where('periode_id', $periode->id)
-    ->where('upt_id', $id)
-    ->get();
+    $nilaiJawaban = ($request->jawaban == 'Ya') ? 1 : 0;
+    $kategoriTemuan = ($nilaiJawaban == 1) ? null : $request->kategori_temuan;
 
-    // --- TAMBAHKAN DEBUG INI ---
-$semuaJawaban = $standarMutu->flatMap(function($s) {
-    return $s->uptSubStandar->flatMap(function($sub) {
-        return $sub->items->flatMap(function($item) {
-            return $item->jawaban_audit;
-        });
-    });
-});
+    JawabanAudit::updateOrCreate(
+        ['upt_item_sub_standar_id' => $id],
+        [
+            'jawaban' => $nilaiJawaban,
+            'kategori_temuan' => $kategoriTemuan,
+            'catatan' => $request->catatan,
+            'id' => (string) Str::uuid()
+        ]
+    );
 
-dd($standarMutu->first()->uptSubStandar);
-
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu'))
-        ->setPaper('a4', 'portrait');
-
-    return $pdf->stream('Ringkasan-Kondisi-Audit.pdf');
+    return redirect()->back()->with([
+        'success'        => 'Penilaian berhasil disimpan.',
+        'active_tab'     => $request->active_tab,
+        'open_accordion' => $request->open_accordion,
+        'target_scroll'  => $request->target_scroll,
+    ]);
 }
+    public function exportRka($id)
+    {
+        $upt = UPT::findOrFail($id);
+        $periode = Periode::where('status', '1')->first();
+        $periode_id = $periode->id;
+
+        // Ambil Standar Mutu yang memiliki relasi ke bawah hingga ke jawaban = 0
+        $standarMutu = UptStandarMutu::with(['standar_mutu', 'subStandarUpt.items.jawaban_audit' => function ($query) {
+            $query->where('jawaban', 0); // Filter langsung di query agar tidak berat di view
+        }])
+            ->where('upt_id', $id)
+            ->where('periode_id', $periode_id)
+            ->get();
+        $penugasan = Penugasan::where('upt_id', $id)
+            ->where('periode_id', $periode_id)
+            ->with('auditor1', 'auditor2')
+            ->firstOrFail();
+
+        // return view('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'));
+                // 2. Load View PDF (Gunakan file blade khusus PDF yang sudah kita buat sebelumnya)
+        $pdf = Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'))
+            ->setPaper('a4', 'portrait');
+
+        // 3. Download atau Stream
+        return $pdf->stream('RKA.pdf');
+    }
     public function previewBukti($id)
     {
         // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = Dokumen::where('dokumen_id', $id)
+        $dokumen = JawabanAMI::where('dokumen_id', $id)
             // ->where('auditee_id', $auditee->auditee_id)
             ->firstOrFail();
 
@@ -181,7 +201,7 @@ dd($standarMutu->first()->uptSubStandar);
     {
         // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = Dokumen::where('dokumen_id', $id)
+        $dokumen = JawabanAMI::where('dokumen_id', $id)
             // ->where('auditee_id', $auditee->auditee_id)
             ->firstOrFail();
 

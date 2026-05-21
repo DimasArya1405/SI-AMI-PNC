@@ -44,20 +44,34 @@
 
     <table>
         <tr>
-            <td style="width: 20%;">Kriteria</td>
-            <td>: Standar SPMI</td>
+            <td style="width: 30%; margin-right:2px;">Kriteria</td>
+            <td style="margin-left:5px;">: Standar SPMI</td>
         </tr>
         <tr>
-            <td style="width: 20%;">Tgl Penilaian</td>
-            <td>: </td>
+            <td style="width: 30%; margin-right:2px;">Tgl Penilaian</td>
+            <td style="margin-left:5px;">: {{$penugasan->tanggal_audit}} - {{$penugasan->jam}}</td>
         </tr>
         <tr>
-            <td style="width: 20%;">Auditi</td>
-            <td>: </td>
+            <td style="width: 30%; margin-right:2px;">Auditi</td>
+            @php
+                if($upt->kategori_upt == 'Prodi'){
+                    $kategori = 'Program Studi';
+                }else{
+                    $kategori = 'Unit';
+                }
+            @endphp
+            <td>: 
+                {{$kategori}}  
+                {{$upt->nama_upt}}
+            </td>
         </tr>
         <tr>
-            <td style="width: 20%;">Auditor</td>
-            <td>: </td>
+            <td style="width: 30%; margin-right:2px;">Auditor (Ketua)</td>
+            <td style="margin-left:5px;">: {{$penugasan->auditor1->nama_lengkap}}</td>
+        </tr>
+        <tr>
+            <td style="width: 30%; margin-right:2px;">Auditor (Anggota)</td>
+            <td style="margin-left:5px;">: {{$penugasan->auditor2->nama_lengkap}}</td>
         </tr>
     </table>
 
@@ -70,70 +84,50 @@
             </tr>
         </thead>
 <tbody>
-
-@foreach($standarMutu as $s)
-{{$s->standar_mutu->nama_standar}}
+    @foreach($standarMutu as $s)
     @php
         $temuan = [];
-
-        foreach ($s->uptSubStandar as $sub) {
-            foreach ($sub->items as $item) {
-
-                foreach ($item->jawaban_audit as $jawaban) {
-                    dd($jawaban);
-                    if ($jawaban->jawaban == false || $jawaban->jawaban == 0) {
-                        $temuan[] = [
-                            'catatan' => $jawaban->catatan,
-                            'kategori' => 'KTS'
-                        ];
-                        
-                    }
-
+        
+        foreach ($s->subStandarUpt ?? [] as $sub) {
+            foreach ($sub->items ?? [] as $item) {
+                // Cek apakah item ini memiliki jawaban_audit
+                if ($item->jawaban_audit) {
+                    $temuan[] = [
+                        'catatan' => $item->jawaban_audit->catatan,
+                        // PERUBAHAN DI SINI: Mengambil kategori_temuan dari jawaban_audit
+                        'kategori' => $item->jawaban_audit->kategori_temuan ?? '-' 
+                    ];
                 }
             }
         }
-
+        
+        // Hilangkan duplikasi jika ada catatan dan kategori yang sama persis dalam satu standar
+        $temuan = array_map("unserialize", array_unique(array_map("serialize", $temuan)));
         $jumlahTemuan = count($temuan);
     @endphp
-@dd($jumlahTemuan)
-    @if($jumlahTemuan > 0)
 
-        @foreach($temuan as $index => $t)
+        @if($jumlahTemuan > 0)
+            @foreach($temuan as $index => $t)
+                <tr>
+                    @if($index == 0)
+                        {{-- Nama Standar muncul hanya sekali di baris pertama temuan --}}
+                        <td rowspan="{{ $jumlahTemuan }}">
+                            {{ $s->standar_mutu->nama_standar_mutu }}
+                        </td>
+                    @endif
+                    <td>{{ $t['catatan'] }}</td>
+                    <td class="center">{{ $t['kategori'] }}</td>
+                </tr>
+            @endforeach
+        @else
+            {{-- Jika tidak ada jawaban = 0, Standar tetap muncul dengan kolom deskripsi kosong --}}
             <tr>
-
-                @if($index == 0)
-                    <td rowspan="{{ $jumlahTemuan }}">
-                        {{ $s->standar_mutu->nama_standar }}
-                    </td>
-                @endif
-
-                <td>
-                    {{ $t['catatan'] }}
-                </td>
-
-                <td class="center">
-                    {{ $t['kategori'] }}
-                </td>
-
+                <td>{{ $s->standar_mutu->nama_standar_mutu }}</td>
+                <td>-</td>
+                <td class="center">-</td>
             </tr>
-        @endforeach
-
-    @else
-
-        <tr>
-            <td>
-                {{ $s->standar_mutu->nama_standar_mutu }}
-            </td>
-
-            <td></td>
-
-            <td></td>
-        </tr>
-
-    @endif
-
-@endforeach
-
+        @endif
+    @endforeach
 </tbody>
     </table>
 

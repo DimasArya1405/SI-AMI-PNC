@@ -33,7 +33,7 @@ class PenugasanController extends Controller
             return redirect()->back()->with('error', 'Periode aktif tidak ditemukan.');
         }
 
-        $periode_id = $periode_now->id;
+        $periode_id = $periode_now?->id;
 
         // Penugasan berdasarkan UPT auditee login
         $penugasanProdi = Penugasan::where('periode_id', $periode_id)

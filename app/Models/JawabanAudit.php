@@ -22,6 +22,7 @@ class JawabanAudit extends Model
         'id',
         'upt_item_sub_standar_id',
         'jawaban',
+        'kategori_temuan',
         'catatan',
     ];
 
