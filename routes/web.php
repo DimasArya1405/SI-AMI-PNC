@@ -123,6 +123,12 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/pelaksanaan-audit', [PelaksanaanAuditController::class, 'index'])->name('auditor.pelaksanaan_audit');
     Route::get('/auditor/pelaksanaan-audit/detail/{id}', [PelaksanaanAuditController::class, 'detail'])->name('auditor.pelaksanaan_audit.detail');
     Route::post('/auditor/pelaksanaan-audit/penilaian/{id}', [PelaksanaanAuditController::class, 'penilaian'])->name('auditor.pelaksanaan_audit.penilaian');
+    Route::get('/auditor/pelaksanaan-audit/exportRka/{id}', [PelaksanaanAuditController::class, 'exportRka'])->name('auditor.pelaksanaan_audit.exportRka');
+    
+    // ROUTE LIHAT BUKTI DUKUNG
+    Route::get('/auditor/pelaksanaan-audit/preview-bukti/{id}', [PelaksanaanAuditController::class, 'previewBukti'])->name('auditor.bukti_dukung.preview');
+    Route::get('/auditor/pelaksanaan-audit/download-bukti/{id}', [PelaksanaanAuditController::class, 'downloadBukti'])->name('auditor.bukti_dukung.download');
+
     
 });
 

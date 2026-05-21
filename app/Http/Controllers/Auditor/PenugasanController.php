@@ -23,7 +23,7 @@ class PenugasanController extends Controller
         $auditor_login = Auditor::where('user_id', $id_user)->first();
         $auditor_id = $auditor_login->auditor_id;
         $periode_now = Periode::where('status', '1')->first();
-        $periode_id = $periode_now->id;
+        $periode_id = $periode_now?->id;
         // Filter UPT Prodi yang ditugaskan ke auditor login
         $penugasanProdi = Penugasan::where('periode_id', $periode_id)
             ->where('status_penugasan', 'aktif')
