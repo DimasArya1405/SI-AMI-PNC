@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auditor;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\Auditor;
-use App\Models\Dokumen;
 use App\Models\JawabanAMI;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
@@ -98,6 +97,8 @@ class PelaksanaanAuditController extends Controller
             ->firstOrFail();
 
         $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
+            ->where('status_validasi', 'diterima')
+            ->with('dosen')
             ->get()
             ->groupBy('upt_item_sub_standar_id');
 
@@ -176,11 +177,7 @@ public function penilaian(Request $request, $id)
     }
     public function previewBukti($id)
     {
-        // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
-
-        $dokumen = JawabanAMI::where('dokumen_id', $id)
-            // ->where('auditee_id', $auditee->auditee_id)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenUntukAuditor($id);
 
         if (!Storage::disk('google')->exists($dokumen->file_path)) {
             abort(404, 'File tidak ditemukan.');
@@ -199,11 +196,7 @@ public function penilaian(Request $request, $id)
     }
     public function downloadBukti($id)
     {
-        // $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
-
-        $dokumen = JawabanAMI::where('dokumen_id', $id)
-            // ->where('auditee_id', $auditee->auditee_id)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenUntukAuditor($id);
 
         if (!Storage::disk('google')->exists($dokumen->file_path)) {
             abort(404, 'File tidak ditemukan di Google Drive.');
@@ -212,5 +205,20 @@ public function penilaian(Request $request, $id)
         return response(Storage::disk('google')->get($dokumen->file_path), 200)
             ->header('Content-Type', 'application/octet-stream')
             ->header('Content-Disposition', 'attachment; filename="' . $dokumen->nama_file . '"');
+    }
+
+    private function findDokumenUntukAuditor(string $id): JawabanAMI
+    {
+        $auditor = Auditor::where('user_id', Auth::id())->firstOrFail();
+
+        return JawabanAMI::where('jawaban_id', $id)
+            ->where('status_validasi', 'diterima')
+            ->whereHas('penugasan', function ($query) use ($auditor) {
+                $query->where(function ($subQuery) use ($auditor) {
+                    $subQuery->where('auditor_id_1', $auditor->auditor_id)
+                        ->orWhere('auditor_id_2', $auditor->auditor_id);
+                });
+            })
+            ->firstOrFail();
     }
 }

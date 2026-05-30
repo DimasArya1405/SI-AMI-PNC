@@ -14,7 +14,7 @@
             Dashboard
         </a>
 
-        <a href="#"
+        <a href="{{ route('dosen.bukti_dukung.index') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('dosen.bukti_dukung.*') ? 'bg-blue-500 text-white' : '' }}">
 

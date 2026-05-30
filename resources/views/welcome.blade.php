@@ -4,7 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'SIAMI') }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('img/logo-pnc-1.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -29,9 +32,13 @@
     <!-- NAVBAR -->
     {{-- <img src="{{ asset('img/bg.png')}}" class="fixed -z-50 w-screen bg-gray-800/50 top-0 left-0 right-0 min-w-screen"></img> --}}
     <header class="w-full px-8 py-4 flex justify-between items-center bg-white shadow-sm">
-        <h1 class="text-lg font-semibold text-blue-600">
-            Sistem Audit Mutu Internal
-        </h1>
+        <a href="{{ url('/') }}" class="flex items-center gap-3">
+            <img src="{{ asset('img/logo-pnc-1.png') }}" alt="Logo PNC" class="h-10 w-10 object-contain">
+            <div>
+                <h1 class="text-lg font-semibold text-blue-600">SIAMI</h1>
+                <p class="text-xs text-gray-500">Sistem Informasi Audit Mutu Internal</p>
+            </div>
+        </a>
 
         @if (Route::has('login'))
         <nav class="flex gap-3">
