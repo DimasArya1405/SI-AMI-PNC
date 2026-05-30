@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auditee;
 use App\DataTables\Auditee\StandarAMIDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
+use App\Models\ItemBuktiDosen;
 use App\Models\JawabanAMI;
 use App\Models\Penugasan;
 use App\Models\Periode;
@@ -14,6 +15,7 @@ use App\Models\UptStandarMutu;
 use App\Models\UptSubStandarMutu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -65,8 +67,13 @@ class StandarAMIController extends Controller
             ->firstOrFail();
 
         $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
+            ->with('dosen')
             ->get()
             ->groupBy('upt_item_sub_standar_id');
+
+        $itemDosenIds = ItemBuktiDosen::where('penugasan_id', $penugasan->penugasan_id)
+            ->pluck('upt_item_sub_standar_id')
+            ->toArray();
 
         return view('auditee.standar-ami-detail', compact(
             'upt',
@@ -76,8 +83,64 @@ class StandarAMIController extends Controller
             'uptItemSubStandar',
             'buktiDukung',
             'status_periode',
-            'penugasan'
+            'penugasan',
+            'itemDosenIds'
         ));
+    }
+
+    public function updateItemDosen(Request $request, $penugasan_id)
+    {
+        $validated = $request->validate([
+            'all_item_ids' => 'nullable|array',
+            'all_item_ids.*' => 'exists:upt_item_sub_standar_mutu,upt_item_sub_standar_id',
+            'item_ids' => 'nullable|array',
+            'item_ids.*' => 'exists:upt_item_sub_standar_mutu,upt_item_sub_standar_id',
+        ]);
+
+        $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $penugasan = Penugasan::where('penugasan_id', $penugasan_id)
+            ->where('upt_id', $auditee->upt_id)
+            ->firstOrFail();
+
+        $periode = Periode::findOrFail($penugasan->periode_id);
+
+        if ($periode->status == 0) {
+            return back()->with('error', 'Periode sudah tidak aktif. Pilihan item dosen tidak dapat diubah.');
+        }
+
+        $allItemIds = collect($validated['all_item_ids'] ?? [])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $validItemIds = UptItemSubStandarMutu::whereIn('upt_item_sub_standar_id', $allItemIds)
+            ->whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($auditee, $penugasan) {
+                $query->where('upt_id', $auditee->upt_id)
+                    ->where('periode_id', $penugasan->periode_id);
+            })
+            ->pluck('upt_item_sub_standar_id');
+
+        $selectedIds = collect($validated['item_ids'] ?? [])
+            ->intersect($validItemIds)
+            ->values();
+
+        DB::transaction(function () use ($penugasan, $validItemIds, $selectedIds) {
+            ItemBuktiDosen::where('penugasan_id', $penugasan->penugasan_id)
+                ->whereIn('upt_item_sub_standar_id', $validItemIds)
+                ->delete();
+
+            foreach ($selectedIds as $itemId) {
+                ItemBuktiDosen::create([
+                    'item_bukti_dosen_id' => Str::uuid()->toString(),
+                    'penugasan_id' => $penugasan->penugasan_id,
+                    'upt_item_sub_standar_id' => $itemId,
+                    'assigned_by_user_id' => Auth::id(),
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Pilihan item untuk dosen berhasil disimpan.');
     }
 
     public function uploadBukti(Request $request)
@@ -147,6 +210,11 @@ class StandarAMIController extends Controller
                 'nama_file' => $file->getClientOriginalName(),
                 'file_path' => $path,
                 'keterangan' => $validated['keterangan'] ?? null,
+                'sumber' => 'auditee',
+                'uploaded_by_user_id' => Auth::id(),
+                'status_validasi' => 'diterima',
+                'validated_by_user_id' => Auth::id(),
+                'validated_at' => now(),
             ]);
         }
 
@@ -193,6 +261,47 @@ class StandarAMIController extends Controller
             ->to(url()->previous() . '#item-' . $itemId)
             ->with([
                 'success' => 'Bukti dukung berhasil dihapus.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+    }
+
+    public function validasiBukti(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status_validasi' => 'required|in:diterima,ditolak',
+            'catatan_validasi' => 'nullable|string|max:1000',
+            'active_tab' => 'nullable|string',
+            'open_accordion' => 'nullable|string',
+            'target_scroll' => 'nullable|string',
+        ]);
+
+        $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
+
+        $dokumen = JawabanAMI::with('item.uptSubStandar.uptStandarMutu')
+            ->where('jawaban_id', $id)
+            ->where('sumber', 'dosen')
+            ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
+                $query->where('auditee_id', $auditee->auditee_id);
+            })
+            ->firstOrFail();
+
+        $dokumen->update([
+            'status_validasi' => $validated['status_validasi'],
+            'catatan_validasi' => $validated['catatan_validasi'] ?? null,
+            'validated_by_user_id' => Auth::id(),
+            'validated_at' => now(),
+        ]);
+
+        $pesan = $validated['status_validasi'] === 'diterima'
+            ? 'Bukti dosen berhasil diterima.'
+            : 'Bukti dosen berhasil ditolak.';
+
+        return redirect()
+            ->to(url()->previous() . '#item-' . $dokumen->upt_item_sub_standar_id)
+            ->with([
+                'success' => $pesan,
                 'active_tab' => $request->active_tab,
                 'open_accordion' => $request->open_accordion,
                 'target_scroll' => $request->target_scroll,

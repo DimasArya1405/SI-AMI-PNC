@@ -35,7 +35,32 @@
             </div>
 
             @if ($pemetaanStandar->count() > 0)
+            @php
+            $itemDosenIdMap = collect($itemDosenIds ?? [])
+                ->mapWithKeys(fn ($itemId) => [(string) $itemId => true])
+                ->all();
+            @endphp
             <div class="bg-white shadow-xs rounded-lg border border-default p-6">
+                @if (!$status_periode)
+                <form id="form-item-dosen" action="{{ route('auditee.item_dosen.update', $penugasan->penugasan_id) }}" method="POST">
+                    @csrf
+                </form>
+
+                <div class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                            <h2 class="text-sm font-semibold text-blue-800">Item AMI untuk Dosen</h2>
+                            <p class="text-xs text-blue-700 mt-1">
+                                Centang item yang boleh diakses dosen untuk upload dokumen pendukung. Gunakan pilihan semua di masing-masing standar bila diperlukan.
+                            </p>
+                        </div>
+                        <button type="submit" form="form-item-dosen"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded">
+                            Simpan Pilihan
+                        </button>
+                    </div>
+                </div>
+                @endif
 
                 {{-- TAB BAR --}}
                 <div class="mb-4 border-b border-gray-200">
@@ -78,13 +103,23 @@
                         role="tabpanel"
                         aria-labelledby="tab-{{ $standar->standar_mutu_id }}">
 
-                        <div class="mb-4">
-                            <h2 class="text-lg font-semibold text-gray-800">
-                                {{ $standar->standar_mutu->nama_standar_mutu ?? '-' }}
-                            </h2>
-                            <p class="text-sm text-gray-500">
-                                Silakan upload bukti dukung sesuai item standar yang tersedia.
-                            </p>
+                        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800">
+                                    {{ $standar->standar_mutu->nama_standar_mutu ?? '-' }}
+                                </h2>
+                                <p class="text-sm text-gray-500">
+                                    Silakan upload bukti dukung sesuai item standar yang tersedia.
+                                </p>
+                            </div>
+                            @if (!$status_periode)
+                            <label class="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm font-medium text-blue-800">
+                                <input type="checkbox"
+                                    class="check-all-standar rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                                    data-standar-id="{{ $standar->standar_mutu_id }}">
+                                Pilih semua item standar ini
+                            </label>
+                            @endif
                         </div>
 
                         <div id="accordion-auditee-{{ $standar->standar_mutu_id }}"
@@ -169,6 +204,30 @@
                                                         {{ $item->nama_item }}
                                                     </p>
 
+                                                    @php
+                                                    $itemDipilihDosen = isset($itemDosenIdMap[(string) $item->upt_item_sub_standar_id]);
+                                                    @endphp
+
+                                                    @if (!$status_periode)
+                                                    <input type="hidden" name="all_item_ids[]" value="{{ $item->upt_item_sub_standar_id }}" form="form-item-dosen">
+                                                    <label class="mt-3 inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                                                        <input type="checkbox"
+                                                            name="item_ids[]"
+                                                            value="{{ $item->upt_item_sub_standar_id }}"
+                                                            form="form-item-dosen"
+                                                            class="item-dosen-checkbox rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                                                            data-standar-id="{{ $standar->standar_mutu_id }}"
+                                                            @checked($itemDipilihDosen)>
+                                                        <span class="item-dosen-label">
+                                                            {{ $itemDipilihDosen ? 'Sudah dipilih untuk dosen' : 'Bisa diisi oleh dosen' }}
+                                                        </span>
+                                                    </label>
+                                                    @elseif ($itemDipilihDosen)
+                                                    <span class="mt-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                                                        Dibuka untuk dosen
+                                                    </span>
+                                                    @endif
+
                                                     <div class="mt-4 rounded-lg border bg-gray-50 p-4">
                                                         <div class="flex items-center justify-between mb-3">
                                                             <h4 class="text-sm font-semibold text-gray-700">
@@ -183,36 +242,88 @@
                                                         @if ($buktiList->count() > 0)
                                                         <div class="space-y-2 mb-4">
                                                             @foreach ($buktiList as $bukti)
-                                                            <div class="flex items-center justify-between bg-white border rounded px-3 py-2">
-                                                                <p class="text-sm font-medium text-gray-800">
-                                                                    {{ $bukti->nama_file }}
-                                                                </p>
+                                                            @php
+                                                            $statusClass = match ($bukti->status_validasi ?? 'diterima') {
+                                                                'diterima' => 'bg-green-100 text-green-700',
+                                                                'ditolak' => 'bg-red-100 text-red-700',
+                                                                default => 'bg-yellow-100 text-yellow-700',
+                                                            };
+                                                            @endphp
+                                                            <div class="bg-white border rounded px-3 py-2">
+                                                                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                                                                    <div class="min-w-0">
+                                                                        <p class="text-sm font-medium text-gray-800 break-all">
+                                                                            {{ $bukti->nama_file }}
+                                                                        </p>
+                                                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                                                            <span class="px-2 py-1 rounded-full {{ $statusClass }}">
+                                                                                {{ ucfirst($bukti->status_validasi ?? 'diterima') }}
+                                                                            </span>
+                                                                            <span>{{ ($bukti->sumber ?? 'auditee') === 'dosen' ? 'Dosen' : 'Auditee' }}</span>
+                                                                            @if ($bukti->dosen)
+                                                                            <span>{{ $bukti->dosen->nama_lengkap }}</span>
+                                                                            @endif
+                                                                        </div>
+                                                                        @if ($bukti->keterangan)
+                                                                        <p class="text-xs text-gray-500 mt-1">{{ $bukti->keterangan }}</p>
+                                                                        @endif
+                                                                        @if ($bukti->catatan_validasi)
+                                                                        <p class="text-xs text-red-600 mt-1">Catatan validasi: {{ $bukti->catatan_validasi }}</p>
+                                                                        @endif
+                                                                    </div>
 
-                                                                <div class="flex items-center gap-2">
-                                                                    <button type="button"
-                                                                        onclick="openSmartPreview(
-                                                                            '{{ route('auditee.bukti_dukung.preview', $bukti->jawaban_id) }}',
-                                                                            '{{ route('auditee.bukti_dukung.download', $bukti->jawaban_id) }}',
-                                                                            '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
-                                                                            '{{ $bukti->nama_file }}'
-                                                                        )"
-                                                                        class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
-                                                                        Lihat
-                                                                    </button>
+                                                                    <div class="flex flex-wrap items-center gap-2">
+                                                                        <button type="button"
+                                                                            onclick="openSmartPreview(
+                                                                                '{{ route('auditee.bukti_dukung.preview', $bukti->jawaban_id) }}',
+                                                                                '{{ route('auditee.bukti_dukung.download', $bukti->jawaban_id) }}',
+                                                                                '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
+                                                                                '{{ $bukti->nama_file }}'
+                                                                            )"
+                                                                            class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
+                                                                            Lihat
+                                                                        </button>
 
-                                                                    @if (!$status_periode)
-                                                                    <button type="button"
-                                                                        data-modal-target="modal-hapus-bukti"
-                                                                        data-modal-toggle="modal-hapus-bukti"
-                                                                        class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
-                                                                        data-jawaban-id="{{ $bukti->jawaban_id }}"
-                                                                        data-nama-file="{{ $bukti->nama_file }}"
-                                                                        data-active-tab="content-{{ $standar->standar_mutu_id }}"
-                                                                        data-open-accordion="{{ $bodyId }}"
-                                                                        data-target-scroll="item-{{ $item->upt_item_sub_standar_id }}">
-                                                                        Hapus
-                                                                    </button>
-                                                                    @endif
+                                                                        @if (!$status_periode && ($bukti->sumber ?? 'auditee') === 'dosen' && ($bukti->status_validasi ?? 'diterima') === 'menunggu')
+                                                                        <form action="{{ route('auditee.bukti_dukung.validasi', $bukti->jawaban_id) }}" method="POST">
+                                                                            @csrf
+                                                                            @method('patch')
+                                                                            <input type="hidden" name="status_validasi" value="diterima">
+                                                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                                            <input type="hidden" name="open_accordion" value="{{ $bodyId }}">
+                                                                            <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
+                                                                            <button type="submit" class="text-sm px-3 py-1 bg-green-500 hover:bg-green-700 text-white rounded">
+                                                                                Terima
+                                                                            </button>
+                                                                        </form>
+                                                                        <form action="{{ route('auditee.bukti_dukung.validasi', $bukti->jawaban_id) }}" method="POST" class="flex items-center gap-2">
+                                                                            @csrf
+                                                                            @method('patch')
+                                                                            <input type="hidden" name="status_validasi" value="ditolak">
+                                                                            <input type="hidden" name="active_tab" value="content-{{ $standar->standar_mutu_id }}">
+                                                                            <input type="hidden" name="open_accordion" value="{{ $bodyId }}">
+                                                                            <input type="hidden" name="target_scroll" value="item-{{ $item->upt_item_sub_standar_id }}">
+                                                                            <input type="text" name="catatan_validasi" placeholder="Alasan ditolak" class="text-xs border rounded px-2 py-1 w-40">
+                                                                            <button type="submit" class="text-sm px-3 py-1 bg-orange-500 hover:bg-orange-700 text-white rounded">
+                                                                                Tolak
+                                                                            </button>
+                                                                        </form>
+                                                                        @endif
+
+                                                                        @if (!$status_periode)
+                                                                        <button type="button"
+                                                                            data-modal-target="modal-hapus-bukti"
+                                                                            data-modal-toggle="modal-hapus-bukti"
+                                                                            class="button-hapus-bukti text-sm px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded"
+                                                                            data-jawaban-id="{{ $bukti->jawaban_id }}"
+                                                                            data-nama-file="{{ $bukti->nama_file }}"
+                                                                            data-active-tab="content-{{ $standar->standar_mutu_id }}"
+                                                                            data-open-accordion="{{ $bodyId }}"
+                                                                            data-target-scroll="item-{{ $item->upt_item_sub_standar_id }}">
+                                                                            Hapus
+                                                                        </button>
+                                                                        @endif
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             @endforeach
@@ -747,6 +858,56 @@
                     }, 200);
                 }
             }
+        });
+
+        // JS Pilih semua item per standar yang bisa diisi dosen
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkAllStandars = Array.from(document.querySelectorAll('.check-all-standar'));
+            const allItemChecks = Array.from(document.querySelectorAll('.item-dosen-checkbox'));
+
+            checkAllStandars.forEach(checkAll => {
+                const standarId = checkAll.dataset.standarId;
+                const itemChecks = allItemChecks.filter(item => item.dataset.standarId === standarId);
+
+                if (itemChecks.length === 0) {
+                    checkAll.disabled = true;
+                    return;
+                }
+
+                function syncCheckAllState() {
+                    const checkedCount = itemChecks.filter(item => item.checked).length;
+                    checkAll.checked = checkedCount === itemChecks.length;
+                    checkAll.indeterminate = checkedCount > 0 && checkedCount < itemChecks.length;
+                }
+
+                function syncItemLabel(item) {
+                    const label = item.closest('label')?.querySelector('.item-dosen-label');
+
+                    if (!label) {
+                        return;
+                    }
+
+                    label.textContent = item.checked ? 'Sudah dipilih untuk dosen' : 'Bisa diisi oleh dosen';
+                }
+
+                checkAll.addEventListener('change', function() {
+                    itemChecks.forEach(item => {
+                        item.checked = checkAll.checked;
+                        syncItemLabel(item);
+                    });
+                    syncCheckAllState();
+                });
+
+                itemChecks.forEach(item => {
+                    item.addEventListener('change', function() {
+                        syncItemLabel(item);
+                        syncCheckAllState();
+                    });
+                    syncItemLabel(item);
+                });
+
+                syncCheckAllState();
+            });
         });
 
         // JS Back To Top

@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'SIAMI') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('img/logo-pnc-1.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -27,8 +30,27 @@
 
     {{-- CSS --}}
     <style>
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
         table.dataTable tbody tr {
             border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dataTables_wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .dataTables_wrapper table.dataTable {
+            width: 100% !important;
         }
 
         /* Opsional: Membuat scrollbar lebih tipis dan modern */
@@ -49,6 +71,71 @@
         aside::-webkit-scrollbar-thumb:hover {
             background: #3b82f6;
             /* Warna biru saat di-hover */
+        }
+
+        @media (max-width: 767px) {
+            .app-sidebar {
+                position: fixed !important;
+                top: 4rem !important;
+                left: 0 !important;
+                width: 16rem !important;
+                max-width: 85vw;
+                height: calc(100vh - 4rem) !important;
+                z-index: 40;
+                border-right: 1px solid #e5e7eb;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .app-sidebar > div {
+                display: flex;
+                flex-direction: column;
+                gap: .25rem;
+                min-width: 0;
+                padding: .5rem;
+            }
+
+            .app-sidebar a,
+            .app-sidebar [data-collapse-toggle] {
+                white-space: normal;
+                padding: .625rem .875rem;
+            }
+
+            .app-sidebar ul {
+                min-width: 0;
+                padding-left: 1rem;
+                padding-right: .5rem;
+            }
+
+            main .max-w-7xl.mx-auto {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .ml-60,
+            .ml-64 {
+                margin-left: 0 !important;
+            }
+
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                float: none !important;
+                width: 100%;
+                text-align: left !important;
+                margin: .5rem 0;
+            }
+
+            .dataTables_wrapper .dataTables_filter label,
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .dataTables_wrapper table.dataTable {
+                min-width: 42rem;
+            }
         }
     </style>
 </head>

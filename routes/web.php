@@ -149,7 +149,9 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
 
     Route::get('/auditee/ami', [StandarAMIController::class, 'index'])->name('auditee.ami');
     Route::get('/auditee/ami/detail/{upt_id}/{periode_id}', [StandarAMIController::class, 'detail'])->name('auditee.ami.detail');
+    Route::post('/auditee/ami/item-dosen/{penugasan_id}', [StandarAMIController::class, 'updateItemDosen'])->name('auditee.item_dosen.update');
     Route::post('/auditee/ami/bukti-dukung/upload', [StandarAMIController::class, 'uploadBukti'])->name('auditee.bukti_dukung.upload');
+    Route::patch('/auditee/ami/bukti-dukung/{id}/validasi', [StandarAMIController::class, 'validasiBukti'])->name('auditee.bukti_dukung.validasi');
     Route::delete('/auditee/ami/bukti-dukung/{id}', [StandarAMIController::class, 'hapusBukti'])->name('auditee.bukti_dukung.hapus');
     Route::get('/auditee/ami/bukti-dukung/{id}/download', [StandarAMIController::class, 'downloadBukti'])->name('auditee.bukti_dukung.download');
     Route::get('/auditee/ami/bukti-dukung/{id}/preview', [StandarAMIController::class, 'previewBukti'])->name('auditee.bukti_dukung.preview');
@@ -157,6 +159,11 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
     Route::get('/dosen/dashboard', [RoleDosenController::class, 'index'])->name('dosen.dashboard');
+    Route::get('/dosen/bukti-dukung', [RoleDosenController::class, 'dokumen'])->name('dosen.bukti_dukung.index');
+    Route::post('/dosen/bukti-dukung/upload', [RoleDosenController::class, 'uploadDokumen'])->name('dosen.bukti_dukung.upload');
+    Route::delete('/dosen/bukti-dukung/{id}', [RoleDosenController::class, 'hapusDokumen'])->name('dosen.bukti_dukung.hapus');
+    Route::get('/dosen/bukti-dukung/{id}/preview', [RoleDosenController::class, 'previewDokumen'])->name('dosen.bukti_dukung.preview');
+    Route::get('/dosen/bukti-dukung/{id}/download', [RoleDosenController::class, 'downloadDokumen'])->name('dosen.bukti_dukung.download');
 });
 
 Route::middleware('auth')->group(function () {

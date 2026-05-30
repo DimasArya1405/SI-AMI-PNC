@@ -9,7 +9,7 @@
         </p>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-5 sm:space-y-6">
         @csrf
         @method('put')
 
@@ -31,8 +31,8 @@
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <x-primary-button class="justify-center sm:justify-start">{{ __('Save') }}</x-primary-button>
 
             @if (session('status') === 'password-updated')
                 <p

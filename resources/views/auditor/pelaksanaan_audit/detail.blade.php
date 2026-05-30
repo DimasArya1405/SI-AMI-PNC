@@ -248,18 +248,25 @@
                                                                             <div class="space-y-2 mb-4">
                                                                                 @foreach ($buktiList as $bukti)
                                                                                     <div
-                                                                                        class="flex items-center justify-between bg-white border rounded px-3 py-2">
-                                                                                        <p
-                                                                                            class="text-sm font-medium text-gray-800">
-                                                                                            {{ $bukti->nama_file }}
-                                                                                        </p>
+                                                                                        class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border rounded px-3 py-2">
+                                                                                        <div class="min-w-0">
+                                                                                            <p class="text-sm font-medium text-gray-800 break-all">
+                                                                                                {{ $bukti->nama_file }}
+                                                                                            </p>
+                                                                                            <p class="text-xs text-gray-500 mt-1">
+                                                                                                Sumber: {{ ($bukti->sumber ?? 'auditee') === 'dosen' ? 'Dosen' : 'Auditee' }}
+                                                                                                @if ($bukti->dosen)
+                                                                                                    - {{ $bukti->dosen->nama_lengkap }}
+                                                                                                @endif
+                                                                                            </p>
+                                                                                        </div>
 
                                                                                         <div
                                                                                             class="flex items-center gap-2">
                                                                                             <button type="button"
                                                                                                 onclick="openSmartPreview(
-                                                                            '{{ route('auditor.bukti_dukung.preview', $bukti->dokumen_id) }}',
-                                                                            '{{ route('auditor.bukti_dukung.download', $bukti->dokumen_id) }}',
+                                                                            '{{ route('auditor.bukti_dukung.preview', $bukti->jawaban_id) }}',
+                                                                            '{{ route('auditor.bukti_dukung.download', $bukti->jawaban_id) }}',
                                                                             '{{ strtolower(pathinfo($bukti->nama_file, PATHINFO_EXTENSION)) }}',
                                                                             '{{ $bukti->nama_file }}'
                                                                         )"

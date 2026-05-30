@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'SIAMI') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('img/logo-pnc-1.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased">
@@ -17,24 +20,32 @@
                 alt="Campus" 
                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
             >
-            <div class="relative z-20 flex flex-col justify-center px-16 text-white">
+            <!-- <div class="relative z-20 flex flex-col justify-center px-16 text-white">
                 <div class="bg-white/10 backdrop-blur-sm p-8 rounded-3xl border border-white/20 inline-block max-w-xl">
                     <h2 class="text-5xl font-black leading-tight italic tracking-tighter">AMI SYSTEM</h2>
                     <p class="mt-6 text-xl text-blue-50 leading-relaxed font-light">
                         "Menjamin standar mutu internal kampus yang berkelanjutan dan terintegrasi secara digital."
                     </p>
                 </div>
-            </div>
+            </div> -->
         </div>
 
         <div class="flex-1 flex items-center justify-center p-8 bg-gray-50 lg:bg-white">
             <div class="w-full max-w-md space-y-8">
                 
-                <div class="lg:hidden text-center mb-10">
-                    <h1 class="text-4xl font-black text-blue-600 italic tracking-tighter">AMI SYSTEM</h1>
+                <div class="lg:hidden flex flex-col items-center text-center mb-10">
+                    <img src="{{ asset('img/logo-pnc-1.png') }}" alt="Logo PNC" class="h-20 w-20 object-contain mb-3">
+                    <h1 class="text-4xl font-black text-blue-600 italic tracking-tighter">SIAMI</h1>
                 </div>
 
                 <div class="text-left">
+                    <div class="hidden lg:flex items-center gap-3 mb-8">
+                        <img src="{{ asset('img/logo-pnc-1.png') }}" alt="Logo PNC" class="h-14 w-14 object-contain">
+                        <div>
+                            <h1 class="text-2xl font-black text-blue-600 italic tracking-tighter">SIAMI</h1>
+                            <p class="text-sm text-gray-500">Sistem Audit Mutu Internal</p>
+                        </div>
+                    </div>
                     <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Login Portal</h2>
                     <p class="text-gray-500 mt-2">Silahkan masuk ke akun Anda</p>
                 </div>
