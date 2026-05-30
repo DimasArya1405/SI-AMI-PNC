@@ -10,6 +10,11 @@
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <div class="font-semibold">Program Studi</div>
+                    <button data-modal-target="modal-info-auditor" data-modal-toggle="modal-info-auditor"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                        <i class="bi bi-people-fill mr-1"></i>
+                        Info Auditor
+                    </button>
                     <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
                         class="bg-blue-500 text-sm font-semibold text-white px-4 py-1 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
                         <i class="bi bi-download mr-2"></i>Export PDF
@@ -243,7 +248,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             @if ($jam = $item->penugasan->first()?->jam)
-                                            {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
+                                                {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
                                                 {{ $jam }} WIB
                                             @else
                                                 <span class="text-gray-400 italic">Belum ada penugasan</span>
@@ -316,7 +321,92 @@
 
         </div>
     </div>
+    {{-- MODAL INFO AUDITOR --}}
+    <div id="modal-info-auditor" tabindex="-1" aria-hidden="true"
+        class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full h-full">
 
+        <div class="relative p-4 w-full max-w-4xl">
+
+            <div class="bg-white rounded-lg shadow flex flex-col max-h-[80vh]">
+
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg font-bold">
+                        Informasi Auditor Periode Ini
+                    </h3>
+
+                    <button type="button" data-modal-hide="modal-info-auditor">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 overflow-auto flex-1">
+
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 text-center">No</th>
+                                <th class="px-4 py-3">Nama Auditor</th>
+                                <th class="px-4 py-3 text-center">Sebagai Ketua</th>
+                                <th class="px-4 py-3 text-center">Sebagai Anggota</th>
+                                <th class="px-4 py-3 text-center">Total UPT</th>
+                                <th class="px-4 py-3">Daftar UPT</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @forelse($rekapAuditor as $item)
+                                @if ($item->jumlah_upt > 0)
+                                    <tr class="border-b">
+                                        <td class="px-4 py-3 text-center">
+                                            {{ $loop->iteration }}
+                                        </td>
+
+                                        <td class="px-4 py-3 font-medium">
+                                            {{ $item->nama_lengkap }}
+                                        </td>
+
+                                        <td class="px-4 py-3 text-center">
+                                            {{ $item->jumlah_ketua }}
+                                        </td>
+
+                                        <td class="px-4 py-3 text-center">
+                                            {{ $item->jumlah_anggota }}
+                                        </td>
+
+                                        <td class="px-4 py-3 text-center font-bold text-blue-600">
+                                            {{ $item->jumlah_upt }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="flex flex-wrap gap-1">
+
+                                                @foreach ($item->daftar_upt as $upt)
+                                                    <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+                                                        {{ $upt }}
+                                                    </span>
+                                                @endforeach
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        Tidak ada data auditor
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
     {{-- MODAL TAMBAH --}}
     <div id="modal-penugasan" tabindex="-1" aria-hidden="true"
         class="hidden bg-gray-900/50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full">

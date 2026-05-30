@@ -28,13 +28,13 @@ class PenugasanController extends Controller
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
                 // Load kedua auditor sekaligus
-                $query->where('periode_id', $id)->with(['auditor1', 'auditor2','pengajuan_jadwal_audit']);
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2', 'pengajuan_jadwal_audit']);
             }])
             ->get();
 
         $uptBagian = UPT::where('kategori_upt', 'Unit/Bagian')
             ->with(['penugasan' => function ($query) use ($id) {
-                $query->where('periode_id', $id)->with(['auditor1', 'auditor2','pengajuan_jadwal_audit']);
+                $query->where('periode_id', $id)->with(['auditor1', 'auditor2', 'pengajuan_jadwal_audit']);
             }])
             ->get();
         $penugasan = Penugasan::where('periode_id', $id)->get();
@@ -44,7 +44,38 @@ class PenugasanController extends Controller
             $query->where('periode_id', $periode_id);
         }])->get();
         $penugasan_sekarang = Penugasan::where('periode_id', $periode_id)->get();
-        return view('admin.ami.penugasan_detail', compact('penugasan', 'uptProdi', 'penugasan_sekarang', 'uptBagian', 'periode_id', 'auditor', 'upts'));
+        $rekapAuditor = Auditor::where('status_aktif', 1)
+            ->get()
+            ->map(function ($auditor) use ($periode_id) {
+
+                $penugasanKetua = Penugasan::with('upt')
+                    ->where('periode_id', $periode_id)
+                    ->where('auditor_id_1', $auditor->auditor_id)
+                    ->get();
+
+                $penugasanAnggota = Penugasan::with('upt')
+                    ->where('periode_id', $periode_id)
+                    ->where('auditor_id_2', $auditor->auditor_id)
+                    ->get();
+
+                $jumlahKetua = $penugasanKetua->count();
+                $jumlahAnggota = $penugasanAnggota->count();
+
+                // gabungkan semua UPT
+                $daftarUpt = $penugasanKetua
+                    ->merge($penugasanAnggota)
+                    ->pluck('upt.nama_upt')
+                    ->unique()
+                    ->values();
+
+                $auditor->jumlah_ketua = $jumlahKetua;
+                $auditor->jumlah_anggota = $jumlahAnggota;
+                $auditor->jumlah_upt = $daftarUpt->count();
+                $auditor->daftar_upt = $daftarUpt;
+
+                return $auditor;
+            });
+        return view('admin.ami.penugasan_detail', compact('penugasan', 'rekapAuditor', 'uptProdi', 'penugasan_sekarang', 'uptBagian', 'periode_id', 'auditor', 'upts'));
     }
     public function edit(Request $request)
     {
@@ -147,7 +178,7 @@ class PenugasanController extends Controller
         Penugasan::where('periode_id', $id)
             ->with(['upt', 'auditor1.user', 'auditor2.user'])
             ->get()
-            ->each(fn ($item) => $this->kirimNotifikasiAmiDibuka($item));
+            ->each(fn($item) => $this->kirimNotifikasiAmiDibuka($item));
 
         return redirect()->back()->with('success', 'Semua penugasan berhasil diaktifkan. Auditor sekarang dapat memulai proses audit.');
     }
@@ -210,7 +241,7 @@ class PenugasanController extends Controller
         ])
             ->filter()
             ->unique('id')
-            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+            ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
     }
 
     private function notifikasiAuditee(Penugasan $penugasan, string $judul, string $pesan, string $url): void
@@ -220,6 +251,6 @@ class PenugasanController extends Controller
             ->get()
             ->pluck('user')
             ->filter()
-            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+            ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
     }
 }
