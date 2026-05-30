@@ -38,4 +38,13 @@ class Auditor extends Model
     {
         return $this->hasMany(Penugasan::class, 'auditor_id', 'auditor_id');
     }
+    public function penugasanSebagaiKetua()
+    {
+        return $this->hasMany(Penugasan::class, 'auditor_id_1', 'auditor_id');
+    }
+
+    public function penugasanSebagaiAnggota()
+    {
+        return $this->hasMany(Penugasan::class, 'auditor_id_2', 'auditor_id');
+    }
 }
