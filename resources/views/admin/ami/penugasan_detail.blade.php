@@ -10,15 +10,17 @@
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <div class="font-semibold">Program Studi</div>
+                    <div class="flex gap-2">
                     <button data-modal-target="modal-info-auditor" data-modal-toggle="modal-info-auditor"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                        class="bg-yellow-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition duration-200 ease-in-out">
                         <i class="bi bi-people-fill mr-1"></i>
                         Info Auditor
                     </button>
                     <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
-                        class="bg-blue-500 text-sm font-semibold text-white px-4 py-1 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
+                        class="bg-blue-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
                         <i class="bi bi-download mr-2"></i>Export PDF
                     </a>
+                    </div>
                 </div>
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     <div
