@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Data\ProdiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
+use App\Http\Controllers\admin\RkaController;
 use App\Http\Controllers\Auditee\DataDosenController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
@@ -108,10 +109,14 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/ami/penugasan/edit', [PenugasanController::class, 'edit'])->name('admin.ami.penugasan.edit');
     Route::put('/admin/ami/penugasan/aktifkan/{id}', [PenugasanController::class, 'aktifkan'])->name('admin.ami.penugasan.aktifkan');
     Route::get('/admin/ami/penugasan/export/{id}', [PenugasanController::class, 'exportPdf'])->name('admin.ami.penugasan.export');
+
+    // ROUTE RKA
+    Route::get('/admin/ami/rka', [RkaController::class, 'index'])->name('admin.ami.rka');
+    Route::get('/admin/ami/rka/exportPdf/{id}', [RkaController::class, 'exportRka'])->name('admin.ami.rka.exportPdf');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
-    Route::get('/auditor/dashboard', [AuditorController::class, 'index'])->name('auditor.dashboard');
+    Route::get('/auditor/dashboard', [AuditorController::class, 'export'])->name('auditor.dashboard');
 
     // ROUTE PENUGASAN
     Route::get('/auditor/penugasan', [AuditorPenugasanController::class, 'index'])->name('auditor.penugasan');
