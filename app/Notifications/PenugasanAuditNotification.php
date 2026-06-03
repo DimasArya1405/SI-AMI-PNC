@@ -14,7 +14,8 @@ class PenugasanAuditNotification extends Notification
         protected Penugasan $penugasan,
         protected string $judul,
         protected string $pesan,
-        protected string $url
+        protected string $url,
+        protected ?string $jenis = null
     ) {
     }
 
@@ -35,6 +36,7 @@ class PenugasanAuditNotification extends Notification
             'judul' => $this->judul,
             'pesan' => $this->pesan,
             'url' => $this->url,
+            'jenis' => $this->jenis,
             'penugasan_id' => $this->penugasan->penugasan_id,
             'periode_id' => $this->penugasan->periode_id,
             'upt_id' => $this->penugasan->upt_id,

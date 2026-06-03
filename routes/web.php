@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
 use App\Http\Controllers\Auditee\DataDosenController;
+use App\Http\Controllers\Auditee\RkaController;
 use App\Http\Controllers\Auditee\StandarAMIController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
@@ -155,6 +156,11 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::delete('/auditee/ami/bukti-dukung/{id}', [StandarAMIController::class, 'hapusBukti'])->name('auditee.bukti_dukung.hapus');
     Route::get('/auditee/ami/bukti-dukung/{id}/download', [StandarAMIController::class, 'downloadBukti'])->name('auditee.bukti_dukung.download');
     Route::get('/auditee/ami/bukti-dukung/{id}/preview', [StandarAMIController::class, 'previewBukti'])->name('auditee.bukti_dukung.preview');
+
+    // ROUTE RKA
+    Route::get('/auditee/rka', [RkaController::class, 'index'])->name('auditee.rka.index');
+    Route::get('/auditee/rka/{penugasan_id}', [RkaController::class, 'show'])->name('auditee.rka.show');
+    Route::get('/auditee/rka/{penugasan_id}/export', [RkaController::class, 'export'])->name('auditee.rka.export');
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {

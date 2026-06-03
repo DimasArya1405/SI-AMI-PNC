@@ -30,6 +30,12 @@
             <i class="bi bi-ui-checks-grid mr-2 text-xl"></i> Standar Mutu
         </a>
 
+        <a href="{{ route('auditee.rka.index') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ request()->routeIs('auditee.rka.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-file-earmark-bar-graph mr-2 text-xl"></i> RKA
+        </a>
+
         <a href="{{ route('auditee.dashboard') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('auditee.temuan*') ? 'bg-blue-500 text-white' : '' }}">
