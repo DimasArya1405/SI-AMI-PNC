@@ -13,11 +13,11 @@ use App\Models\UPT;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\UptStandarMutu;
 use App\Models\UptSubStandarMutu;
+use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class PelaksanaanAuditController extends Controller
 {
@@ -42,10 +42,7 @@ class PelaksanaanAuditController extends Controller
         $user = Auth::user();
 
         $auditor = Auditor::where('user_id', $user->id)->firstOrFail();
-        $periode = Periode::where('status', '1')->first();
-        if ($periode == null) {
-            $adaPeriode = 0;
-        }
+        $periode = Periode::where('status', '1')->firstOrFail();
         $penugasan = Penugasan::where('periode_id', $periode?->id)
             ->where('upt_id', $id) // Cari berdasarkan ID UPT yang dipassing
             ->where(function ($query) use ($auditor) {
@@ -63,10 +60,6 @@ class PelaksanaanAuditController extends Controller
         }
 
         $upt = UPT::findOrFail($id);
-        $status_periode = $periode->status == 0;
-
-        $upt = UPT::findOrFail($id);
-        $periode = Periode::where('status', '1')->first();
         $periode_id = $periode->id;
         $status_periode = $periode->status == 0;
 
@@ -122,58 +115,52 @@ class PelaksanaanAuditController extends Controller
             // 'adaPeriode'
         ));
     }
-public function penilaian(Request $request, $id)
-{
-    $request->validate([
-        'jawaban' => 'required',
-        'kategori_temuan' => 'required_if:jawaban,Tidak|in:KTS,OB',
-    ]);
-
-    $nilaiJawaban = ($request->jawaban == 'Ya') ? 1 : 0;
-    $kategoriTemuan = ($nilaiJawaban == 1) ? null : $request->kategori_temuan;
-
-    JawabanAudit::updateOrCreate(
-        ['upt_item_sub_standar_id' => $id],
-        [
-            'jawaban' => $nilaiJawaban,
-            'kategori_temuan' => $kategoriTemuan,
-            'catatan' => $request->catatan,
-            'id' => (string) Str::uuid()
-        ]
-    );
-
-    return redirect()->back()->with([
-        'success'        => 'Penilaian berhasil disimpan.',
-        'active_tab'     => $request->active_tab,
-        'open_accordion' => $request->open_accordion,
-        'target_scroll'  => $request->target_scroll,
-    ]);
-}
-    public function exportRka($id)
+    public function penilaian(Request $request, $id)
     {
-        $upt = UPT::findOrFail($id);
-        $periode = Periode::where('status', '1')->first();
-        $periode_id = $periode->id;
+        $validated = $request->validate([
+            'jawaban' => 'required|in:Ya,Tidak',
+            'kategori_temuan' => 'nullable|required_if:jawaban,Tidak|in:KTS,OB',
+            'catatan' => 'nullable|string|max:5000',
+        ]);
 
-        // Ambil Standar Mutu yang memiliki relasi ke bawah hingga ke jawaban = 0
-        $standarMutu = UptStandarMutu::with(['standar_mutu', 'subStandarUpt.items.jawaban_audit' => function ($query) {
-            $query->where('jawaban', 0); // Filter langsung di query agar tidak berat di view
-        }])
-            ->where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->get();
-        $penugasan = Penugasan::where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->with('auditor1', 'auditor2')
+        $auditor = Auditor::where('user_id', Auth::id())->firstOrFail();
+        $item = UptItemSubStandarMutu::with('uptSubStandar.uptStandarMutu')
+            ->findOrFail($id);
+        $uptStandarMutu = $item->uptSubStandar?->uptStandarMutu;
+
+        abort_unless($uptStandarMutu, 404, 'Pemetaan item standar tidak ditemukan.');
+
+        Penugasan::where('upt_id', $uptStandarMutu->upt_id)
+            ->where('periode_id', $uptStandarMutu->periode_id)
+            ->where('status_penugasan', 'aktif')
+            ->where('auditor_id_1', $auditor->auditor_id)
             ->firstOrFail();
 
-        // return view('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'));
-                // 2. Load View PDF (Gunakan file blade khusus PDF yang sudah kita buat sebelumnya)
-        $pdf = Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'))
-            ->setPaper('a4', 'portrait');
+        $nilaiJawaban = $validated['jawaban'] === 'Ya';
 
-        // 3. Download atau Stream
-        return $pdf->stream('RKA.pdf');
+        JawabanAudit::updateOrCreate(
+            ['upt_item_sub_standar_id' => $item->upt_item_sub_standar_id],
+            [
+                'jawaban' => $nilaiJawaban,
+                'kategori_temuan' => $nilaiJawaban ? null : $validated['kategori_temuan'],
+                'catatan' => $validated['catatan'] ?? null,
+            ]
+        );
+
+        $this->kirimNotifikasiRkaJikaTersedia($item->upt_item_sub_standar_id);
+
+        return redirect()->back()->with([
+            'success' => 'Penilaian berhasil disimpan.',
+            'active_tab' => $request->active_tab,
+            'open_accordion' => $request->open_accordion,
+            'target_scroll' => $request->target_scroll,
+        ]);
+    }
+    public function exportRka($id)
+    {
+        return redirect()
+            ->route('auditor.rka.index')
+            ->with('info', 'RKA sekarang disusun dan difinalisasi melalui menu RKA.');
     }
     public function previewBukti($id)
     {
@@ -220,5 +207,70 @@ public function penilaian(Request $request, $id)
                 });
             })
             ->firstOrFail();
+    }
+
+    private function kirimNotifikasiRkaJikaTersedia(string $itemId): void
+    {
+        $item = UptItemSubStandarMutu::with('uptSubStandar.uptStandarMutu')
+            ->find($itemId);
+
+        $uptStandarMutu = $item?->uptSubStandar?->uptStandarMutu;
+
+        if (!$uptStandarMutu) {
+            return;
+        }
+
+        $penugasan = Penugasan::with('upt')
+            ->where('upt_id', $uptStandarMutu->upt_id)
+            ->where('periode_id', $uptStandarMutu->periode_id)
+            ->first();
+
+        if (!$penugasan) {
+            return;
+        }
+
+        $itemIds = UptItemSubStandarMutu::whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($penugasan) {
+            $query->where('upt_id', $penugasan->upt_id)
+                ->where('periode_id', $penugasan->periode_id);
+        })->pluck('upt_item_sub_standar_id');
+
+        if ($itemIds->isEmpty()) {
+            return;
+        }
+
+        $jumlahJawaban = JawabanAudit::whereIn('upt_item_sub_standar_id', $itemIds)
+            ->distinct()
+            ->count('upt_item_sub_standar_id');
+
+        if ($jumlahJawaban < $itemIds->count()) {
+            return;
+        }
+
+        $penugasan->loadMissing('auditor1.user');
+
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesan = "Penilaian audit untuk {$namaUpt} telah lengkap. Draft RKA siap disusun melalui rapat internal tim auditor.";
+        $url = route('auditor.rka.show', $penugasan->penugasan_id);
+
+        collect([$penugasan->auditor1?->user])
+            ->filter()
+            ->unique('id')
+            ->each(function ($user) use ($penugasan, $pesan, $url) {
+                $sudahDikirim = $user->notifications()
+                    ->where('type', PenugasanAuditNotification::class)
+                    ->get()
+                    ->contains(fn ($notifikasi) => ($notifikasi->data['jenis'] ?? null) === 'rka-draft-siap'
+                        && ($notifikasi->data['penugasan_id'] ?? null) === $penugasan->penugasan_id);
+
+                if (!$sudahDikirim) {
+                    $user->notify(new PenugasanAuditNotification(
+                        $penugasan,
+                        'Draft RKA Siap Disusun',
+                        $pesan,
+                        $url,
+                        'rka-draft-siap'
+                    ));
+                }
+            });
     }
 }

@@ -62,9 +62,11 @@ class StandarAMIController extends Controller
             ->get()
             ->groupBy('upt_sub_standar_id');
 
-        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+        $penugasan = Penugasan::with('rka')
+            ->where('upt_id', $auditee->upt_id)
             ->where('periode_id', $periode_id)
             ->firstOrFail();
+        $rkaFinal = $this->isRkaFinal($penugasan);
 
         $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
             ->with('dosen')
@@ -84,7 +86,8 @@ class StandarAMIController extends Controller
             'buktiDukung',
             'status_periode',
             'penugasan',
-            'itemDosenIds'
+            'itemDosenIds',
+            'rkaFinal'
         ));
     }
 
@@ -99,7 +102,8 @@ class StandarAMIController extends Controller
 
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $penugasan = Penugasan::where('penugasan_id', $penugasan_id)
+        $penugasan = Penugasan::with('rka')
+            ->where('penugasan_id', $penugasan_id)
             ->where('upt_id', $auditee->upt_id)
             ->firstOrFail();
 
@@ -107,6 +111,10 @@ class StandarAMIController extends Controller
 
         if ($periode->status == 0) {
             return back()->with('error', 'Periode sudah tidak aktif. Pilihan item dosen tidak dapat diubah.');
+        }
+
+        if ($this->isRkaFinal($penugasan)) {
+            return back()->with('error', 'RKA sudah difinalisasi. Pilihan item dan bukti AMI tidak dapat diubah lagi.');
         }
 
         $allItemIds = collect($validated['all_item_ids'] ?? [])
@@ -169,9 +177,14 @@ class StandarAMIController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+        $penugasan = Penugasan::with('rka')
+            ->where('upt_id', $auditee->upt_id)
             ->where('periode_id', $validated['periode_id'])
             ->firstOrFail();
+
+        if ($this->isRkaFinal($penugasan)) {
+            return back()->with('error', 'RKA sudah difinalisasi. Upload bukti AMI tidak dapat dilakukan lagi.');
+        }
 
         $item = UptItemSubStandarMutu::with('uptSubStandar.uptStandarMutu.standar_mutu')
             ->where('upt_item_sub_standar_id', $validated['upt_item_sub_standar_id'])
@@ -232,7 +245,7 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = JawabanAMI::with('item.uptSubStandar.uptStandarMutu')
+        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka'])
             ->where('jawaban_id', $id)
             ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
                 $query->where('auditee_id', $auditee->auditee_id);
@@ -243,6 +256,13 @@ class StandarAMIController extends Controller
 
         $periodeId = $dokumen->item?->uptSubStandar?->uptStandarMutu?->periode_id;
         $periode = Periode::find($periodeId);
+
+        if ($this->isRkaFinal($dokumen->penugasan)) {
+            return redirect()
+                ->to(url()->previous() . '#item-' . $itemId)
+                ->with('error', 'RKA sudah difinalisasi. Bukti AMI tidak dapat dihapus lagi.')
+                ->with('active_tab', $request->active_tab);
+        }
 
         if ($periode && $periode->status == 0) {
             return redirect()
@@ -279,13 +299,20 @@ class StandarAMIController extends Controller
 
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = JawabanAMI::with('item.uptSubStandar.uptStandarMutu')
+        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka'])
             ->where('jawaban_id', $id)
             ->where('sumber', 'dosen')
             ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
                 $query->where('auditee_id', $auditee->auditee_id);
             })
             ->firstOrFail();
+
+        if ($this->isRkaFinal($dokumen->penugasan)) {
+            return redirect()
+                ->to(url()->previous() . '#item-' . $dokumen->upt_item_sub_standar_id)
+                ->with('error', 'RKA sudah difinalisasi. Validasi bukti dosen tidak dapat diubah lagi.')
+                ->with('active_tab', $request->active_tab);
+        }
 
         $dokumen->update([
             'status_validasi' => $validated['status_validasi'],
@@ -351,5 +378,16 @@ class StandarAMIController extends Controller
         return response($file, 200)
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
+    }
+
+    private function isRkaFinal(?Penugasan $penugasan): bool
+    {
+        if (!$penugasan) {
+            return false;
+        }
+
+        $rka = $penugasan->relationLoaded('rka') ? $penugasan->rka : $penugasan->rka()->first();
+
+        return $rka && ($rka->status === 'final' || filled($rka->finalized_at));
     }
 }

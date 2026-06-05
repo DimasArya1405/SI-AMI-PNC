@@ -53,6 +53,12 @@
             width: 100% !important;
         }
 
+        .dataTables_wrapper .dataTables_length select {
+            min-width: 2rem;
+            padding-right: 2rem;
+            background-position: right .3rem center;
+        }
+
         /* Opsional: Membuat scrollbar lebih tipis dan modern */
         aside::-webkit-scrollbar {
             width: 5px;

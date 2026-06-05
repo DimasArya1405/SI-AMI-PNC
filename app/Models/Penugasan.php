@@ -57,4 +57,19 @@ class Penugasan extends Model
     {
         return $this->hasMany(PengajuanJadwalAudit::class, 'penugasan_id', 'penugasan_id');
     }
+
+    public function tindakanKoreksi()
+    {
+        return $this->hasMany(TindakanKoreksi::class, 'penugasan_id', 'penugasan_id');
+    }
+
+    public function rka()
+    {
+        return $this->hasOne(RingkasanKondisiAudit::class, 'penugasan_id', 'penugasan_id');
+    }
+
+    public function verifikasiTindakanKoreksi()
+    {
+        return $this->hasOne(VerifikasiTindakanKoreksi::class, 'penugasan_id', 'penugasan_id');
+    }
 }
