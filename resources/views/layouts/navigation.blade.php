@@ -8,6 +8,7 @@
                     @php
                     $dashboardRoute = match (Auth::user()->role) {
                     'admin' => 'admin.dashboard',
+                    'kepala_p4mp' => 'kepala_p4mp.dashboard',
                     'auditor' => 'auditor.dashboard',
                     'auditee' => 'auditee.dashboard',
                     'dosen' => 'dosen.dashboard',

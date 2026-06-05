@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\RingkasanKondisiAudit;
 use App\Models\UptItemSubStandarMutu;
-use App\Models\UptStandarMutu;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -22,17 +21,19 @@ class RkaController extends Controller
     {
         $auditee = $this->getAuditee();
 
-        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2'])
+        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
             ->where('upt_id', $auditee->upt_id)
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) {
                 $progress = $this->getAuditProgress($penugasan);
+                $rkaFinal = $penugasan->rka?->status === 'final';
 
                 $penugasan->setAttribute('total_item', $progress['total_item']);
                 $penugasan->setAttribute('item_terjawab', $progress['item_terjawab']);
                 $penugasan->setAttribute('persentase', $progress['persentase']);
-                $penugasan->setAttribute('rka_tersedia', $progress['selesai']);
+                $penugasan->setAttribute('penilaian_selesai', $progress['selesai']);
+                $penugasan->setAttribute('rka_tersedia', $rkaFinal);
 
                 return $penugasan;
             });
@@ -43,56 +44,40 @@ class RkaController extends Controller
     public function show(string $penugasanId): View
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
+        $rka = $this->getRkaFinal($penugasan);
         $progress = $this->getAuditProgress($penugasan);
+        $rka->load([
+            'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
+            'finalizedBy',
+        ]);
 
-        abort_unless($progress['selesai'], 403, 'RKA belum tersedia karena penilaian auditor belum lengkap.');
-
-        $standarMutu = $this->getStandarMutu($penugasan);
-        $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $progress['item_ids'])
-            ->get()
-            ->unique('upt_item_sub_standar_id');
-
-        $ringkasanStandar = $standarMutu->map(function (UptStandarMutu $standar) {
-            $temuan = $standar->subStandarUpt
-                ->flatMap(fn ($subStandar) => $subStandar->items)
-                ->filter(fn ($item) => $item->jawaban_audit && (int) $item->jawaban_audit->jawaban === 0)
-                ->map(fn ($item) => [
-                    'nama_item' => $item->nama_item,
-                    'catatan' => $item->jawaban_audit->catatan ?: '-',
-                    'kategori' => $item->jawaban_audit->kategori_temuan ?: '-',
-                ])
-                ->values();
-
-            return [
-                'nama_standar' => $standar->standar_mutu?->nama_standar_mutu ?? '-',
+        $ringkasanStandar = $rka->temuan
+            ->groupBy(fn ($temuan) => $temuan->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->nama_standar_mutu ?? '-')
+            ->map(fn ($temuan, $namaStandar) => [
+                'nama_standar' => $namaStandar,
                 'temuan' => $temuan,
-            ];
-        });
+            ])
+            ->values();
 
-        $ringkasan = [
-            'total_item' => $progress['total_item'],
-            'sesuai' => $jawabanAudit->filter(fn ($jawaban) => (int) $jawaban->jawaban === 1)->count(),
-            'temuan' => $jawabanAudit->filter(fn ($jawaban) => (int) $jawaban->jawaban === 0)->count(),
-            'kts' => $jawabanAudit->where('kategori_temuan', 'KTS')->count(),
-            'ob' => $jawabanAudit->where('kategori_temuan', 'OB')->count(),
-        ];
+        $ringkasan = $this->getRingkasan($progress['item_ids'], $rka);
 
-        return view('auditee.rka.show', compact('penugasan', 'ringkasanStandar', 'ringkasan'));
+        return view('auditee.rka.show', compact('penugasan', 'rka', 'ringkasanStandar', 'ringkasan'));
     }
 
     public function export(string $penugasanId): Response
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
-        $progress = $this->getAuditProgress($penugasan);
+        $rka = $this->getRkaFinal($penugasan);
+        $rka->load([
+            'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
+            'finalizedBy',
+        ]);
 
-        abort_unless($progress['selesai'], 403, 'RKA belum tersedia karena penilaian auditor belum lengkap.');
-
-        $standarMutu = $this->getStandarMutu($penugasan, true);
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'RKA-' . Str::slug($upt->nama_upt) . '-' . $periode->tahun . '.pdf';
 
-        return Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'))
+        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }
@@ -108,9 +93,16 @@ class RkaController extends Controller
     {
         $auditee = $this->getAuditee();
 
-        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2'])
+        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
             ->where('penugasan_id', $penugasanId)
             ->where('upt_id', $auditee->upt_id)
+            ->firstOrFail();
+    }
+
+    private function getRkaFinal(Penugasan $penugasan): RingkasanKondisiAudit
+    {
+        return RingkasanKondisiAudit::where('penugasan_id', $penugasan->penugasan_id)
+            ->where('status', 'final')
             ->firstOrFail();
     }
 
@@ -139,20 +131,18 @@ class RkaController extends Controller
         })->pluck('upt_item_sub_standar_id');
     }
 
-    private function getStandarMutu(Penugasan $penugasan, bool $hanyaTemuan = false): EloquentCollection
+    private function getRingkasan(Collection $itemIds, RingkasanKondisiAudit $rka): array
     {
-        return UptStandarMutu::with([
-            'standar_mutu',
-            'subStandarUpt.items.jawaban_audit' => function ($query) use ($hanyaTemuan) {
-                if ($hanyaTemuan) {
-                    $query->where('jawaban', 0);
-                }
-            },
-        ])
-            ->where('upt_id', $penugasan->upt_id)
-            ->where('periode_id', $penugasan->periode_id)
+        $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $itemIds)
             ->get()
-            ->sortBy(fn ($standar) => $standar->standar_mutu?->urutan ?? 0)
-            ->values();
+            ->unique('upt_item_sub_standar_id');
+
+        return [
+            'total_item' => $itemIds->count(),
+            'sesuai' => $jawabanAudit->filter(fn ($jawaban) => (int) $jawaban->jawaban === 1)->count(),
+            'temuan' => $rka->temuan->count(),
+            'kts' => $rka->temuan->where('kategori_final', 'KTS')->count(),
+            'ob' => $rka->temuan->where('kategori_final', 'OB')->count(),
+        ];
     }
 }

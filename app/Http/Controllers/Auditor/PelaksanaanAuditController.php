@@ -158,29 +158,9 @@ class PelaksanaanAuditController extends Controller
     }
     public function exportRka($id)
     {
-        $upt = UPT::findOrFail($id);
-        $periode = Periode::where('status', '1')->first();
-        $periode_id = $periode->id;
-
-        // Ambil Standar Mutu yang memiliki relasi ke bawah hingga ke jawaban = 0
-        $standarMutu = UptStandarMutu::with(['standar_mutu', 'subStandarUpt.items.jawaban_audit' => function ($query) {
-            $query->where('jawaban', 0); // Filter langsung di query agar tidak berat di view
-        }])
-            ->where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->get();
-        $penugasan = Penugasan::where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->with('auditor1', 'auditor2')
-            ->firstOrFail();
-
-        // return view('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'));
-                // 2. Load View PDF (Gunakan file blade khusus PDF yang sudah kita buat sebelumnya)
-        $pdf = Pdf::loadView('auditor.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'))
-            ->setPaper('a4', 'portrait');
-
-        // 3. Download atau Stream
-        return $pdf->stream('RKA.pdf');
+        return redirect()
+            ->route('auditor.rka.index')
+            ->with('info', 'RKA sekarang disusun dan difinalisasi melalui menu RKA.');
     }
     public function previewBukti($id)
     {
@@ -266,30 +246,29 @@ class PelaksanaanAuditController extends Controller
             return;
         }
 
-        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
-        $pesan = "Penilaian audit untuk {$namaUpt} telah lengkap. Ringkasan Kondisi Audit (RKA) sudah dapat dilihat.";
-        $url = route('auditee.rka.show', $penugasan->penugasan_id);
+        $penugasan->loadMissing('auditor1.user');
 
-        Auditee::with('user')
-            ->where('upt_id', $penugasan->upt_id)
-            ->get()
-            ->pluck('user')
+        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
+        $pesan = "Penilaian audit untuk {$namaUpt} telah lengkap. Draft RKA siap disusun melalui rapat internal tim auditor.";
+        $url = route('auditor.rka.show', $penugasan->penugasan_id);
+
+        collect([$penugasan->auditor1?->user])
             ->filter()
             ->unique('id')
             ->each(function ($user) use ($penugasan, $pesan, $url) {
                 $sudahDikirim = $user->notifications()
                     ->where('type', PenugasanAuditNotification::class)
                     ->get()
-                    ->contains(fn ($notifikasi) => ($notifikasi->data['jenis'] ?? null) === 'rka-tersedia'
+                    ->contains(fn ($notifikasi) => ($notifikasi->data['jenis'] ?? null) === 'rka-draft-siap'
                         && ($notifikasi->data['penugasan_id'] ?? null) === $penugasan->penugasan_id);
 
                 if (!$sudahDikirim) {
                     $user->notify(new PenugasanAuditNotification(
                         $penugasan,
-                        'RKA Tersedia',
+                        'Draft RKA Siap Disusun',
                         $pesan,
                         $url,
-                        'rka-tersedia'
+                        'rka-draft-siap'
                     ));
                 }
             });

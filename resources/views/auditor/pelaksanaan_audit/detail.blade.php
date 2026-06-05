@@ -27,10 +27,10 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('auditor.pelaksanaan_audit.exportRka', $upt->upt_id) }}" target="_blank"
+                            <a href="{{ route('auditor.rka.index') }}"
                                 class="flex items-center gap-2 bg-green-500 hover:bg-green-700 text-white text-sm px-3 py-2 rounded">
-                                <i class="bi bi-download"></i>
-                                Export RKA
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                Susun RKA
                             </a>
                             <a href="{{ route('auditor.pelaksanaan_audit') }}"
                                 class="flex items-center gap-2 bg-gray-500 hover:bg-gray-700 text-white text-sm px-3 py-2 rounded">

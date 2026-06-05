@@ -19,20 +19,20 @@
 
         <a href="{{ route('auditor.pelaksanaan_audit') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
+            {{ request()->routeIs('auditor.pelaksanaan_audit*') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-pencil-square mr-2 text-xl"></i> Pelaksanaan Audit
         </a>
 
-        <a href="{{ route('admin.dashboard') }}"
+        <a href="{{ route('auditor.rka.index') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
-            <i class="bi bi-exclamation-octagon mr-2 text-xl"></i> Hasil dan Temuan
+            {{ request()->routeIs('auditor.rka.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-file-earmark-bar-graph mr-2 text-xl"></i> RKA
         </a>
 
-        <a href="{{ route('admin.dashboard') }}"
+        <a href="{{ route('auditor.tindakan_koreksi.index') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
-            <i class="bi bi-file-earmark-medical mr-2 text-xl"></i> Laporan Audit
+            {{ request()->routeIs('auditor.tindakan_koreksi.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-clipboard-check mr-2 text-xl"></i> Tindakan Koreksi
         </a>
         <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
             <a href="{{ route('profile.edit') }}"

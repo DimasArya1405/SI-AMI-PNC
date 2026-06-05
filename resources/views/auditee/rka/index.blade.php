@@ -6,7 +6,7 @@
             <div class="rounded-lg bg-white p-5 shadow-sm sm:p-6">
                 <h1 class="text-xl font-bold text-gray-800">Ringkasan Kondisi Audit</h1>
                 <p class="mt-1 text-sm text-gray-600">
-                    RKA dapat dilihat setelah seluruh item AMI selesai dinilai oleh auditor.
+                    RKA dapat dilihat setelah difinalisasi oleh tim auditor melalui rapat internal.
                 </p>
             </div>
 
@@ -23,10 +23,14 @@
                                 </span>
                                 @if ($item->rka_tersedia)
                                     <span class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                                        RKA tersedia
+                                        RKA final tersedia
+                                    </span>
+                                @elseif ($item->penilaian_selesai)
+                                    <span class="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                                        Menunggu finalisasi auditor
                                     </span>
                                 @else
-                                    <span class="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                                    <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                                         Penilaian belum lengkap
                                     </span>
                                 @endif
@@ -69,7 +73,7 @@
                             @else
                                 <span class="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-400 lg:w-auto">
                                     <i class="bi bi-lock"></i>
-                                    Belum tersedia
+                                    Belum final
                                 </span>
                             @endif
                         </div>

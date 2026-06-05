@@ -3,6 +3,11 @@
 
     <div class="ml-60 min-h-screen bg-gray-100">
         <div class="p-6 max-w-7xl mx-auto space-y-6">
+            @php
+                $rka = $penugasan?->relationLoaded('rka') ? $penugasan?->rka : $penugasan?->rka()->first();
+                $rkaFinal = $rka && ($rka->status === 'final' || filled($rka->finalized_at));
+            @endphp
+
             @if ($errors->any())
                 <div class="rounded-lg bg-red-100 p-4 text-red-700 text-sm">
                     {{ $errors->first() }}
@@ -47,6 +52,12 @@
                     Auditee belum memilih item pertanyaan yang bisa diisi oleh dosen.
                 </div>
             @else
+                @if ($rkaFinal)
+                    <div class="rounded-lg border border-green-100 bg-green-50 p-4 text-sm text-green-800">
+                        RKA sudah difinalisasi. Dokumen AMI yang sudah masuk tetap bisa dilihat, tetapi upload dan hapus dokumen sudah dikunci.
+                    </div>
+                @endif
+
                 <div class="bg-white rounded-lg border p-6">
                     <div class="mb-4 border-b border-gray-200 overflow-x-auto">
                         <ul class="flex -mb-px text-sm font-medium text-center"
@@ -197,7 +208,7 @@
                                                                                                     class="text-sm px-3 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded">
                                                                                                     Lihat
                                                                                                 </button>
-                                                                                                @if ($bukti->status_validasi !== 'diterima')
+                                                                                                @if (!$rkaFinal && $bukti->status_validasi !== 'diterima')
                                                                                                     <form action="{{ route('dosen.bukti_dukung.hapus', $bukti->jawaban_id) }}" method="POST">
                                                                                                         @csrf
                                                                                                         @method('delete')
@@ -218,6 +229,7 @@
                                                                             <p class="text-xs text-gray-500 mb-4">Belum ada dokumen yang Anda upload untuk item ini.</p>
                                                                         @endif
 
+                                                                        @if (!$rkaFinal)
                                                                         <form action="{{ route('dosen.bukti_dukung.upload') }}"
                                                                             method="POST"
                                                                             enctype="multipart/form-data"
@@ -250,6 +262,11 @@
                                                                                 </svg>
                                                                             </button>
                                                                         </form>
+                                                                        @else
+                                                                            <p class="rounded border border-green-100 bg-green-50 p-3 text-xs text-green-700">
+                                                                                RKA final. Upload dokumen untuk item ini sudah dikunci.
+                                                                            </p>
+                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                             </div>
