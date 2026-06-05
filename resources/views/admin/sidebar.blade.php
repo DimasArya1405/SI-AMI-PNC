@@ -83,9 +83,9 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.ami.rka') }}"
+                <a href="{{ route('admin.rka.index') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.ami.rka') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    {{ request()->routeIs('admin.rka.*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> RKA
                 </a>
             </li>

@@ -73,7 +73,7 @@ class AuthenticatedSessionController extends Controller
             $url = 'dosen/dashboard';
         }
 
-        return redirect()->intended($url);
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

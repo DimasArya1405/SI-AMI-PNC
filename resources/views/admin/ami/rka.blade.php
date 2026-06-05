@@ -48,7 +48,7 @@
                                                     </span>
                                                 @elseif ($penugasanTerkini->status_penugasan == 'selesai')
                                                     {{-- KONDISI 3: AUDIT SELESAI (BUTTON TAILWIND) --}}
-                                                    <a href="{{ route('admin.ami.rka.exportPdf', $item->upt_id) }}" target="_blank"
+                                                    <a href="{{ route('admin.rka.show', $penugasanTerkini->penugasan_id) }}"
                                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition duration-150 ease-in-out">
                                                         <i class="bi bi-eye mr-1.5"></i> Lihat RKA
                                                     </a>
@@ -103,7 +103,7 @@
                                                     </span>
                                                 @elseif ($penugasanTerkini->status_penugasan == 'selesai')
                                                     {{-- KONDISI 3: AUDIT SELESAI (BUTTON TAILWIND) --}}
-                                                    <a href="{{ route('admin.ami.rka.exportPdf', $item->upt_id) }}" target="_blank"
+                                                    <a href="{{ route('admin.rka.show', $penugasanTerkini->penugasan_id) }}"
                                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition duration-150 ease-in-out">
                                                         <i class="bi bi-eye mr-1.5"></i> Lihat RKA
                                                     </a>

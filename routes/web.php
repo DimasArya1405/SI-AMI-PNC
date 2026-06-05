@@ -39,10 +39,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route umum setelah login
-// Route::get('/dashboard', function () {
-//     return view('template_dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+// Route umum setelah login. Setiap role tetap diarahkan ke dashboard masing-masing.
+Route::get('/dashboard', function () {
+    $role = request()->user()?->role;
+
+    return match ($role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'kepala_p4mp' => redirect()->route('kepala_p4mp.dashboard'),
+        'auditor' => redirect()->route('auditor.dashboard'),
+        'auditee' => redirect()->route('auditee.dashboard'),
+        default => redirect()->route('dosen.dashboard'),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grouping berdasarkan role
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
