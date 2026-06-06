@@ -53,6 +53,8 @@
                     $ketuaAuditor = $penugasan->auditor1?->nama_lengkap ?? '-';
                     $anggotaAuditor = $penugasan->auditor2?->nama_lengkap ?? '-';
                     $auditeeName = $penugasan->upt?->nama_upt ?? '-';
+                    $itemPath = collect($jawaban->item_path ?? []);
+                    $temuanItemId = $jawaban->upt_item_sub_standar_id;
                     $p4mpStatus = $tk?->p4mp_status;
                     $currentStep = !$tk ? 2 : ($status === 'selesai' ? 5 : ($tk->bukti_file_path ? 4 : 4));
                     $statusClass = match ($status) {
@@ -102,7 +104,25 @@
                                 <h2 class="mt-3 text-base font-semibold text-gray-900">
                                     {{ $jawaban->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->nama_standar_mutu ?? '-' }}
                                 </h2>
-                                <p class="mt-1 text-sm font-medium text-gray-700">{{ $jawaban->itemSubStandar?->nama_item ?? '-' }}</p>
+                                <div class="mt-2 flex flex-col gap-1.5">
+                                    @forelse ($itemPath as $pathItem)
+                                        @php
+                                            $isTemuanItem = $pathItem->upt_item_sub_standar_id === $temuanItemId;
+                                            $level = $pathItem->level ?? $loop->iteration;
+                                            $indentClass = match (true) {
+                                                $level >= 4 => 'ml-12',
+                                                $level === 3 => 'ml-8',
+                                                $level === 2 => 'ml-4',
+                                                default => '',
+                                            };
+                                        @endphp
+                                        <p class="{{ $indentClass }} text-sm {{ $isTemuanItem ? 'font-semibold text-gray-900' : 'font-medium text-gray-600' }}">
+                                            - {{ $pathItem->nama_item }}
+                                        </p>
+                                    @empty
+                                        <p class="text-sm font-medium text-gray-700">{{ $jawaban->itemSubStandar?->nama_item ?? '-' }}</p>
+                                    @endforelse
+                                </div>
                             </div>
                             <div class="rounded border border-blue-100 bg-blue-50 p-3 text-sm text-blue-800 lg:max-w-sm">
                                 <p class="font-semibold">Yang perlu dilakukan</p>

@@ -12,6 +12,7 @@ use App\Models\UPT;
 use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -132,7 +133,7 @@ class PenugasanController extends Controller
         $penugasan->load('upt');
 
         $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
-        $tanggal = $penugasan->tanggal_audit ? date('d-m-Y', strtotime($penugasan->tanggal_audit)) : '-';
+        $tanggal = $penugasan->tanggal_audit ? Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-';
         $jam = $penugasan->jam ? date('H:i', strtotime($penugasan->jam)) : '-';
         $pesan = "Pengajuan jadwal audit untuk {$namaUpt} sudah disetujui semua pihak. Jadwal baru: {$tanggal} pukul {$jam}.";
 

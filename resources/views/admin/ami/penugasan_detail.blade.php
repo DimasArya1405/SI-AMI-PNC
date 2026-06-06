@@ -102,7 +102,7 @@
                                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <span
                                                                 class="text-xs ml-5 text-gray-400 italic">{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
@@ -122,7 +122,7 @@
                                                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $pengajuan->tanggal_audit ?? '-' }}</span>
+                                                                <span>{{ $pengajuan->tanggal_audit ? \Carbon\Carbon::parse($pengajuan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <span
                                                                 class="text-xs ml-5 text-blue-700">{{ $pengajuan->jam ? $pengajuan->jam . ' WIB' : '-' }}</span>
@@ -139,7 +139,7 @@
                                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $penugasan->tanggal_audit ?? '-' }}</span>
+                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <div
                                                                 class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5">
@@ -250,7 +250,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $item->penugasan->first()->tanggal_audit ?? '-' }} <br>
+                                                {{ $item->penugasan->first()->tanggal_audit ? \Carbon\Carbon::parse($item->penugasan->first()->tanggal_audit)->translatedFormat('d F Y') : '-' }} <br>
                                                 {{ $jam }} WIB
                                             @else
                                                 <span class="text-gray-400 italic">Belum ada penugasan</span>

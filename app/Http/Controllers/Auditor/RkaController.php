@@ -65,6 +65,7 @@ class RkaController extends Controller
         }
 
         $rka->load([
+            'temuan.jawabanAudit.itemSubStandar.parent.parent.parent',
             'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
             'finalizedBy',
         ]);
@@ -254,10 +255,36 @@ class RkaController extends Controller
 
                 return [
                     'nama_standar' => $standar?->nama_standar_mutu ?? '-',
-                    'temuan' => $temuan->values(),
+                    'temuan' => $temuan
+                        ->values()
+                        ->map(function ($itemTemuan) {
+                            $item = $itemTemuan->jawabanAudit?->itemSubStandar;
+                            $itemTemuan->setAttribute('item_path', $this->getItemPath($item));
+
+                            return $itemTemuan;
+                        }),
                 ];
             })
             ->values();
+    }
+
+    private function getItemPath(?UptItemSubStandarMutu $item): Collection
+    {
+        if (!$item) {
+            return collect();
+        }
+
+        $path = collect();
+        $current = $item;
+        $guard = 0;
+
+        while ($current && $guard < 10) {
+            $path->prepend($current);
+            $current = $current->parent;
+            $guard++;
+        }
+
+        return $path->values();
     }
 
     private function getAuditProgress(Penugasan $penugasan): array
