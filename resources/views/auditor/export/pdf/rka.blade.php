@@ -20,6 +20,8 @@
         }
 
         .page {
+            border: 1.5px solid #444;
+            padding: 8px 10px 10px;
             width: 100%;
         }
 
@@ -54,30 +56,6 @@
 
         .logo-cell img {
             width: 205px;
-        }
-
-        .doc-strip td {
-            border: 1.4px solid #444;
-            height: 15px;
-            padding: 0;
-        }
-
-        .stripe {
-            background: repeating-linear-gradient(
-                -45deg,
-                #444 0,
-                #444 2px,
-                #fff 2px,
-                #fff 5px
-            );
-        }
-
-        .doc-code {
-            font-size: 8pt;
-            font-style: italic;
-            font-weight: bold;
-            text-align: center;
-            width: 145px;
         }
 
         .main-box {
@@ -274,13 +252,6 @@
             <td class="logo-cell">
                 <img src="{{ public_path('img/logo_pnc.png') }}" alt="Logo PNC">
             </td>
-        </tr>
-    </table>
-
-    <table class="doc-strip">
-        <tr>
-            <td class="stripe"></td>
-            <td class="doc-code">FM.SOP 1/AMI-Q.06-01</td>
         </tr>
     </table>
 

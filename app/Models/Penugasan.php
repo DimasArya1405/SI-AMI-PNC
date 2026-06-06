@@ -28,6 +28,10 @@ class Penugasan extends Model
         'status_penugasan'
     ];
 
+    protected $casts = [
+        'tanggal_audit' => 'date',
+    ];
+
     public function periode()
     {
         return $this->belongsTo(Periode::class, 'periode_id', 'id');

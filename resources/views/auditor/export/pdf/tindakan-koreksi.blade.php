@@ -61,30 +61,6 @@
             width: 205px;
         }
 
-        .doc-strip td {
-            border: 1.4px solid #444;
-            height: 15px;
-            padding: 0;
-        }
-
-        .stripe {
-            background: repeating-linear-gradient(
-                -45deg,
-                #444 0,
-                #444 2px,
-                #fff 2px,
-                #fff 5px
-            );
-        }
-
-        .doc-code {
-            font-size: 8pt;
-            font-style: italic;
-            font-weight: bold;
-            text-align: center;
-            width: 220px;
-        }
-
         .title {
             font-size: 13pt;
             font-weight: bold;
@@ -154,6 +130,10 @@
             padding-left: 18px;
         }
 
+        .finding-list {
+            min-height: 126px;
+        }
+
         .section-list li {
             font-style: italic;
             margin-bottom: 4px;
@@ -177,8 +157,8 @@
         .unit-row {
             border-top: 1.25px solid #444;
             font-size: 11pt;
-            margin: 10px -6px -6px;
-            padding: 7px 6px 0;
+            margin: 0 -6px -6px;
+            padding: 7px 6px;
             text-align: center;
         }
 
@@ -253,13 +233,6 @@
         </tr>
     </table>
 
-    <table class="doc-strip">
-        <tr>
-            <td class="stripe"></td>
-            <td class="doc-code">FM.SOP 1/TK-Q.02-01</td>
-        </tr>
-    </table>
-
     <div class="title">FORMULIR USULAN TINDAKAN KOREKSI</div>
 
     <table class="section-table section-large">
@@ -268,7 +241,7 @@
         </tr>
         <tr>
             <td rowspan="2" class="content-cell">
-                <ol class="section-list">
+                <ol class="section-list finding-list">
                     @forelse ($temuan as $jawaban)
                         <li>{{ $jawaban->rkaTemuan?->kondisi_final ?: ($jawaban->catatan ?: $jawaban->itemSubStandar?->nama_item ?? '-') }}</li>
                     @empty
@@ -400,10 +373,6 @@
             <td rowspan="2" class="content-cell">
                 @if ($catatanUmumVerifikasi)
                     <p class="verification-note">{!! nl2br(e($catatanUmumVerifikasi)) !!}</p>
-                @elseif ($catatanItemVerifikasi->isEmpty())
-                    <p class="verification-note">
-                        {{ $tkItems->first()?->tindakanKoreksi?->hasil_penilaian_auditor ?: 'Belum ada verifikasi pelaksanaan tindakan koreksi.' }}
-                    </p>
                 @elseif ($catatanItemVerifikasi->isNotEmpty())
                     <ol class="verification-detail">
                         @foreach ($catatanItemVerifikasi as $catatan)

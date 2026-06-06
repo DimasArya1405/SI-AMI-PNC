@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Penugasan;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Carbon;
 use Illuminate\Notifications\Notification;
 
 class PenugasanAuditNotification extends Notification
@@ -41,7 +42,9 @@ class PenugasanAuditNotification extends Notification
             'periode_id' => $this->penugasan->periode_id,
             'upt_id' => $this->penugasan->upt_id,
             'nama_upt' => $this->penugasan->upt?->nama_upt,
-            'tanggal_audit' => optional($this->penugasan->tanggal_audit)->format('Y-m-d') ?? $this->penugasan->tanggal_audit,
+            'tanggal_audit' => $this->penugasan->tanggal_audit
+                ? Carbon::parse($this->penugasan->tanggal_audit)->translatedFormat('d F Y')
+                : null,
             'jam' => $this->penugasan->jam,
         ];
     }

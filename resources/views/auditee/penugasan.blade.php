@@ -97,7 +97,7 @@
                                                 <div class="flex items-center gap-1.5 text-gray-500 line-through">
                                                     <i class="bi bi-calendar-event"></i>
                                                     <span class="font-medium">
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <span class="text-[11px] ml-5 text-gray-400 italic">
@@ -112,7 +112,7 @@
                                                 <div class="flex items-center gap-1.5 text-blue-900 font-bold">
                                                     <i class="bi bi-calendar-check"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->format('d M Y') }}
+                                                        {{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <span class="text-[11px] ml-5 text-blue-700 font-medium">
@@ -124,7 +124,7 @@
                                                 <div class="flex items-center gap-1.5 font-bold text-gray-900">
                                                     <i class="bi bi-calendar-event text-gray-400"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
 
@@ -145,7 +145,7 @@
                                                 <div class="flex items-center gap-1.5 font-bold text-gray-800">
                                                     <i class="bi bi-calendar-event text-gray-400"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">

@@ -13,6 +13,7 @@ use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -235,6 +236,7 @@ class TindakanKoreksiController extends Controller
         })->pluck('upt_item_sub_standar_id');
 
         return JawabanAudit::with([
+            'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
             'tindakanKoreksi.p4mpVerifiedBy',
             'rkaTemuan',
@@ -248,7 +250,31 @@ class TindakanKoreksiController extends Controller
                 $jawaban->itemSubStandar?->uptSubStandar?->urutan ?? 0,
                 $jawaban->itemSubStandar?->urutan ?? 0
             ))
+            ->map(function (JawabanAudit $jawaban) {
+                $jawaban->setAttribute('item_path', $this->getItemPath($jawaban->itemSubStandar));
+
+                return $jawaban;
+            })
             ->values();
+    }
+
+    private function getItemPath(?UptItemSubStandarMutu $item): Collection
+    {
+        if (!$item) {
+            return collect();
+        }
+
+        $path = collect();
+        $current = $item;
+        $guard = 0;
+
+        while ($current && $guard < 10) {
+            $path->prepend($current);
+            $current = $current->parent;
+            $guard++;
+        }
+
+        return $path->values();
     }
 
     private function getJawabanTemuan(Penugasan $penugasan, string $jawabanAuditId): JawabanAudit

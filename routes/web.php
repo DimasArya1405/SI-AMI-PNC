@@ -154,7 +154,7 @@ Route::middleware(['auth', 'checkRole:kepala_p4mp'])->group(function () {
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
-    Route::get('/auditor/dashboard', [AuditorController::class, 'export'])->name('auditor.dashboard');
+    Route::get('/auditor/dashboard', [AuditorController::class, 'index'])->name('auditor.dashboard');
 
     // ROUTE PENUGASAN
     Route::get('/auditor/penugasan', [AuditorPenugasanController::class, 'index'])->name('auditor.penugasan');
