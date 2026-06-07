@@ -18,6 +18,17 @@ class KepalaP4mpDataTable extends DataTable
                 return $row->created_at?->translatedFormat('d F Y H:i') ?? '-';
             })
             ->addColumn('action', function (User $row) {
+                $bolehHapus = User::where('role', 'kepala_p4mp')->count() > 1;
+                $hapusButton = $bolehHapus ? '
+                        <button data-modal-target="modal-hapus"
+                            data-modal-toggle="modal-hapus"
+                            data-id="' . e($row->id) . '"
+                            data-name="' . e($row->name) . '"
+                            class="button-hapus rounded bg-red-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-red-700">
+                            <i class="bi bi-trash text-xs"></i>
+                        </button>
+                ' : '';
+
                 return '
                     <div class="flex items-center gap-2">
                         <button data-modal-target="modal-edit"
@@ -28,14 +39,7 @@ class KepalaP4mpDataTable extends DataTable
                             data-email="' . e($row->email) . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
-
-                        <button data-modal-target="modal-hapus"
-                            data-modal-toggle="modal-hapus"
-                            data-id="' . e($row->id) . '"
-                            data-name="' . e($row->name) . '"
-                            class="button-hapus rounded bg-red-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-red-700">
-                            <i class="bi bi-trash text-xs"></i>
-                        </button>
+                        ' . $hapusButton . '
                     </div>
                 ';
             })

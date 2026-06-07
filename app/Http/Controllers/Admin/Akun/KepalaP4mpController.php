@@ -13,11 +13,17 @@ class KepalaP4mpController extends Controller
 {
     public function index(KepalaP4mpDataTable $dataTable)
     {
-        return $dataTable->render('admin.akun.kepala-p4mp');
+        $jumlahKepalaP4mp = User::where('role', 'kepala_p4mp')->count();
+
+        return $dataTable->render('admin.akun.kepala-p4mp', compact('jumlahKepalaP4mp'));
     }
 
     public function tambah(Request $request)
     {
+        if (User::where('role', 'kepala_p4mp')->exists()) {
+            return back()->with('error', 'Akun Kepala P4MP sudah ada. Silakan edit akun yang tersedia.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -62,6 +68,10 @@ class KepalaP4mpController extends Controller
 
     public function hapus(Request $request)
     {
+        if (User::where('role', 'kepala_p4mp')->count() <= 1) {
+            return back()->with('error', 'Akun Kepala P4MP utama tidak dapat dihapus. Silakan edit data akun tersebut.');
+        }
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
