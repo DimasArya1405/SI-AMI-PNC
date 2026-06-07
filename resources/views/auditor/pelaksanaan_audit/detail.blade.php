@@ -27,12 +27,12 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('auditor.pelaksanaan_audit.exportRka', $upt->upt_id) }}" target="_blank"
+                            <a href="{{ route('auditor.rka.index') }}"
                                 class="flex items-center gap-2 bg-green-500 hover:bg-green-700 text-white text-sm px-3 py-2 rounded">
-                                <i class="bi bi-download"></i>
-                                Export RKA
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                Susun RKA
                             </a>
-                            <a href="{{ route('auditee.ami') }}"
+                            <a href="{{ route('auditor.pelaksanaan_audit') }}"
                                 class="flex items-center gap-2 bg-gray-500 hover:bg-gray-700 text-white text-sm px-3 py-2 rounded">
                                 <i class="bi bi-arrow-left"></i>
                                 Kembali
@@ -89,7 +89,7 @@
                                 @php
                                     // 1. Ambil semua sub-standar yang dimiliki standar ini
                                     $subStandarIds = $uptSubStandar
-                                        ->where('standar_mutu_id', $standar->standar_mutu_id)
+                                        ->where('upt_standar_mutu_id', $standar->upt_standar_mutu_id)
                                         ->pluck('upt_sub_standar_id');
 
                                     // 2. Kumpulkan semua item dari sub-standar tersebut
@@ -298,9 +298,6 @@
                                                                             action="{{ route('auditor.pelaksanaan_audit.penilaian', $item->upt_item_sub_standar_id) }}"
                                                                             method="POST" class="space-y-6">
                                                                             @csrf
-                                                                            <input type="hidden"
-                                                                                name="upt_item_sub_standar_id"
-                                                                                value="{{ $item->upt_item_sub_standar_id }}">
                                                                             <input type="hidden"
                                                                                 name="upt_item_sub_standar_id"
                                                                                 value="{{ $item->upt_item_sub_standar_id }}">
@@ -583,42 +580,6 @@
     </div>
 
     <script>
-        // JS LOADING HAPUS BUKTI
-        const formHapus = document.getElementById('form-hapus-bukti');
-
-        if (formHapus) {
-            formHapus.addEventListener('submit', function() {
-
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                document.getElementById('loadingText').textContent = 'Menghapus dokumen...';
-
-                const btn = formHapus.querySelector('.btnHapus');
-                const text = formHapus.querySelector('.textHapus');
-                const spinner = formHapus.querySelector('.spinnerHapus');
-
-                btn.disabled = true;
-                text.textContent = 'Menghapus...';
-                spinner.classList.remove('hidden');
-            });
-        }
-
-        // JS LOADING UPLOAD BUKTI
-        document.querySelectorAll('.formUploadBukti').forEach(function(form) {
-            form.addEventListener('submit', function() {
-
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                document.getElementById('loadingText').textContent = 'Mengupload dokumen...';
-
-                const btn = form.querySelector('.btnUpload');
-                const text = form.querySelector('.textUpload');
-                const spinner = form.querySelector('.spinnerUpload');
-
-                btn.disabled = true;
-                text.textContent = 'Mengupload...';
-                spinner.classList.remove('hidden');
-            });
-        });
-
         // JS MODAL PREVIEW
         let previewTimeout;
 
@@ -799,34 +760,6 @@
                 }, 300);
 
             }, 400);
-        });
-
-        // JS Modal Hapus Bukti
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('.button-hapus-bukti');
-
-            const form = document.getElementById('form-hapus-bukti');
-            const namaFileText = document.getElementById('nama_file_hapus_bukti');
-            const activeTabInput = document.getElementById('active_tab_hapus_bukti');
-            const openAccordionInput = document.getElementById('open_accordion_hapus_bukti');
-            const targetScrollInput = document.getElementById('target_scroll_hapus_bukti');
-
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const dokumenId = this.dataset.dokumenId;
-                    const namaFile = this.dataset.namaFile;
-
-                    let actionUrl = "{{ route('auditee.bukti_dukung.hapus', ':id') }}";
-                    actionUrl = actionUrl.replace(':id', dokumenId);
-
-                    form.setAttribute('action', actionUrl);
-                    namaFileText.textContent = namaFile;
-
-                    activeTabInput.value = this.dataset.activeTab;
-                    openAccordionInput.value = this.dataset.openAccordion;
-                    targetScrollInput.value = this.dataset.targetScroll;
-                });
-            });
         });
 
         setTimeout(() => {

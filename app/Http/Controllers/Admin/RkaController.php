@@ -1,68 +1,161 @@
 <?php
 
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\JawabanAudit;
 use App\Models\Penugasan;
-use App\Models\Periode;
-use App\Models\UPT;
-use App\Models\UptStandarMutu;
+use App\Models\RingkasanKondisiAudit;
+use App\Models\UptItemSubStandarMutu;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class RkaController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        $periode = Periode::where('status', '1')->first();
+        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
+            ->latest()
+            ->get()
+            ->map(function (Penugasan $penugasan) {
+                $progress = $this->getAuditProgress($penugasan);
+                $statusRka = $penugasan->rka?->status ?? 'belum_dibuat';
 
-        // Jika tidak ada periode yang aktif, set data UPT menjadi collection kosong
-        if (!$periode) {
-            $uptProdi = collect();
-            $uptBagian = collect();
-            return view('admin.ami.rka', compact('uptProdi', 'uptBagian'))->with('no_periode', true);
-        }
+                $penugasan->setAttribute('total_item', $progress['total_item']);
+                $penugasan->setAttribute('item_terjawab', $progress['item_terjawab']);
+                $penugasan->setAttribute('persentase', $progress['persentase']);
+                $penugasan->setAttribute('penilaian_selesai', $progress['selesai']);
+                $penugasan->setAttribute('status_rka', $statusRka);
 
-        // Eager load penugasan yang sesuai dengan periode aktif
-        $uptProdi = UPT::where('kategori_upt', 'Prodi')->with(['penugasan' => function ($query) use ($periode) {
-            $query->where('periode_id', $periode->id);
-        }])->get();
+                return $penugasan;
+            });
 
-        $uptBagian = UPT::where('kategori_upt', 'Unit/Bagian')->with(['penugasan' => function ($query) use ($periode) {
-            $query->where('periode_id', $periode->id);
-        }])->get();
+        $ringkasan = [
+            'total_penugasan' => $penugasan->count(),
+            'rka_final' => $penugasan->filter(fn ($item) => $item->status_rka === 'final')->count(),
+            'rka_draft' => $penugasan->filter(fn ($item) => $item->status_rka === 'draft')->count(),
+            'belum_rka' => $penugasan->filter(fn ($item) => $item->status_rka === 'belum_dibuat')->count(),
+        ];
 
-        return view('admin.ami.rka', compact('uptProdi', 'uptBagian'));
+        return view('admin.rka.index', compact('penugasan', 'ringkasan'));
     }
-    public function exportRka($id)
+
+    public function show(string $penugasanId): View
     {
-        $periode = Periode::where('status', '1')->first();
-        $periode_id = $periode->id;
+        $penugasan = $this->getPenugasan($penugasanId);
+        $rka = $this->getRka($penugasan);
+        $progress = $this->getAuditProgress($penugasan);
 
-        // Ambil data penugasan untuk cek status
-        $penugasan = Penugasan::where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->with('auditor1', 'auditor2')
+        $rka->load([
+            'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
+            'createdBy',
+            'finalizedBy',
+        ]);
+
+        $ringkasan = $this->getRingkasan($progress['item_ids'], $rka);
+        $temuanPerStandar = $this->getTemuanPerStandar($rka);
+
+        return view('admin.rka.show', compact('penugasan', 'rka', 'ringkasan', 'temuanPerStandar'));
+    }
+
+    public function export(string $penugasanId): Response
+    {
+        $penugasan = $this->getPenugasan($penugasanId);
+        $rka = $this->getRka($penugasan);
+
+        $rka->load([
+            'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
+            'finalizedBy',
+        ]);
+
+        $upt = $penugasan->upt;
+        $periode = $penugasan->periode;
+        $namaFile = 'RKA-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+
+        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan'))
+            ->setPaper('a4', 'portrait')
+            ->stream($namaFile);
+    }
+
+    private function getPenugasan(string $penugasanId): Penugasan
+    {
+        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
+            ->where('penugasan_id', $penugasanId)
             ->firstOrFail();
+    }
 
-        // Proteksi: Jika status_penugasan BUKAN 'selesai', gagalkan proses export
-        if ($penugasan->status_penugasan !== 'selesai') {
-            return redirect()->back()->with('error', 'Audit belum selesai. Dokumen RKA belum dapat diunduh.');
-        }
+    private function getRka(Penugasan $penugasan): RingkasanKondisiAudit
+    {
+        return RingkasanKondisiAudit::where('penugasan_id', $penugasan->penugasan_id)
+            ->firstOrFail();
+    }
 
-        $upt = UPT::findOrFail($id);
+    private function getAuditProgress(Penugasan $penugasan): array
+    {
+        $itemIds = $this->getItemIds($penugasan);
+        $totalItem = $itemIds->count();
+        $itemTerjawab = JawabanAudit::whereIn('upt_item_sub_standar_id', $itemIds)
+            ->distinct()
+            ->count('upt_item_sub_standar_id');
 
-        // Ambil Standar Mutu yang memiliki relasi ke bawah hingga ke jawaban = 0
-        $standarMutu = UptStandarMutu::with(['standar_mutu', 'subStandarUpt.items.jawaban_audit' => function ($query) {
-            $query->where('jawaban', 0);
-        }])
-            ->where('upt_id', $id)
-            ->where('periode_id', $periode_id)
-            ->get();
+        return [
+            'item_ids' => $itemIds,
+            'total_item' => $totalItem,
+            'item_terjawab' => $itemTerjawab,
+            'persentase' => $totalItem > 0 ? (int) round(($itemTerjawab / $totalItem) * 100) : 0,
+            'selesai' => $totalItem > 0 && $itemTerjawab >= $totalItem,
+        ];
+    }
 
-        $pdf = Pdf::loadView('admin.export.pdf.rka', compact('standarMutu', 'upt', 'periode', 'penugasan'))
-            ->setPaper('a4', 'portrait');
+    private function getItemIds(Penugasan $penugasan): Collection
+    {
+        return UptItemSubStandarMutu::whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($penugasan) {
+            $query->where('upt_id', $penugasan->upt_id)
+                ->where('periode_id', $penugasan->periode_id);
+        })->pluck('upt_item_sub_standar_id');
+    }
 
-        return $pdf->stream('RKA.pdf');
+    private function getRingkasan(Collection $itemIds, RingkasanKondisiAudit $rka): array
+    {
+        $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $itemIds)
+            ->get()
+            ->unique('upt_item_sub_standar_id');
+
+        return [
+            'total_item' => $itemIds->count(),
+            'sesuai' => $jawabanAudit->filter(fn ($jawaban) => (int) $jawaban->jawaban === 1)->count(),
+            'temuan' => $rka->temuan->count(),
+            'kts' => $rka->temuan->where('kategori_final', 'KTS')->count(),
+            'ob' => $rka->temuan->where('kategori_final', 'OB')->count(),
+        ];
+    }
+
+    private function getTemuanPerStandar(RingkasanKondisiAudit $rka): Collection
+    {
+        return $rka->temuan
+            ->sortBy(function ($temuan) {
+                $item = $temuan->jawabanAudit?->itemSubStandar;
+                $standar = $item?->uptSubStandar?->uptStandarMutu?->standar_mutu;
+
+                return sprintf(
+                    '%05d-%05d-%05d',
+                    $standar?->urutan ?? 0,
+                    $item?->uptSubStandar?->urutan ?? 0,
+                    $item?->urutan ?? 0
+                );
+            })
+            ->groupBy(fn ($temuan) => $temuan->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->standar_mutu_id ?? 'tanpa-standar')
+            ->map(function ($temuan) {
+                $standar = $temuan->first()?->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu;
+
+                return [
+                    'nama_standar' => $standar?->nama_standar_mutu ?? '-',
+                    'temuan' => $temuan->values(),
+                ];
+            })
+            ->values();
     }
 }

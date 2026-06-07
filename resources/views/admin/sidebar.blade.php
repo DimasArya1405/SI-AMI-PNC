@@ -35,6 +35,13 @@
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Auditee
                 </a>
             </li>
+            <li>
+                <a href="{{ route('admin.akun.kepala_p4mp') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ request()->routeIs('admin.akun.kepala_p4mp') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Kepala P4MP
+                </a>
+            </li>
             <!-- <li>
                 <a href="{{ route('admin.akun.dosen') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
@@ -76,9 +83,9 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.ami.rka') }}"
+                <a href="{{ route('admin.rka.index') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.ami.rka') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    {{ request()->routeIs('admin.rka.*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> RKA
                 </a>
             </li>
@@ -131,6 +138,16 @@
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('admin.periode') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-calendar mr-2 text-base"></i> Periode
+        </a>
+        <a href="{{ route('admin.rka.index') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ request()->routeIs('admin.rka.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-file-earmark-text mr-2 text-xl"></i> RKA
+        </a>
+        <a href="{{ route('admin.monitoring_tk.index') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ request()->routeIs('admin.monitoring_tk.*') ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-clipboard-data mr-2 text-xl"></i> Tindakan Koreksi
         </a>
         <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
             <a href="{{ route('profile.edit') }}"

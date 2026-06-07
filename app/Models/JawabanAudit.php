@@ -30,4 +30,14 @@ class JawabanAudit extends Model
     {
         return $this->belongsTo(UptItemSubStandarMutu::class, 'upt_item_sub_standar_id', 'upt_item_sub_standar_id');
     }
+
+    public function tindakanKoreksi()
+    {
+        return $this->hasOne(TindakanKoreksi::class, 'jawaban_audit_id', 'id');
+    }
+
+    public function rkaTemuan()
+    {
+        return $this->hasOne(RingkasanKondisiAuditTemuan::class, 'jawaban_audit_id', 'id');
+    }
 }

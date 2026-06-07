@@ -32,8 +32,8 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // Cek status aktif untuk role selain admin
-        if ($user->role !== 'admin') {
+        // Cek status aktif untuk role yang punya data profil operasional.
+        if (!in_array($user->role, ['admin', 'kepala_p4mp'], true)) {
             $statusAktif = false;
 
             if ($user->role === 'auditor') {
@@ -63,6 +63,8 @@ class AuthenticatedSessionController extends Controller
         $url = '';
         if ($request->user()->role === 'admin') {
             $url = 'admin/dashboard';
+        } elseif ($request->user()->role === 'kepala_p4mp') {
+            $url = 'kepala-p4mp/dashboard';
         } elseif ($request->user()->role === 'auditor') {
             $url = 'auditor/dashboard';
         } elseif ($request->user()->role === 'auditee') {
@@ -71,7 +73,7 @@ class AuthenticatedSessionController extends Controller
             $url = 'dosen/dashboard';
         }
 
-        return redirect()->intended($url);
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

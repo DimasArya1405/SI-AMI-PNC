@@ -89,7 +89,7 @@
                                                                 </path>
                                                             </svg>
                                                             <span
-                                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <span
                                                             class="text-[11px] ml-5 text-gray-400 italic">{{ $item->jam }}
@@ -109,7 +109,7 @@
                                                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->format('d M Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <span
                                                             class="text-[11px] ml-5 text-blue-700 font-medium">{{ $dataPengajuan->jam }}
@@ -126,7 +126,7 @@
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <div
                                                             class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
@@ -154,7 +154,7 @@
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->format('d M Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <div
                                                             class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">

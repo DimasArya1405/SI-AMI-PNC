@@ -22,6 +22,14 @@
             Upload Dokumen
         </a>
 
+        <a href="{{ route('dosen.tindakan_koreksi_dokumen.index') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ request()->routeIs('dosen.tindakan_koreksi_dokumen.*') ? 'bg-blue-500 text-white' : '' }}">
+
+            <i class="bi bi-clipboard-plus mr-2 text-xl"></i>
+            Dokumen TK
+        </a>
+
         <a href="#"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('dosen.standar_mutu*') ? 'bg-blue-500 text-white' : '' }}">

@@ -39,9 +39,16 @@
             $itemDosenIdMap = collect($itemDosenIds ?? [])
                 ->mapWithKeys(fn ($itemId) => [(string) $itemId => true])
                 ->all();
+            $buktiLocked = $status_periode || ($rkaFinal ?? false);
             @endphp
             <div class="bg-white shadow-xs rounded-lg border border-default p-6">
-                @if (!$status_periode)
+                @if ($rkaFinal ?? false)
+                <div class="mb-4 rounded-lg border border-green-100 bg-green-50 p-4 text-sm text-green-800">
+                    RKA sudah difinalisasi. Upload, hapus, validasi bukti, dan pilihan item dosen sudah dikunci.
+                </div>
+                @endif
+
+                @if (!$buktiLocked)
                 <form id="form-item-dosen" action="{{ route('auditee.item_dosen.update', $penugasan->penugasan_id) }}" method="POST">
                     @csrf
                 </form>
@@ -112,7 +119,7 @@
                                     Silakan upload bukti dukung sesuai item standar yang tersedia.
                                 </p>
                             </div>
-                            @if (!$status_periode)
+                            @if (!$buktiLocked)
                             <label class="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm font-medium text-blue-800">
                                 <input type="checkbox"
                                     class="check-all-standar rounded border-blue-300 text-blue-600 focus:ring-blue-500"
@@ -208,7 +215,7 @@
                                                     $itemDipilihDosen = isset($itemDosenIdMap[(string) $item->upt_item_sub_standar_id]);
                                                     @endphp
 
-                                                    @if (!$status_periode)
+                                                    @if (!$buktiLocked)
                                                     <input type="hidden" name="all_item_ids[]" value="{{ $item->upt_item_sub_standar_id }}" form="form-item-dosen">
                                                     <label class="mt-3 inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800">
                                                         <input type="checkbox"
@@ -284,7 +291,7 @@
                                                                             Lihat
                                                                         </button>
 
-                                                                        @if (!$status_periode && ($bukti->sumber ?? 'auditee') === 'dosen' && ($bukti->status_validasi ?? 'diterima') === 'menunggu')
+                                                                        @if (!$buktiLocked && ($bukti->sumber ?? 'auditee') === 'dosen' && ($bukti->status_validasi ?? 'diterima') === 'menunggu')
                                                                         <form action="{{ route('auditee.bukti_dukung.validasi', $bukti->jawaban_id) }}" method="POST">
                                                                             @csrf
                                                                             @method('patch')
@@ -310,7 +317,7 @@
                                                                         </form>
                                                                         @endif
 
-                                                                        @if (!$status_periode)
+                                                                        @if (!$buktiLocked)
                                                                         <button type="button"
                                                                             data-modal-target="modal-hapus-bukti"
                                                                             data-modal-toggle="modal-hapus-bukti"
@@ -334,7 +341,7 @@
                                                         </p>
                                                         @endif
 
-                                                        @if (!$status_periode)
+                                                        @if (!$buktiLocked)
                                                         <form action="{{ route('auditee.bukti_dukung.upload') }}"
                                                             method="POST"
                                                             enctype="multipart/form-data"
@@ -370,8 +377,12 @@
                                                                     <path class="opacity-75" fill="currentColor"
                                                                         d="M4 12a8 8 0 018-8v8z"></path>
                                                                 </svg>
-                                                            </button>
-                                                        </form>
+                                                                </button>
+                                                            </form>
+                                                        @elseif ($rkaFinal ?? false)
+                                                            <p class="rounded border border-green-100 bg-green-50 p-3 text-xs text-green-700">
+                                                                RKA final. Bukti dukung untuk item ini sudah dikunci.
+                                                            </p>
                                                         @endif
                                                     </div>
                                                 </div>
