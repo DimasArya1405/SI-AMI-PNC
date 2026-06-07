@@ -11,11 +11,21 @@
 
             <div class="relative overflow-x-auto rounded-lg border border-default bg-white shadow-xs">
                 <div class="mx-4 flex items-center justify-between border-b border-gray-300 py-4">
-                    <button data-modal-target="modal-tambah" data-modal-toggle="modal-tambah"
-                        class="flex items-center gap-2 rounded bg-green-500 px-4 py-1 text-white transition duration-200 ease-in-out hover:bg-green-700 focus:outline-none focus:shadow-outline"
-                        type="button">
-                        <i class="bi bi-plus"></i> <span class="text-sm">Tambah Data</span>
-                    </button>
+                    @if ($jumlahKepalaP4mp < 1)
+                        <button data-modal-target="modal-tambah" data-modal-toggle="modal-tambah"
+                            class="flex items-center gap-2 rounded bg-green-500 px-4 py-1 text-white transition duration-200 ease-in-out hover:bg-green-700 focus:outline-none focus:shadow-outline"
+                            type="button">
+                            <i class="bi bi-plus"></i> <span class="text-sm">Tambah Data</span>
+                        </button>
+                    @else
+                        <div class="rounded border {{ $jumlahKepalaP4mp > 1 ? 'border-yellow-200 bg-yellow-50 text-yellow-800' : 'border-blue-100 bg-blue-50 text-blue-700' }} px-4 py-2 text-sm">
+                            @if ($jumlahKepalaP4mp > 1)
+                                Akun Kepala P4MP terdeteksi lebih dari satu. Hapus akun duplikat sampai tersisa satu, lalu gunakan tombol edit untuk mengubah data.
+                            @else
+                                Akun Kepala P4MP hanya boleh satu. Silakan gunakan tombol edit untuk mengubah data.
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="dt-responsive table-responsive p-4 pt-4">
@@ -25,66 +35,68 @@
         </div>
     </div>
 
-    <div id="modal-tambah" tabindex="-1" aria-hidden="true"
-        class="hidden fixed left-0 right-0 top-0 z-50 min-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 md:inset-0">
-        <div class="relative max-h-full w-full max-w-md p-4">
-            <div class="relative rounded-base border border-default bg-white p-4 shadow-sm md:p-6">
-                <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
-                    <h3 class="text-lg font-medium text-heading">Tambah Data Kepala P4MP</h3>
-                    <button type="button"
-                        class="ms-auto inline-flex h-9 w-9 items-center justify-center rounded-base bg-transparent text-sm text-body hover:bg-neutral-tertiary hover:text-heading"
-                        data-modal-hide="modal-tambah">
-                        <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
-                            height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18 17.94 6M18 18 6.06 6" />
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
-                </div>
-
-                <form action="{{ route('admin.kepala_p4mp.tambah') }}" method="post">
-                    @csrf
-                    @method('post')
-                    <div class="grid grid-cols-2 gap-4 py-4 md:py-6">
-                        <div class="col-span-2">
-                            <label class="mb-2.5 block text-sm font-medium text-heading">Nama</label>
-                            <input type="text" name="name"
-                                class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
-                                required>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="mb-2.5 block text-sm font-medium text-heading">Email</label>
-                            <input type="email" name="email"
-                                class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
-                                required>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="mb-2.5 block text-sm font-medium text-heading">Password</label>
-                            <input type="password" name="password"
-                                class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
-                                required>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
-                        <button type="submit"
-                            class="inline-flex items-center rounded-base border border-transparent bg-blue-500 px-4 py-2.5 text-sm font-medium leading-5 text-white shadow-xs transition duration-200 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-brand-medium">
-                            <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="M5 12h14m-7 7V5" />
+    @if ($jumlahKepalaP4mp < 1)
+        <div id="modal-tambah" tabindex="-1" aria-hidden="true"
+            class="hidden fixed left-0 right-0 top-0 z-50 min-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 md:inset-0">
+            <div class="relative max-h-full w-full max-w-md p-4">
+                <div class="relative rounded-base border border-default bg-white p-4 shadow-sm md:p-6">
+                    <div class="flex items-center justify-between border-b border-default pb-4 md:pb-5">
+                        <h3 class="text-lg font-medium text-heading">Tambah Data Kepala P4MP</h3>
+                        <button type="button"
+                            class="ms-auto inline-flex h-9 w-9 items-center justify-center rounded-base bg-transparent text-sm text-body hover:bg-neutral-tertiary hover:text-heading"
+                            data-modal-hide="modal-tambah">
+                            <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18 17.94 6M18 18 6.06 6" />
                             </svg>
-                            Tambah Kepala P4MP Baru
-                        </button>
-                        <button data-modal-hide="modal-tambah" type="button"
-                            class="rounded-base border border-gray-400 bg-white px-4 py-2.5 text-sm font-medium leading-5 text-body shadow-xs transition duration-300 ease-in-out hover:bg-gray-200 hover:text-heading focus:outline-none focus:ring-4 focus:ring-neutral-tertiary">
-                            Batal
+                            <span class="sr-only">Close modal</span>
                         </button>
                     </div>
-                </form>
+
+                    <form action="{{ route('admin.kepala_p4mp.tambah') }}" method="post">
+                        @csrf
+                        @method('post')
+                        <div class="grid grid-cols-2 gap-4 py-4 md:py-6">
+                            <div class="col-span-2">
+                                <label class="mb-2.5 block text-sm font-medium text-heading">Nama</label>
+                                <input type="text" name="name"
+                                    class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
+                                    required>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="mb-2.5 block text-sm font-medium text-heading">Email</label>
+                                <input type="email" name="email"
+                                    class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
+                                    required>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="mb-2.5 block text-sm font-medium text-heading">Password</label>
+                                <input type="password" name="password"
+                                    class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs focus:border-brand focus:ring-brand"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
+                            <button type="submit"
+                                class="inline-flex items-center rounded-base border border-transparent bg-blue-500 px-4 py-2.5 text-sm font-medium leading-5 text-white shadow-xs transition duration-200 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-brand-medium">
+                                <svg class="-ms-0.5 me-1.5 h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M5 12h14m-7 7V5" />
+                                </svg>
+                                Tambah Kepala P4MP Baru
+                            </button>
+                            <button data-modal-hide="modal-tambah" type="button"
+                                class="rounded-base border border-gray-400 bg-white px-4 py-2.5 text-sm font-medium leading-5 text-body shadow-xs transition duration-300 ease-in-out hover:bg-gray-200 hover:text-heading focus:outline-none focus:ring-4 focus:ring-neutral-tertiary">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
     <div id="modal-edit" tabindex="-1" aria-hidden="true"
         class="hidden fixed left-0 right-0 top-0 z-50 min-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 md:inset-0">

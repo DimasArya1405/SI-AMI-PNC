@@ -82,13 +82,13 @@
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Pemetaan Standar Mutu
                 </a>
             </li>
-            <li>
+            <!-- <li>
                 <a href="{{ route('admin.rka.index') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
                     {{ request()->routeIs('admin.rka.*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> RKA
                 </a>
-            </li>
+            </li> -->
             {{-- <li>
                 <a href="{{ route('admin.akun.dosen') }}"
                     class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
@@ -101,7 +101,7 @@
             {{ request()->routeIs('admin.data.*') ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-blue-500 hover:text-white' }}"
             aria-controls="dp-audit" data-collapse-toggle="dp-audit">
             <div>
-                <i class="bi bi-database mr-2 text-xl"></i> Data Audit
+                <i class="bi bi-database mr-2 text-xl"></i> Master Data
             </div>
             <i class="bi bi-chevron-down text-sm"></i>
         </div>
@@ -121,7 +121,7 @@
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Data UPT
                 </a>
             </li>
-            <li>
+            <!-- <li>
                 <a href="#"
                     class="pl-5 flex items-center px-2 py-1.5  text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Data Akademik
@@ -132,7 +132,7 @@
                     class="pl-5 flex items-center px-2 py-1.5  text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
                     <i class="bi bi-chevron-right mr-3 text-xs"></i> Data Sertifikasi
                 </a>
-            </li>
+            </li> -->
         </ul>
         <a href="{{ route('admin.periode') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
