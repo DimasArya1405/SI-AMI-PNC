@@ -26,6 +26,7 @@ use App\Http\Controllers\Auditee\TindakanKoreksiController as AuditeeTindakanKor
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
+use App\Http\Controllers\auditor\MonitoringController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
 use App\Http\Controllers\Auditor\RkaController as AuditorRkaController;
 use App\Http\Controllers\Auditor\TindakanKoreksiController as AuditorTindakanKoreksiController;
@@ -167,6 +168,10 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/pelaksanaan-audit/detail/{id}', [PelaksanaanAuditController::class, 'detail'])->name('auditor.pelaksanaan_audit.detail');
     Route::post('/auditor/pelaksanaan-audit/penilaian/{id}', [PelaksanaanAuditController::class, 'penilaian'])->name('auditor.pelaksanaan_audit.penilaian');
     Route::get('/auditor/pelaksanaan-audit/exportRka/{id}', [PelaksanaanAuditController::class, 'exportRka'])->name('auditor.pelaksanaan_audit.exportRka');
+    
+    // ROUTE MONITORING
+    Route::get('/auditor/monitoring', [MonitoringController::class, 'index'])->name('auditor.monitoring');
+    Route::get('/auditor/monitoring/detail/{id}', [MonitoringController::class, 'detail'])->name('auditor.monitoring.detail');
     
     // ROUTE LIHAT BUKTI DUKUNG
     Route::get('/auditor/pelaksanaan-audit/preview-bukti/{id}', [PelaksanaanAuditController::class, 'previewBukti'])->name('auditor.bukti_dukung.preview');

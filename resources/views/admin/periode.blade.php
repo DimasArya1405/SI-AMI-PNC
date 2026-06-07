@@ -75,7 +75,7 @@
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="M5 12h14m-7 7V5" />
                             </svg>
-                            Tambah Prodi Baru
+                            Tambah Periode Baru
                         </button>
                         <button data-modal-hide="modal-tambah" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
