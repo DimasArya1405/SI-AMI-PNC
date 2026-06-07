@@ -28,6 +28,10 @@ class Penugasan extends Model
         'status_penugasan'
     ];
 
+    protected $casts = [
+        'tanggal_audit' => 'date',
+    ];
+
     public function periode()
     {
         return $this->belongsTo(Periode::class, 'periode_id', 'id');
@@ -56,5 +60,20 @@ class Penugasan extends Model
     public function pengajuan_jadwal_audit()
     {
         return $this->hasMany(PengajuanJadwalAudit::class, 'penugasan_id', 'penugasan_id');
+    }
+
+    public function tindakanKoreksi()
+    {
+        return $this->hasMany(TindakanKoreksi::class, 'penugasan_id', 'penugasan_id');
+    }
+
+    public function rka()
+    {
+        return $this->hasOne(RingkasanKondisiAudit::class, 'penugasan_id', 'penugasan_id');
+    }
+
+    public function verifikasiTindakanKoreksi()
+    {
+        return $this->hasOne(VerifikasiTindakanKoreksi::class, 'penugasan_id', 'penugasan_id');
     }
 }

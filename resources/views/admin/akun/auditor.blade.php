@@ -3,7 +3,7 @@
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-xl font-bold text-gray-900">
+                <div class="p-6 text-gray-900">
                     {{ __('Data Akun Auditor') }}
                 </div>
             </div>
@@ -16,7 +16,7 @@
                     </button>
                 </div>
                 <div class="dt-responsive table-responsive p-4 pt-4">
-                    {!! $dataTable->table(['class' => 'min-w-full text-sm text-left text-gray-700'], true) !!}
+                    {!! $dataTable->table(['class' => 'table table-striped table-bordered align-middle w-100'], true) !!}
                 </div>
             </div>
         </div>

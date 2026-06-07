@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Carbon::setLocale(config('app.locale', 'id'));
+        CarbonImmutable::setLocale(config('app.locale', 'id'));
+        setlocale(LC_TIME, 'id_ID', 'id_ID.utf8', 'Indonesian_Indonesia.1252', 'Indonesian');
     }
 }

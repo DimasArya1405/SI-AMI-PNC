@@ -49,7 +49,7 @@
         </tr>
         <tr>
             <td style="width: 30%; margin-right:2px;">Tgl Penilaian</td>
-            <td style="margin-left:5px;">: {{$penugasan->tanggal_audit}} - {{$penugasan->jam}}</td>
+            <td style="margin-left:5px;">: {{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }} - {{ $penugasan->jam }}</td>
         </tr>
         <tr>
             <td style="width: 30%; margin-right:2px;">Auditi</td>

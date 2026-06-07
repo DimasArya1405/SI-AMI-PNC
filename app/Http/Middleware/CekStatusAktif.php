@@ -20,8 +20,8 @@ class CekStatusAktif
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Admin selalu boleh akses
-            if ($user->role !== 'admin') {
+            // Admin dan Kepala P4MP tidak memakai tabel profil status_aktif terpisah.
+            if (!in_array($user->role, ['admin', 'kepala_p4mp'], true)) {
                 $statusAktif = false;
                 $dataRole = null;
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\Auditee\AuditeeController as RoleAuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
 use App\Http\Controllers\Admin\Akun\DosenController;
+use App\Http\Controllers\Admin\Akun\KepalaP4mpController;
 use App\Http\Controllers\Admin\Ami\ItemSubStandarMutuController;
 use App\Http\Controllers\Admin\Ami\StandarMutuController;
 use App\Http\Controllers\Admin\Ami\SubStandarMutuController;
@@ -13,18 +14,24 @@ use App\Http\Controllers\Admin\Ami\UptItemSubStandarMutuController;
 use App\Http\Controllers\Admin\Ami\UptStandarMutuController;
 use App\Http\Controllers\Admin\Ami\UptSubStandarMutuController;
 use App\Http\Controllers\Admin\Data\ProdiController;
+use App\Http\Controllers\Admin\MonitoringTindakanKoreksiController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\Data\UPTController;
 use App\Http\Controllers\Admin\PenugasanController;
-use App\Http\Controllers\admin\RkaController;
+use App\Http\Controllers\Admin\RkaController as AdminRkaController;
 use App\Http\Controllers\Auditee\DataDosenController;
+use App\Http\Controllers\Auditee\RkaController;
 use App\Http\Controllers\Auditee\StandarAMIController;
+use App\Http\Controllers\Auditee\TindakanKoreksiController as AuditeeTindakanKoreksiController;
 use App\Http\Controllers\Auditor\AuditorController;
 use App\Http\Controllers\Auditor\PenugasanController as AuditorPenugasanController;
 use App\Http\Controllers\Auditee\PenugasanController as AuditeePenugasanController;
 use App\Http\Controllers\auditor\MonitoringController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
+use App\Http\Controllers\Auditor\RkaController as AuditorRkaController;
+use App\Http\Controllers\Auditor\TindakanKoreksiController as AuditorTindakanKoreksiController;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
+use App\Http\Controllers\KepalaP4mp\DashboardController as KepalaP4mpDashboardController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -33,10 +40,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route umum setelah login
-// Route::get('/dashboard', function () {
-//     return view('template_dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+// Route umum setelah login. Setiap role tetap diarahkan ke dashboard masing-masing.
+Route::get('/dashboard', function () {
+    $role = request()->user()?->role;
+
+    return match ($role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'kepala_p4mp' => redirect()->route('kepala_p4mp.dashboard'),
+        'auditor' => redirect()->route('auditor.dashboard'),
+        'auditee' => redirect()->route('auditee.dashboard'),
+        default => redirect()->route('dosen.dashboard'),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grouping berdasarkan role
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
@@ -50,6 +65,10 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/akun/auditee/edit', [AuditeeController::class, 'edit'])->name('admin.auditee.edit');
     Route::delete('/admin/akun/auditee/hapus', [AuditeeController::class, 'hapus'])->name('admin.auditee.hapus');
     Route::put('/admin/akun/auditee/aktivasi', [AuditeeController::class, 'aktivasi'])->name('admin.auditee.aktivasi');
+    Route::get('/admin/akun/kepala-p4mp', [KepalaP4mpController::class, 'index'])->name('admin.akun.kepala_p4mp');
+    Route::post('/admin/akun/kepala-p4mp/tambah', [KepalaP4mpController::class, 'tambah'])->name('admin.kepala_p4mp.tambah');
+    Route::put('/admin/akun/kepala-p4mp/edit', [KepalaP4mpController::class, 'edit'])->name('admin.kepala_p4mp.edit');
+    Route::delete('/admin/akun/kepala-p4mp/hapus', [KepalaP4mpController::class, 'hapus'])->name('admin.kepala_p4mp.hapus');
     Route::get('/admin/akun/dosen', [DosenController::class, 'index'])->name('admin.akun.dosen');
     Route::post('/admin/akun/dosen/tambah', [DosenController::class, 'tambah'])->name('admin.dosen.tambah');
     Route::put('/admin/akun/dosen/edit', [DosenController::class, 'edit'])->name('admin.dosen.edit');
@@ -111,9 +130,28 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::put('/admin/ami/penugasan/aktifkan/{id}', [PenugasanController::class, 'aktifkan'])->name('admin.ami.penugasan.aktifkan');
     Route::get('/admin/ami/penugasan/export/{id}', [PenugasanController::class, 'exportPdf'])->name('admin.ami.penugasan.export');
 
-    // ROUTE RKA
-    Route::get('/admin/ami/rka', [RkaController::class, 'index'])->name('admin.ami.rka');
-    Route::get('/admin/ami/rka/exportPdf/{id}', [RkaController::class, 'exportRka'])->name('admin.ami.rka.exportPdf');
+    Route::get('/admin/monitoring-tindakan-koreksi', [MonitoringTindakanKoreksiController::class, 'index'])->name('admin.monitoring_tk.index');
+    Route::get('/admin/monitoring-tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewBukti'])->name('admin.monitoring_tk.preview_bukti');
+    Route::get('/admin/monitoring-tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [MonitoringTindakanKoreksiController::class, 'downloadBukti'])->name('admin.monitoring_tk.download_bukti');
+    Route::get('/admin/monitoring-tindakan-koreksi/{penugasan_id}/export', [MonitoringTindakanKoreksiController::class, 'export'])->name('admin.monitoring_tk.export');
+    Route::get('/admin/monitoring-tindakan-koreksi/{penugasan_id}', [MonitoringTindakanKoreksiController::class, 'show'])->name('admin.monitoring_tk.show');
+
+    Route::get('/admin/rka', [AdminRkaController::class, 'index'])->name('admin.rka.index');
+    Route::get('/admin/rka/{penugasan_id}/export', [AdminRkaController::class, 'export'])->name('admin.rka.export');
+    Route::get('/admin/rka/{penugasan_id}', [AdminRkaController::class, 'show'])->name('admin.rka.show');
+});
+
+Route::middleware(['auth', 'checkRole:kepala_p4mp'])->group(function () {
+    Route::get('/kepala-p4mp/dashboard', [KepalaP4mpDashboardController::class, 'index'])->name('kepala_p4mp.dashboard');
+    Route::get('/kepala-p4mp/rka', [AdminRkaController::class, 'index'])->name('kepala_p4mp.rka.index');
+    Route::get('/kepala-p4mp/rka/{penugasan_id}/export', [AdminRkaController::class, 'export'])->name('kepala_p4mp.rka.export');
+    Route::get('/kepala-p4mp/rka/{penugasan_id}', [AdminRkaController::class, 'show'])->name('kepala_p4mp.rka.show');
+    Route::get('/kepala-p4mp/tindakan-koreksi', [MonitoringTindakanKoreksiController::class, 'index'])->name('kepala_p4mp.tindakan_koreksi.index');
+    Route::get('/kepala-p4mp/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewBukti'])->name('kepala_p4mp.tindakan_koreksi.preview_bukti');
+    Route::get('/kepala-p4mp/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [MonitoringTindakanKoreksiController::class, 'downloadBukti'])->name('kepala_p4mp.tindakan_koreksi.download_bukti');
+    Route::post('/kepala-p4mp/tindakan-koreksi/{penugasan_id}/finalisasi', [MonitoringTindakanKoreksiController::class, 'finalisasi'])->name('kepala_p4mp.tindakan_koreksi.finalisasi');
+    Route::get('/kepala-p4mp/tindakan-koreksi/{penugasan_id}/export', [MonitoringTindakanKoreksiController::class, 'export'])->name('kepala_p4mp.tindakan_koreksi.export');
+    Route::get('/kepala-p4mp/tindakan-koreksi/{penugasan_id}', [MonitoringTindakanKoreksiController::class, 'show'])->name('kepala_p4mp.tindakan_koreksi.show');
 });
 
 Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
@@ -138,6 +176,21 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     // ROUTE LIHAT BUKTI DUKUNG
     Route::get('/auditor/pelaksanaan-audit/preview-bukti/{id}', [PelaksanaanAuditController::class, 'previewBukti'])->name('auditor.bukti_dukung.preview');
     Route::get('/auditor/pelaksanaan-audit/download-bukti/{id}', [PelaksanaanAuditController::class, 'downloadBukti'])->name('auditor.bukti_dukung.download');
+
+    // ROUTE RKA
+    Route::get('/auditor/rka', [AuditorRkaController::class, 'index'])->name('auditor.rka.index');
+    Route::get('/auditor/rka/{rka_id}/export', [AuditorRkaController::class, 'export'])->name('auditor.rka.export');
+    Route::get('/auditor/rka/{penugasan_id}', [AuditorRkaController::class, 'show'])->name('auditor.rka.show');
+    Route::patch('/auditor/rka/{rka_id}', [AuditorRkaController::class, 'update'])->name('auditor.rka.update');
+
+    // ROUTE TINDAKAN KOREKSI
+    Route::get('/auditor/tindakan-koreksi', [AuditorTindakanKoreksiController::class, 'index'])->name('auditor.tindakan_koreksi.index');
+    Route::get('/auditor/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [AuditorTindakanKoreksiController::class, 'previewBukti'])->name('auditor.tindakan_koreksi.preview_bukti');
+    Route::get('/auditor/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [AuditorTindakanKoreksiController::class, 'downloadBukti'])->name('auditor.tindakan_koreksi.download_bukti');
+    Route::get('/auditor/tindakan-koreksi/{penugasan_id}/export', [AuditorTindakanKoreksiController::class, 'export'])->name('auditor.tindakan_koreksi.export');
+    Route::get('/auditor/tindakan-koreksi/{penugasan_id}', [AuditorTindakanKoreksiController::class, 'show'])->name('auditor.tindakan_koreksi.show');
+    Route::post('/auditor/tindakan-koreksi/{penugasan_id}/{jawaban_audit_id}', [AuditorTindakanKoreksiController::class, 'rumuskan'])->name('auditor.tindakan_koreksi.rumuskan');
+    Route::patch('/auditor/tindakan-koreksi/verifikasi/{tindakan_koreksi_id}', [AuditorTindakanKoreksiController::class, 'verifikasi'])->name('auditor.tindakan_koreksi.verifikasi');
 
     
 });
@@ -165,6 +218,23 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::delete('/auditee/ami/bukti-dukung/{id}', [StandarAMIController::class, 'hapusBukti'])->name('auditee.bukti_dukung.hapus');
     Route::get('/auditee/ami/bukti-dukung/{id}/download', [StandarAMIController::class, 'downloadBukti'])->name('auditee.bukti_dukung.download');
     Route::get('/auditee/ami/bukti-dukung/{id}/preview', [StandarAMIController::class, 'previewBukti'])->name('auditee.bukti_dukung.preview');
+
+    // ROUTE RKA
+    Route::get('/auditee/rka', [RkaController::class, 'index'])->name('auditee.rka.index');
+    Route::get('/auditee/rka/{penugasan_id}', [RkaController::class, 'show'])->name('auditee.rka.show');
+    Route::get('/auditee/rka/{penugasan_id}/export', [RkaController::class, 'export'])->name('auditee.rka.export');
+
+    // ROUTE TINDAKAN KOREKSI
+    Route::get('/auditee/tindakan-koreksi', [AuditeeTindakanKoreksiController::class, 'index'])->name('auditee.tindakan_koreksi.index');
+    Route::post('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}', [AuditeeTindakanKoreksiController::class, 'uploadBukti'])->name('auditee.tindakan_koreksi.upload_bukti');
+    Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewBukti'])->name('auditee.tindakan_koreksi.preview_bukti');
+    Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [AuditeeTindakanKoreksiController::class, 'downloadBukti'])->name('auditee.tindakan_koreksi.download_bukti');
+    Route::patch('/auditee/tindakan-koreksi/{tindakan_koreksi_id}/dokumen-dosen', [AuditeeTindakanKoreksiController::class, 'aturKebutuhanDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.atur');
+    Route::patch('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/validasi', [AuditeeTindakanKoreksiController::class, 'validasiDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.validasi');
+    Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.preview');
+    Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/download', [AuditeeTindakanKoreksiController::class, 'downloadDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.download');
+    Route::get('/auditee/tindakan-koreksi/{penugasan_id}/export', [AuditeeTindakanKoreksiController::class, 'export'])->name('auditee.tindakan_koreksi.export');
+    Route::get('/auditee/tindakan-koreksi/{penugasan_id}', [AuditeeTindakanKoreksiController::class, 'show'])->name('auditee.tindakan_koreksi.show');
 });
 
 Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
@@ -174,6 +244,11 @@ Route::middleware(['auth', 'checkRole:dosen'])->group(function () {
     Route::delete('/dosen/bukti-dukung/{id}', [RoleDosenController::class, 'hapusDokumen'])->name('dosen.bukti_dukung.hapus');
     Route::get('/dosen/bukti-dukung/{id}/preview', [RoleDosenController::class, 'previewDokumen'])->name('dosen.bukti_dukung.preview');
     Route::get('/dosen/bukti-dukung/{id}/download', [RoleDosenController::class, 'downloadDokumen'])->name('dosen.bukti_dukung.download');
+    Route::get('/dosen/tindakan-koreksi-dokumen', [RoleDosenController::class, 'dokumenTindakanKoreksi'])->name('dosen.tindakan_koreksi_dokumen.index');
+    Route::post('/dosen/tindakan-koreksi-dokumen/{tindakan_koreksi_id}', [RoleDosenController::class, 'uploadDokumenTindakanKoreksi'])->name('dosen.tindakan_koreksi_dokumen.upload');
+    Route::delete('/dosen/tindakan-koreksi-dokumen/{dokumen_id}', [RoleDosenController::class, 'hapusDokumenTindakanKoreksi'])->name('dosen.tindakan_koreksi_dokumen.hapus');
+    Route::get('/dosen/tindakan-koreksi-dokumen/{dokumen_id}/preview', [RoleDosenController::class, 'previewDokumenTindakanKoreksi'])->name('dosen.tindakan_koreksi_dokumen.preview');
+    Route::get('/dosen/tindakan-koreksi-dokumen/{dokumen_id}/download', [RoleDosenController::class, 'downloadDokumenTindakanKoreksi'])->name('dosen.tindakan_koreksi_dokumen.download');
 });
 
 Route::middleware('auth')->group(function () {
