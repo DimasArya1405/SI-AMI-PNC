@@ -24,7 +24,7 @@ public function up(): void
               ->on('upt_item_sub_standar_mutu')
               ->onDelete('cascade');
         
-        $table->string('kategori_temuan')->default(null);
+        $table->string('kategori_temuan')->nullable();
         $table->boolean('jawaban')->default(0);
         $table->text('catatan')->nullable();
         $table->timestamps();
