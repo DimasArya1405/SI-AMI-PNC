@@ -11,15 +11,15 @@
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <div class="font-semibold">Program Studi</div>
                     <div class="flex gap-2">
-                    <button data-modal-target="modal-info-auditor" data-modal-toggle="modal-info-auditor"
-                        class="bg-yellow-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition duration-200 ease-in-out">
-                        <i class="bi bi-people-fill mr-1"></i>
-                        Info Auditor
-                    </button>
-                    <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
-                        class="bg-blue-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
-                        <i class="bi bi-download mr-2"></i>Export PDF
-                    </a>
+                        <button data-modal-target="modal-info-auditor" data-modal-toggle="modal-info-auditor"
+                            class="bg-yellow-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition duration-200 ease-in-out">
+                            <i class="bi bi-people-fill mr-1"></i>
+                            Info Auditor
+                        </button>
+                        <a href="{{ route('admin.ami.penugasan.export', $periode_id) }}" target="_blank"
+                            class="bg-blue-500 text-sm font-semibold text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out">
+                            <i class="bi bi-download mr-2"></i>Export PDF
+                        </a>
                     </div>
                 </div>
                 <div class="dt-responsive table-responsive p-4 pt-4">
@@ -250,7 +250,8 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $item->penugasan->first()->tanggal_audit ? \Carbon\Carbon::parse($item->penugasan->first()->tanggal_audit)->translatedFormat('d F Y') : '-' }} <br>
+                                                {{ $item->penugasan->first()->tanggal_audit ? \Carbon\Carbon::parse($item->penugasan->first()->tanggal_audit)->translatedFormat('d F Y') : '-' }}
+                                                <br>
                                                 {{ $jam }} WIB
                                             @else
                                                 <span class="text-gray-400 italic">Belum ada penugasan</span>
@@ -305,14 +306,14 @@
                     </div>
                     <div class="flex justify-end">
                         @if ($penugasan_sekarang->count() > 0)
-                            @if ($penugasan_sekarang->first()->status_penugasan == 'pending')
+                            @if ($penugasan_sekarang->contains('status_penugasan', 'pending') || $penugasan_sekarang->count() < ($total_upt ?? 0))
                                 <button data-modal-target="modal-konfirmasi-aktif"
-                                    data-modal-toggle="modal-konfirmasi-aktif" {{-- href="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" --}}
+                                    data-modal-toggle="modal-konfirmasi-aktif"
                                     class="hover:bg-blue-700 mb-2 px-4 py-2 transition button-penugasan duration-300 ease-in-out bg-blue-500 rounded text-white">
                                     <i class="bi bi-check-circle"></i> Aktifkan Penugasan
                                 </button>
                             @else
-                                <p class="text-green-500">Penugasan sudah aktif</p>
+                                <p class="text-green-500 font-medium">Penugasan sudah aktif</p>
                             @endif
                         @else
                             <p class="text-red-500">Belum ada penugasan</p>
