@@ -29,7 +29,6 @@
             <i class="bi bi-graph-up mr-2 text-xl"></i> Monitoring
         </a>
 
-        <a href="{{ route('admin.dashboard') }}"
         <a href="{{ route('auditor.rka.index') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('auditor.rka.*') ? 'bg-blue-500 text-white' : '' }}">
