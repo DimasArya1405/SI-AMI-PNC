@@ -751,7 +751,6 @@
                 }
             }
 
-            // penting: kasih delay supaya Flowbite selesai init
             setTimeout(() => {
                 openTargetAccordion();
 

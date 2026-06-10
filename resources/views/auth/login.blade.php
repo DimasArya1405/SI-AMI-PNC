@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('img/logo-pnc-1.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('img/logo-pnc-1.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased">
@@ -70,9 +71,16 @@
                                 <a href="{{ route('password.request') }}" class="text-xs text-blue-600 hover:underline">Lupa Password?</a>
                             @endif
                         </div>
-                        <input type="password" name="password" required
-                            class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all duration-200 outline-none"
-                            placeholder="Masukan Kata Sandi">
+                        <div class="relative mt-1">
+                            <input id="password" type="password" name="password" required
+                                class="block w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all duration-200 outline-none"
+                                placeholder="Masukan Kata Sandi">
+                            <button type="button" id="togglePassword"
+                                class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-blue-600 focus:outline-none"
+                                aria-label="Tampilkan password">
+                                <i class="bi bi-eye text-lg" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 
@@ -93,5 +101,22 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+
+            if (!passwordInput || !togglePassword) {
+                return;
+            }
+
+            togglePassword.addEventListener('click', () => {
+                const isHidden = passwordInput.type === 'password';
+                passwordInput.type = isHidden ? 'text' : 'password';
+                togglePassword.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
+                togglePassword.querySelector('i').className = isHidden ? 'bi bi-eye-slash text-lg' : 'bi bi-eye text-lg';
+            });
+        });
+    </script>
 </body>
 </html>

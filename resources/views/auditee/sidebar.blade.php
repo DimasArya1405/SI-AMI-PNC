@@ -42,11 +42,11 @@
             <i class="bi bi-clipboard-check mr-2 text-xl"></i> Tindakan Koreksi
         </a>
 
-        <a href="{{ route('auditee.dashboard') }}"
+        <!-- <a href="{{ route('auditee.dashboard') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('auditee.laporan*') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-file-earmark-text mr-2 text-xl"></i> Laporan Audit
-        </a>
+        </a> -->
         <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
             <a href="{{ route('profile.edit') }}"
                 class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
