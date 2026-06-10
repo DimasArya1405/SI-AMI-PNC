@@ -46,6 +46,7 @@
                 @php
                     $dashboardUrl = match (Auth::user()->role) {
                         'admin' => route('admin.dashboard'),
+                        'kepala_p4mp' => route('kepala_p4mp.dashboard'),
                         'auditor' => route('auditor.dashboard'),
                         'auditee' => route('auditee.dashboard'),
                         'dosen' => route('dosen.dashboard'),
@@ -119,32 +120,73 @@
                 Fitur Utama Sistem
             </h2>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
                 <div class="p-6 rounded-xl border hover:shadow-lg transition">
-                    <h3 class="font-semibold mb-2">Manajemen Auditor</h3>
-                    <p class="text-sm text-gray-600">
-                        Mengelola data auditor secara terpusat untuk memudahkan
-                        proses audit mutu internal.
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">1</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Penugasan AMI</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Admin mengelola periode, auditee, ketua auditor, anggota auditor,
+                        dan aktivasi AMI dalam satu alur penugasan.
                     </p>
                 </div>
 
                 <div class="p-6 rounded-xl border hover:shadow-lg transition">
-                    <h3 class="font-semibold mb-2">Jadwal Audit</h3>
-                    <p class="text-sm text-gray-600">
-                        Mengatur dan memonitor jadwal audit sehingga
-                        proses audit berjalan lebih terstruktur.
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">2</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Penjadwalan Audit</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Auditor dan auditee dapat mengajukan jadwal, menyetujui pengajuan,
+                        serta menerima notifikasi ketika ada perubahan jadwal.
                     </p>
                 </div>
 
                 <div class="p-6 rounded-xl border hover:shadow-lg transition">
-                    <h3 class="font-semibold mb-2">Laporan Audit</h3>
-                    <p class="text-sm text-gray-600">
-                        Menghasilkan laporan audit secara digital
-                        untuk meningkatkan transparansi dan dokumentasi.
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">3</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Dokumen Pendukung</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Auditee dan dosen dapat mengunggah bukti sesuai item standar yang
+                        dipilih, sehingga dokumen AMI lebih rapi dan terarah.
                     </p>
                 </div>
 
+                <div class="p-6 rounded-xl border hover:shadow-lg transition">
+                    <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">4</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Pelaksanaan Audit</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Auditor melakukan penilaian, menulis catatan temuan, dan
+                        memantau progres pengisian pada setiap standar.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-xl border hover:shadow-lg transition">
+                    <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">5</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Ringkasan Kondisi Audit</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Ketua auditor menyusun RKA berdasarkan hasil rapat tim auditor,
+                        mengelompokkan temuan per standar, dan mengekspor laporan PDF.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-xl border hover:shadow-lg transition">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-5">
+                        <span class="text-lg font-bold">6</span>
+                    </div>
+                    <h3 class="font-semibold mb-2">Tindakan Koreksi</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Auditor menyusun analisis dan usulan tindakan, auditee mengunggah
+                        bukti perbaikan, lalu Kepala P4MP melakukan verifikasi akhir.
+                    </p>
+                </div>
             </div>
 
         </div>
