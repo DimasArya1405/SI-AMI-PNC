@@ -33,6 +33,20 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get custom messages for login validation.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Email harus berupa alamat email yang valid.',
+            'password.required' => 'Kata sandi wajib diisi.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -45,7 +59,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Email atau kata sandi yang Anda masukkan salah.',
             ]);
         }
 
@@ -68,10 +82,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
         ]);
     }
 
