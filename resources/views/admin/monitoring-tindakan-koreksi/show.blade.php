@@ -201,7 +201,7 @@
                                 <h3 class="text-sm font-semibold text-indigo-900">Catatan Verifikasi Item</h3>
                                 @if ($tk?->p4mp_verified_at)
                                     <p class="mt-1 text-xs text-indigo-700">
-                                        Terakhir difinalisasi oleh {{ $tk->p4mpVerifiedBy?->name ?? 'Kepala P4MP' }} pada {{ $tk->p4mp_verified_at->translatedFormat('d F Y H:i') }}
+                                        Terakhir difinalisasi oleh {{ $tk->p4mpVerifiedBy?->name ?? 'Kepala P4MP' }} pada {{ $tk->p4mp_verified_at->locale('id')->translatedFormat('d F Y H:i') }}
                                     </p>
                                 @endif
                             </div>
@@ -244,7 +244,7 @@
                                 </p>
                                 @if ($sudahFinalisasi)
                                     <p class="mt-2 text-xs font-medium text-green-700">
-                                        Sudah difinalisasi oleh {{ $verifikasiTk->finalizedBy?->name ?? 'Kepala P4MP' }} pada {{ $verifikasiTk->finalized_at->translatedFormat('d F Y H:i') }}.
+                                        Sudah difinalisasi oleh {{ $verifikasiTk->finalizedBy?->name ?? 'Kepala P4MP' }} pada {{ $verifikasiTk->finalized_at->locale('id')->translatedFormat('d F Y H:i') }}.
                                     </p>
                                 @endif
                             </div>
@@ -301,7 +301,7 @@
                             </p>
                             @if ($sudahFinalisasi)
                                 <p class="mt-2 text-xs font-medium text-green-700">
-                                    Sudah difinalisasi oleh {{ $verifikasiTk->finalizedBy?->name ?? 'Kepala P4MP' }} pada {{ $verifikasiTk->finalized_at->translatedFormat('d F Y H:i') }}.
+                                    Sudah difinalisasi oleh {{ $verifikasiTk->finalizedBy?->name ?? 'Kepala P4MP' }} pada {{ $verifikasiTk->finalized_at->locale('id')->translatedFormat('d F Y H:i') }}.
                                 </p>
                             @endif
                         </div>
@@ -399,4 +399,5 @@
             </script>
         @endpush
     @endif
+    @include('layouts.partials.back-to-top')
 </x-app-layout>
