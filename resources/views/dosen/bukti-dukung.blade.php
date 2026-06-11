@@ -446,4 +446,5 @@
             }
         });
     </script>
+    @include('layouts.partials.back-to-top')
 </x-app-layout>

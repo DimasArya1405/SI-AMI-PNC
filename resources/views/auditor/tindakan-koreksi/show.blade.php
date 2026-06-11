@@ -275,4 +275,5 @@
     </div>
 
     @include('layouts.partials.smart-file-preview')
+    @include('layouts.partials.back-to-top')
 </x-app-layout>

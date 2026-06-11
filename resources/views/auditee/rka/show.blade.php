@@ -61,7 +61,7 @@
                     <div>
                         <p class="text-xs text-gray-500">Tanggal Audit</p>
                         <p class="mt-1 font-medium text-gray-800">
-                            {{ $penugasan->tanggal_audit ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}
+                            {{ $penugasan->tanggal_audit ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}
                         </p>
                     </div>
                     <div>
@@ -77,12 +77,8 @@
                         <p class="mt-1 font-medium text-gray-800">{{ $penugasan->auditor2?->nama_lengkap ?? '-' }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500">Tanggal Rapat RKA</p>
-                        <p class="mt-1 font-medium text-gray-800">{{ optional($rka->tanggal_rapat)->translatedFormat('d F Y') ?? '-' }}</p>
-                    </div>
-                    <div>
                         <p class="text-xs text-gray-500">Finalisasi</p>
-                        <p class="mt-1 font-medium text-gray-800">{{ optional($rka->finalized_at)->translatedFormat('d F Y H:i') ?? '-' }}</p>
+                        <p class="mt-1 font-medium text-gray-800">{{ $rka->finalized_at?->locale('id')->translatedFormat('d F Y H:i') ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -136,4 +132,5 @@
             </div>
         </div>
     </div>
+    @include('layouts.partials.back-to-top')
 </x-app-layout>
