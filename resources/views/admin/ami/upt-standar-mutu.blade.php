@@ -519,14 +519,12 @@
                     </div>
 
                     {{-- Multi Select UPT --}}
-                    <div>
+                    <div class="relative">
                         <label class="block mb-2 text-sm font-medium text-gray-900">
                             Pilih UPT / Unit / Bagian
                         </label>
 
                         <button id="dropdownSearchButtonUpt"
-                            data-dropdown-toggle="dropdownSearchUpt"
-                            data-dropdown-placement="bottom"
                             type="button"
                             class="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300">
                             <span id="upt-selected-text">Pilih UPT</span>
@@ -539,7 +537,7 @@
                         </button>
 
                         <div id="dropdownSearchUpt"
-                            class="z-50 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+                            class="absolute left-0 right-0 top-full z-[60] mt-1 hidden bg-white rounded-lg shadow-lg w-full border border-gray-200">
 
                             <div class="p-3 border-b border-gray-200">
                                 <div class="relative">
@@ -822,10 +820,12 @@
         // JS MODAL COPY PERIODE
         document.addEventListener('DOMContentLoaded', function() {
             const periodeSumber = document.getElementById('periode_sumber_id');
+            const dropdownButton = document.getElementById('dropdownSearchButtonUpt');
+            const dropdownUpt = document.getElementById('dropdownSearchUpt');
             const searchInput = document.getElementById('input-group-search-upt');
             const uptList = document.getElementById('upt-list');
-            const checkboxAll = document.getElementById('checkbox-all-upt');
             const selectedText = document.getElementById('upt-selected-text');
+            const getUptByPeriodeUrl = @json(route('admin.upt_standar_mutu.get_upt_by_periode', ['periode_id' => '__PERIODE_ID__'], false));
 
             function getUptCheckboxes() {
                 return document.querySelectorAll('.upt-checkbox');
@@ -847,7 +847,10 @@
                     selectedText.textContent = checked.length + ' UPT dipilih';
                 }
 
-                checkboxAll.checked = uptCheckboxes.length > 0 && checked.length === uptCheckboxes.length;
+                const currentCheckboxAll = document.getElementById('checkbox-all-upt');
+                if (currentCheckboxAll) {
+                    currentCheckboxAll.checked = uptCheckboxes.length > 0 && checked.length === uptCheckboxes.length;
+                }
             }
 
             function renderUptList(data) {
@@ -902,6 +905,10 @@
                 const newCheckboxAll = document.getElementById('checkbox-all-upt');
                 const uptCheckboxes = getUptCheckboxes();
 
+                if (!newCheckboxAll) {
+                    return;
+                }
+
                 newCheckboxAll.addEventListener('change', function() {
                     uptCheckboxes.forEach(function(checkbox) {
                         checkbox.checked = newCheckboxAll.checked;
@@ -927,8 +934,20 @@
                     return;
                 }
 
-                fetch(`/admin/ami/upt-standar-mutu/get-upt-by-periode/${periodeId}`)
-                    .then(response => response.json())
+                const url = getUptByPeriodeUrl.replace('__PERIODE_ID__', encodeURIComponent(periodeId));
+
+                fetch(url, {
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Gagal memuat data UPT.');
+                        }
+
+                        return response.json();
+                    })
                     .then(data => {
                         renderUptList(data);
                     })
@@ -940,6 +959,16 @@
                 `;
                         selectedText.textContent = 'Pilih UPT';
                     });
+            });
+
+            dropdownButton.addEventListener('click', function() {
+                dropdownUpt.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!dropdownButton.contains(event.target) && !dropdownUpt.contains(event.target)) {
+                    dropdownUpt.classList.add('hidden');
+                }
             });
 
             searchInput.addEventListener('keyup', function() {
