@@ -31,8 +31,25 @@ class UptStandarMutuController extends Controller
             ->distinct()
             ->get();
         $periodeList = Periode::whereNull('deleted_at')->orderBy('tahun', 'desc')->get();
+        $uptByPeriode = UptStandarMutu::with('upt')
+            ->select('periode_id', 'upt_id')
+            ->distinct()
+            ->get()
+            ->groupBy('periode_id')
+            ->map(function ($items) {
+                return $items
+                    ->map(function ($item) {
+                        return [
+                            'upt_id' => $item->upt_id,
+                            'nama_upt' => $item->upt?->nama_upt ?? 'UPT tidak ditemukan',
+                        ];
+                    })
+                    ->sortBy('nama_upt')
+                    ->values();
+            })
+            ->toArray();
 
-        return $dataTable->render('admin.ami.upt-standar-mutu', compact('standarMutu', 'uptUnitBagian', 'periodeList', 'uptList'));
+        return $dataTable->render('admin.ami.upt-standar-mutu', compact('standarMutu', 'uptUnitBagian', 'periodeList', 'uptList', 'uptByPeriode'));
     }
 
     public function tambah(Request $request)
