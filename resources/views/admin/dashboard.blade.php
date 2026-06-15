@@ -12,38 +12,41 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <a href="{{ route('admin.akun.auditor') }}"
+                    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                     <div class="flex justify-center items-center w-14 h-14 bg-indigo-50 rounded-lg text-indigo-600 mr-4">
                         <i class="bi bi-people font-bold text-xl"></i>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Total Auditor</p>
                         <p class="text-2xl font-bold text-gray-900">{{ $auditor }}</p>
+                        <p class="mt-1 text-xs font-medium text-indigo-600">Lihat data auditor</p>
                     </div>
-                </div>
+                </a>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                <a href="{{ route('admin.data.upt') }}"
+                    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:-translate-y-0.5 hover:border-green-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                     <div class="flex justify-center items-center w-14 h-14 bg-green-50 rounded-lg text-green-600 mr-4">
-                        <i class="bi bi-people font-bold text-xl"></i>
+                        <i class="bi bi-building font-bold text-xl"></i>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Total UPT</p>
                         <p class="text-2xl font-bold text-gray-900">{{ $upt }}</p>
+                        <p class="mt-1 text-xs font-medium text-green-600">Lihat data UPT</p>
                     </div>
-                </div>
+                </a>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
-                    <div class="p-3 bg-amber-50 rounded-lg text-amber-600 mr-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Alert-Icon-Path">
-                            </path>
-                        </svg>
+                <a href="{{ route('admin.periode') }}"
+                    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+                    <div class="flex justify-center items-center w-14 h-14 bg-amber-50 rounded-lg text-amber-600 mr-4">
+                        <i class="bi bi-calendar3 font-bold text-xl"></i>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Total Periode</p>
                         <p class="text-2xl font-bold text-gray-900">{{ $periode }}</p>
+                        <p class="mt-1 text-xs font-medium text-amber-600">Lihat data periode</p>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-2xl">
@@ -52,8 +55,9 @@
                         <h3 class="text-lg font-semibold text-gray-800">
                             Progress Audit Periode Saat Ini ( Tahun {{ $periode_now->tahun ?? '-' }} )
                         </h3>
-                        <button class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition">Lihat
-                            Detail</button>
+                        <a href="{{ route('admin.ami.penugasan') }}"
+                            class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition">Lihat
+                            Detail</a>
                     </div>
 
                     @php
@@ -170,6 +174,25 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-3 border-t border-gray-50 pt-6 text-sm lg:grid-cols-4">
+                        <div class="rounded-lg bg-gray-50 p-3">
+                            <p class="text-xs text-gray-500">Penugasan</p>
+                            <p class="mt-1 text-lg font-bold text-gray-900">{{ $progressSummary['total_penugasan'] }}</p>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3">
+                            <p class="text-xs text-gray-500">RKA Final</p>
+                            <p class="mt-1 text-lg font-bold text-gray-900">{{ $progressSummary['rka_final'] }}</p>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3">
+                            <p class="text-xs text-gray-500">Tindakan Koreksi</p>
+                            <p class="mt-1 text-lg font-bold text-gray-900">{{ $progressSummary['tindakan_koreksi'] }}</p>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3">
+                            <p class="text-xs text-gray-500">Terverifikasi</p>
+                            <p class="mt-1 text-lg font-bold text-gray-900">{{ $progressSummary['tindakan_koreksi_terverifikasi'] }}</p>
+                        </div>
+                    </div>
+
                     <div class="text-gray-600 leading-relaxed border-t border-gray-50 pt-6">
                         <div class="flex items-center p-4 bg-indigo-50 rounded-xl mb-4 border border-indigo-100">
                             <span class="relative flex h-3 w-3 mr-3">
@@ -178,9 +201,7 @@
                                 <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
                             </span>
                             <p class="text-sm text-indigo-700 font-medium">
-                                Info: Saat ini sedang berlangsung tahap <span class="underline">Pelaksanaan
-                                    Audit</span>
-                                lapangan.
+                                Info: Saat ini sedang berlangsung tahap <span class="underline">{{ $currentStageLabel }}</span>.
                             </p>
                         </div>
                         <p class="text-sm">Gunakan dashboard ini untuk memantau aktivitas tim auditor dan status
