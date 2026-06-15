@@ -24,14 +24,15 @@
                     default => \Illuminate\Support\Str::of(Auth::user()->role)->replace('_', ' ')->title(),
                     };
                     @endphp
-                    <a href="{{ route($dashboardRoute) }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    <a href="{{ route($dashboardRoute) }}" class="inline-flex h-10 w-10 shrink-0 items-center justify-center">
+                        <x-application-logo class="block h-10 w-10 object-contain fill-current text-gray-800" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <a href="{{ route($dashboardRoute) }}"
-                    class="ml-3 truncate text-sm font-medium text-gray-600 hover:text-blue-600 sm:ml-5 sm:text-base lg:ml-10">
+                    class="truncate text-sm font-medium text-gray-600 hover:text-blue-600 sm:text-base"
+                    style="margin-left: 1rem; white-space: nowrap;">
                     SI-AMI PNC
                 </a>
             </div>
