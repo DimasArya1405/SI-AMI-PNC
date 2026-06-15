@@ -96,7 +96,7 @@
                 </form>
 
                 <div class="pt-8 text-center border-t border-gray-100 text-xs text-gray-400">
-                    &copy; 2026 Audit Mutu Internal System. Semua Hak Dilindungi.
+                    &copy; 2026 Sistem Informasi Audit Mutu Internal.
                 </div>
             </div>
         </div>
