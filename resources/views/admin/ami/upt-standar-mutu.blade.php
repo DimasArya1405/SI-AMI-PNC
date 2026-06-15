@@ -537,23 +537,12 @@
                         </button>
 
                         <div id="dropdownSearchUpt"
-                            class="absolute left-0 right-0 top-full z-[60] mt-1 hidden bg-white rounded-lg shadow-lg w-full border border-gray-200">
+                            class="mt-2 hidden bg-white rounded-lg shadow-sm w-full border border-gray-200">
 
                             <div class="p-3 border-b border-gray-200">
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 20 20">
-                                            <path stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" stroke-width="2"
-                                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                                        </svg>
-                                    </div>
-
-                                    <input type="text" id="input-group-search-upt"
-                                        class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Cari UPT">
-                                </div>
+                                <input type="text" id="input-group-search-upt"
+                                    class="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Cari UPT">
                             </div>
 
                             <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
@@ -825,7 +814,7 @@
             const searchInput = document.getElementById('input-group-search-upt');
             const uptList = document.getElementById('upt-list');
             const selectedText = document.getElementById('upt-selected-text');
-            const getUptByPeriodeUrl = @json(route('admin.upt_standar_mutu.get_upt_by_periode', ['periode_id' => '__PERIODE_ID__'], false));
+            const uptByPeriode = @json($uptByPeriode ?? []);
 
             function getUptCheckboxes() {
                 return document.querySelectorAll('.upt-checkbox');
@@ -934,31 +923,8 @@
                     return;
                 }
 
-                const url = getUptByPeriodeUrl.replace('__PERIODE_ID__', encodeURIComponent(periodeId));
-
-                fetch(url, {
-                        headers: {
-                            'Accept': 'application/json',
-                        },
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Gagal memuat data UPT.');
-                        }
-
-                        return response.json();
-                    })
-                    .then(data => {
-                        renderUptList(data);
-                    })
-                    .catch(() => {
-                        uptList.innerHTML = `
-                    <li class="py-3 text-sm text-red-500">
-                        Gagal memuat data UPT.
-                    </li>
-                `;
-                        selectedText.textContent = 'Pilih UPT';
-                    });
+                renderUptList(uptByPeriode[periodeId] || []);
+                dropdownUpt.classList.remove('hidden');
             });
 
             dropdownButton.addEventListener('click', function() {
