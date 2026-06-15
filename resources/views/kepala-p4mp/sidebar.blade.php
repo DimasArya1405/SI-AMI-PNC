@@ -24,7 +24,7 @@
             <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
                 <a href="{{ route('profile.edit') }}"
                     class="block rounded-md px-6 py-2 text-gray-600 transition duration-200 ease-in-out hover:bg-blue-500 hover:text-white">
-                    <i class="bi bi-person-circle mr-2 text-xl"></i> Profile
+                    <i class="bi bi-person-circle mr-2 text-xl"></i> Profil
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

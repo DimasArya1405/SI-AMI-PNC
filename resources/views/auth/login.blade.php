@@ -91,7 +91,7 @@
 
                     <button type="submit" 
                         class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm shadow-blue-200 transition-all duration-300 active:scale-95">
-                        MASUK KE DASHBOARD
+                        Login
                     </button>
                 </form>
 
