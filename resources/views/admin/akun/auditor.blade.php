@@ -295,5 +295,7 @@
             });
         </script>
     @endpush
-    {!! $dataTable->scripts() !!}
+    @push('js')
+        {!! $dataTable->scripts() !!}
+    @endpush
 </x-app-layout>

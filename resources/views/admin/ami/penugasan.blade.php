@@ -23,9 +23,7 @@
         </div>
     </div>
 
-    {{-- JS --}}
     @push('js')
+        {!! $dataTable->scripts() !!}
     @endpush
-    {!! $dataTable->scripts() !!}
-    @stack('js')
 </x-app-layout>

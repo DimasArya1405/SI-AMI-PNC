@@ -33,6 +33,22 @@ class PeriodeDataTable extends DataTable
             ->editColumn('tahun', function ($row) {
                 return $row->tahun;
             })
+            ->filterColumn('status_aktif', function ($query, $keyword) {
+                $keyword = strtolower(trim($keyword));
+
+                if ($keyword === '') {
+                    return;
+                }
+
+                if (str_contains('aktif', $keyword)) {
+                    $query->where('status', '1');
+                    return;
+                }
+
+                if (str_contains('tidak aktif', $keyword) || str_contains('nonaktif', $keyword)) {
+                    $query->where('status', '0');
+                }
+            })
             ->addColumn('action', function ($row) {
                 if (request()->routeIs('admin.periode')) {
                     return '
@@ -99,7 +115,7 @@ class PeriodeDataTable extends DataTable
         return [
             ['data' => 'DT_RowIndex', 'name' => 'DT_RowIndex', 'title' => 'NO',  'orderable' => false, 'searchable' => false],
             ['data' => 'tahun', 'name' => 'tahun', 'title' => 'Tahun'],
-            ['data' => 'status_aktif', 'name' => 'status_aktif', 'title' => 'Status Aktif'],
+            ['data' => 'status_aktif', 'name' => 'status', 'title' => 'Status Aktif'],
             ['data' => 'action', 'name' => 'action', 'title' => 'Action', 'orderable' => false, 'searchable' => false],
         ];
     }
