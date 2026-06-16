@@ -31,7 +31,13 @@ class AuditorDataTable extends DataTable
                 }
             })
             ->editColumn('prodi', function ($row) {
-                return $row->prodi->nama_prodi;
+                return $row->prodi?->nama_prodi ?? '-';
+            })
+            ->filterColumn('prodi', function ($query, $keyword) {
+                $query->whereHas('prodi', function ($prodiQuery) use ($keyword) {
+                    $prodiQuery->where('nama_prodi', 'like', "%{$keyword}%")
+                        ->orWhere('jenjang', 'like', "%{$keyword}%");
+                });
             })
             ->addColumn('action', function ($row) {
 
@@ -105,7 +111,7 @@ class AuditorDataTable extends DataTable
         return [
             ['data' => 'nip', 'name' => 'nip', 'title' => 'NIP'],
             ['data' => 'nama_lengkap', 'name' => 'nama_lengkap', 'title' => 'Nama Lengkap'],
-            ['data' => 'prodi', 'name' => 'prodi', 'title' => 'Prodi'],
+            ['data' => 'prodi', 'name' => 'prodi.nama_prodi', 'title' => 'Prodi'],
             ['data' => 'no_telp', 'name' => 'no_telp', 'title' => 'No Telp'],
             ['data' => 'email', 'name' => 'email', 'title' => 'Email'],
             ['data' => 'status_aktif', 'name' => 'status_aktif', 'title' => 'Status Aktif'],
