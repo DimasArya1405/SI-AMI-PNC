@@ -222,21 +222,6 @@
     $tanggalAudit = $penugasan->tanggal_audit
         ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
         : '-';
-    $logoSrc = null;
-    $logoCandidates = [
-        public_path('img/logo_pnc.png'),
-        public_path('img/logo-pnc-1.png'),
-        public_path('img/pnc.png'),
-    ];
-
-    foreach ($logoCandidates as $logoPath) {
-        if (is_readable($logoPath)) {
-            $extension = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
-            $mime = $extension === 'jpg' || $extension === 'jpeg' ? 'image/jpeg' : 'image/png';
-            $logoSrc = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
-            break;
-        }
-    }
 
     if (isset($rka)) {
         $temuanPerStandar = $rka->temuan
@@ -265,9 +250,7 @@
                 <p>Telp : (0282) 537992 Fax : (0282) 533329</p>
             </td>
             <td class="logo-cell">
-                @if($logoSrc)
-                    <img src="{{ $logoSrc }}" alt="Logo PNC">
-                @endif
+                <img src="{{ public_path('img/logo_pnc.png') }}" alt="Logo PNC">
             </td>
         </tr>
     </table>
