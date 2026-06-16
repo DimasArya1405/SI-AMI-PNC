@@ -1,3 +1,59 @@
+<style>
+    .siami-desktop-actions {
+        display: none;
+    }
+
+    .siami-compact-actions {
+        display: flex;
+    }
+
+    .siami-tablet-user {
+        display: none;
+    }
+
+    .siami-mobile-menu-button {
+        display: inline-flex;
+    }
+
+    .siami-date-full {
+        display: none;
+    }
+
+    .siami-date-short {
+        display: inline;
+    }
+
+    @media (min-width: 640px) {
+        .siami-date-full {
+            display: inline;
+        }
+
+        .siami-date-short {
+            display: none;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .siami-tablet-user {
+            display: block;
+        }
+
+        .siami-mobile-menu-button {
+            display: none;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .siami-desktop-actions {
+            display: flex;
+        }
+
+        .siami-compact-actions {
+            display: none;
+        }
+    }
+</style>
+
 <nav x-data class="fixed top-0 left-0 w-full bg-white border-b border-gray-300 z-50">
     <!-- Primary Navigation Menu -->
     <div class="w-full mx-auto px-3 sm:px-5 lg:px-8">
@@ -38,7 +94,7 @@
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden lg:flex lg:items-center lg:ms-6">
+            <div class="siami-desktop-actions items-center lg:ms-6">
                 @php
                     $notifikasiAktif = \Illuminate\Support\Facades\Schema::hasTable('notifications');
                     $notifikasiBelumDibaca = $notifikasiAktif ? Auth::user()->unreadNotifications()->count() : 0;
@@ -48,7 +104,7 @@
                     $tanggalHariIni = now()->locale('id')->translatedFormat('l, d F Y');
                     $tanggalHariIniMobile = now()->locale('id')->translatedFormat('d M Y');
                 @endphp
-                <div class="mr-3 hidden items-center border-r border-gray-200 pr-4 text-sm font-medium text-gray-600 lg:flex">
+                <div class="mr-3 flex items-center border-r border-gray-200 pr-4 text-sm font-medium text-gray-600">
                     <i class="bi bi-calendar3 mr-2 text-blue-600"></i>
                     {{ $tanggalHariIni }}
                 </div>
@@ -143,11 +199,11 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-me-2 flex shrink-0 items-center gap-1 lg:hidden">
+            <div class="siami-compact-actions -me-2 shrink-0 items-center gap-1">
                 <div class="inline-flex max-w-[6.25rem] items-center truncate rounded-full bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700 sm:max-w-none sm:px-3 sm:text-xs">
                     <i class="bi bi-calendar3 mr-1 shrink-0"></i>
-                    <span class="truncate sm:hidden">{{ $tanggalHariIniMobile }}</span>
-                    <span class="hidden truncate sm:inline">{{ $tanggalHariIni }}</span>
+                    <span class="siami-date-short truncate">{{ $tanggalHariIniMobile }}</span>
+                    <span class="siami-date-full truncate">{{ $tanggalHariIni }}</span>
                 </div>
 
                 <x-dropdown align="right" width="w-72" contentClasses="bg-white">
@@ -205,7 +261,7 @@
                     </x-slot>
                 </x-dropdown>
 
-                <div class="hidden md:block lg:hidden">
+                <div class="siami-tablet-user">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center rounded-md border border-transparent bg-white px-2 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none sm:px-3">
@@ -240,7 +296,7 @@
                     </x-dropdown>
                 </div>
 
-                <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-sidebar'))" class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:bg-blue-50 focus:text-blue-600 transition duration-150 ease-in-out md:hidden">
+                <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-sidebar'))" class="siami-mobile-menu-button items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:bg-blue-50 focus:text-blue-600 transition duration-150 ease-in-out">
                     <i class="bi bi-list text-2xl leading-none"></i>
                     <span class="sr-only">Buka menu</span>
                 </button>
