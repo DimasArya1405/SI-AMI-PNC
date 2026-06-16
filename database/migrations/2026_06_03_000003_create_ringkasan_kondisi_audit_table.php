@@ -15,9 +15,11 @@ return new class extends Migration
             $table->text('ringkasan_umum')->nullable();
             $table->text('catatan_rapat')->nullable();
             $table->enum('status', ['draft', 'final'])->default('draft');
+            $table->enum('acc_p4mp', ['0', '1'])->default(null);
             $table->uuid('created_by_user_id')->nullable();
             $table->uuid('finalized_by_user_id')->nullable();
             $table->timestamp('finalized_at')->nullable();
+            $table->timestamp('acc_p4mp_at')->nullable();
             $table->timestamps();
 
             $table->foreign('penugasan_id')

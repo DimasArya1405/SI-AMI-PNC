@@ -30,15 +30,19 @@ use App\Http\Controllers\auditor\MonitoringController;
 use App\Http\Controllers\Auditor\PelaksanaanAuditController;
 use App\Http\Controllers\Auditor\RkaController as AuditorRkaController;
 use App\Http\Controllers\Auditor\TindakanKoreksiController as AuditorTindakanKoreksiController;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
 use App\Http\Controllers\KepalaP4mp\DashboardController as KepalaP4mpDashboardController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TtdController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+// ROUTE TANDA TANGAN
+Route::get('/ttd2', [TtdController::class, 'ttdShow'])->name('ttdcode.show');
 
 // Route umum setelah login. Setiap role tetap diarahkan ke dashboard masing-masing.
 Route::get('/dashboard', function () {
