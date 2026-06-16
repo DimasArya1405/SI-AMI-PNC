@@ -215,39 +215,98 @@
 </head>
 
 <body>
-    @php
-        $kepalaP4mp =
-            Auth::user()?->role === 'kepala_p4mp'
-                ? Auth::user()
-                : \App\Models\User::where('role', 'kepala_p4mp')->first();
-        $namaKepalaP4mp = $kepalaP4mp?->name ?? 'Kepala P4MP';
-        $kategori = ($upt?->kategori_upt ?? null) === 'Prodi' ? 'Program Studi' : 'Unit';
-        $tanggalAudit = $penugasan->tanggal_audit
-            ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
-            : '-';
+@php
+    $kepalaP4mp = Auth::user()?->role === 'kepala_p4mp'
+        ? Auth::user()
+        : \App\Models\User::where('role', 'kepala_p4mp')->first();
+    $namaKepalaP4mp = $kepalaP4mp?->name ?? 'Kepala P4MP';
+    $kategori = ($upt?->kategori_upt ?? null) === 'Prodi' ? 'Program Studi' : 'Unit';
+    $tanggalAudit = $penugasan->tanggal_audit
+        ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
+        : '-';
+    $logoSrc = null;
+    $logoCandidates = [
+        public_path('img/logo_pnc.png'),
+        public_path('img/logo-pnc-1.png'),
+        public_path('img/pnc.png'),
+    ];
 
-        if (isset($rka)) {
-            $temuanPerStandar = $rka->temuan
-                ->sortBy(function ($temuan) {
-                    $item = $temuan->jawabanAudit?->itemSubStandar;
-                    $standar = $item?->uptSubStandar?->uptStandarMutu?->standar_mutu;
-
-                    return sprintf(
-                        '%05d-%05d-%05d',
-                        $standar?->urutan ?? 0,
-                        $item?->uptSubStandar?->urutan ?? 0,
-                        $item?->urutan ?? 0,
-                    );
-                })
-                ->groupBy(
-                    fn($temuan) => $temuan->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu
-                        ?->standar_mutu?->standar_mutu_id ?? 'tanpa-standar',
-                );
+    foreach ($logoCandidates as $logoPath) {
+        if (is_readable($logoPath)) {
+            $extension = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+            $mime = $extension === 'jpg' || $extension === 'jpeg' ? 'image/jpeg' : 'image/png';
+            $logoSrc = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+            break;
         }
-    @endphp
+    }
 
-    <div class="page">
-        <table class="top-header">
+    if (isset($rka)) {
+        $temuanPerStandar = $rka->temuan
+            ->sortBy(function ($temuan) {
+                $item = $temuan->jawabanAudit?->itemSubStandar;
+                $standar = $item?->uptSubStandar?->uptStandarMutu?->standar_mutu;
+
+                return sprintf(
+                    '%05d-%05d-%05d',
+                    $standar?->urutan ?? 0,
+                    $item?->uptSubStandar?->urutan ?? 0,
+                    $item?->urutan ?? 0
+                );
+            })
+            ->groupBy(fn ($temuan) => $temuan->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->standar_mutu_id ?? 'tanpa-standar');
+    }
+@endphp
+
+<div class="page">
+    <table class="top-header">
+        <tr>
+            <td class="institution">
+                <h1>POLITEKNIK NEGERI CILACAP</h1>
+                <p>Jl.Dr. Soetomo No.1 Sidakaya, CILACAP 53212, Jawa Tengah</p>
+                <p>E-mail: sekretariat@pnc.ac.id, Website: www.pnc.ac.id</p>
+                <p>Telp : (0282) 537992 Fax : (0282) 533329</p>
+            </td>
+            <td class="logo-cell">
+                @if($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="Logo PNC">
+                @endif
+            </td>
+        </tr>
+    </table>
+
+    <table class="main-box">
+        <tr>
+            <td colspan="3" class="title">RINGKASAN KONDISI AUDIT</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Kriteria</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">Standar SPMI PNC</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Tgl Penilaian</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">{{ $tanggalAudit }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Auditi</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">{{ $kategori }} {{ $upt?->nama_upt ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Auditor</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">1. {{ $penugasan->auditor1?->nama_lengkap ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label"></td>
+            <td class="meta-separator"></td>
+            <td class="meta-value">2. {{ $penugasan->auditor2?->nama_lengkap ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <table class="audit-table">
+        <thead>
             <tr>
                 <td class="institution">
                     <h1>POLITEKNIK NEGERI CILACAP</h1>
