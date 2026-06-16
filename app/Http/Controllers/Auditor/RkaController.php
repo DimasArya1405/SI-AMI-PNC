@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
 
 class RkaController extends Controller
@@ -119,6 +120,13 @@ class RkaController extends Controller
             ? 'RKA berhasil difinalisasi dan dikirim ke auditee.'
             : 'Draft RKA berhasil disimpan.');
     }
+        public function generateQrCode($prefix, $registrasi)
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        // dd($encodedCode);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
+    }
 
     public function export(string $rkaId): Response
     {
@@ -136,8 +144,11 @@ class RkaController extends Controller
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'RKA-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+        $ketuaAuditorQR = $this->generateQrCode('rka_ketua||', $rka->penugasan_id);
+        $anggotaAuditorQR = $this->generateQrCode('rka_anggota||', $rka->penugasan_id);
+        $kepalaQR = $this->generateQrCode('rka_kepala||', $rka->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan'))
+        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan', 'ketuaAuditorQR', 'anggotaAuditorQR', 'kepalaQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }

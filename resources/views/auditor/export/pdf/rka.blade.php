@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <style>
@@ -212,6 +213,7 @@
         }
     </style>
 </head>
+
 <body>
 @php
     $kepalaP4mp = Auth::user()?->role === 'kepala_p4mp'
@@ -289,107 +291,176 @@
     <table class="audit-table">
         <thead>
             <tr>
-                <th class="standard-col">Nama<br>Standar</th>
-                <th class="condition-col">Deskripsi Kondisi</th>
-                <th class="category-col">Kategori<br>(OB/KTS)*</th>
+                <td class="institution">
+                    <h1>POLITEKNIK NEGERI CILACAP</h1>
+                    <p>Jl.Dr. Soetomo No.1 Sidakaya, CILACAP 53212, Jawa Tengah</p>
+                    <p>E-mail: sekretariat@pnc.ac.id, Website: www.pnc.ac.id</p>
+                    <p>Telp : (0282) 537992 Fax : (0282) 533329</p>
+                </td>
+                <td class="logo-cell">
+                    <img src="{{ public_path('img/logo_pnc.png') }}" alt="Logo PNC">
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @if(isset($rka))
-                @forelse($temuanPerStandar as $temuanStandar)
-                    @php
-                        $standar = $temuanStandar->first()?->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu;
-                        $jumlahTemuan = $temuanStandar->count();
-                    @endphp
+        </table>
 
-                    @foreach($temuanStandar as $index => $temuan)
-                        <tr>
-                            @if($index === 0)
-                                <td rowspan="{{ $jumlahTemuan }}" class="standard-col">
-                                    {{ $standar?->nama_standar_mutu ?? '-' }}
-                                </td>
-                            @endif
-                            <td class="condition-text">{{ $temuan->kondisi_final }}</td>
-                            <td class="category-col">{{ $temuan->kategori_final }}</td>
-                        </tr>
-                    @endforeach
-                @empty
-                    <tr>
-                        <td class="standard-col">-</td>
-                        <td class="condition-text">Tidak ada temuan pada RKA.</td>
-                        <td class="category-col">-</td>
-                    </tr>
-                @endforelse
-            @else
-                @foreach($standarMutu as $s)
-                    @php
-                        $temuan = [];
+        <table class="main-box">
+            <tr>
+                <td colspan="3" class="title">RINGKASAN KONDISI AUDIT</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Kriteria</td>
+                <td class="meta-separator">:</td>
+                <td class="meta-value">Standar SPMI PNC</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Tgl Penilaian</td>
+                <td class="meta-separator">:</td>
+                <td class="meta-value">{{ $tanggalAudit }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Auditi</td>
+                <td class="meta-separator">:</td>
+                <td class="meta-value">{{ $kategori }} {{ $upt?->nama_upt ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Auditor</td>
+                <td class="meta-separator">:</td>
+                <td class="meta-value">1. {{ $penugasan->auditor1?->nama_lengkap ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label"></td>
+                <td class="meta-separator"></td>
+                <td class="meta-value">2. {{ $penugasan->auditor2?->nama_lengkap ?? '-' }}</td>
+            </tr>
+        </table>
 
-                        foreach ($s->subStandarUpt ?? [] as $sub) {
-                            foreach ($sub->items ?? [] as $item) {
-                                if ($item->jawaban_audit) {
-                                    $temuan[] = [
-                                        'catatan' => $item->jawaban_audit->catatan,
-                                        'kategori' => $item->jawaban_audit->kategori_temuan ?? '-'
-                                    ];
-                                }
-                            }
-                        }
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th class="standard-col">Nama<br>Standar</th>
+                    <th class="condition-col">Deskripsi Kondisi</th>
+                    <th class="category-col">Kategori<br>(OB/KTS)*</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isset($rka))
+                    @forelse($temuanPerStandar as $temuanStandar)
+                        @php
+                            $standar = $temuanStandar->first()?->jawabanAudit?->itemSubStandar?->uptSubStandar
+                                ?->uptStandarMutu?->standar_mutu;
+                            $jumlahTemuan = $temuanStandar->count();
+                        @endphp
 
-                        $temuan = array_map("unserialize", array_unique(array_map("serialize", $temuan)));
-                        $jumlahTemuan = count($temuan);
-                    @endphp
-
-                    @if($jumlahTemuan > 0)
-                        @foreach($temuan as $index => $t)
+                        @foreach ($temuanStandar as $index => $temuan)
                             <tr>
-                                @if($index === 0)
+                                @if ($index === 0)
                                     <td rowspan="{{ $jumlahTemuan }}" class="standard-col">
-                                        {{ $s->standar_mutu->nama_standar_mutu }}
+                                        {{ $standar?->nama_standar_mutu ?? '-' }}
                                     </td>
                                 @endif
-                                <td class="condition-text">{{ $t['catatan'] }}</td>
-                                <td class="category-col">{{ $t['kategori'] }}</td>
+                                <td class="condition-text">{{ $temuan->kondisi_final }}</td>
+                                <td class="category-col">{{ $temuan->kategori_final }}</td>
                             </tr>
                         @endforeach
-                    @else
+                    @empty
                         <tr>
-                            <td class="standard-col">{{ $s->standar_mutu->nama_standar_mutu }}</td>
-                            <td class="condition-text">-</td>
+                            <td class="standard-col">-</td>
+                            <td class="condition-text">Tidak ada temuan pada RKA.</td>
                             <td class="category-col">-</td>
                         </tr>
+                    @endforelse
+                @else
+                    @foreach ($standarMutu as $s)
+                        @php
+                            $temuan = [];
+
+                            foreach ($s->subStandarUpt ?? [] as $sub) {
+                                foreach ($sub->items ?? [] as $item) {
+                                    if ($item->jawaban_audit) {
+                                        $temuan[] = [
+                                            'catatan' => $item->jawaban_audit->catatan,
+                                            'kategori' => $item->jawaban_audit->kategori_temuan ?? '-',
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $temuan = array_map('unserialize', array_unique(array_map('serialize', $temuan)));
+                            $jumlahTemuan = count($temuan);
+                        @endphp
+
+                        @if ($jumlahTemuan > 0)
+                            @foreach ($temuan as $index => $t)
+                                <tr>
+                                    @if ($index === 0)
+                                        <td rowspan="{{ $jumlahTemuan }}" class="standard-col">
+                                            {{ $s->standar_mutu->nama_standar_mutu }}
+                                        </td>
+                                    @endif
+                                    <td class="condition-text">{{ $t['catatan'] }}</td>
+                                    <td class="category-col">{{ $t['kategori'] }}</td>
+                                </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td class="standard-col">{{ $s->standar_mutu->nama_standar_mutu }}</td>
+                                <td class="condition-text">-</td>
+                                <td class="category-col">-</td>
+                            </tr>
+                        @endif
+                    @endforeach
+                @endif
+            </tbody>
+        </table>
+
+        <div class="definition">
+            <p><strong>*OB (Observasi) :</strong> KTS ringan atau kondisi yang tidak langsung mempengaruhi mutu, mudah
+                diralat, dan tidak menghambat akreditasi/sertifikasi. (Tindakan koreksi bersifat opsional)</p>
+            <p><strong>*KTS (Ketidaksesuaian) :</strong> Kondisi yang berpengaruh besar terhadap mutu produk/pelayanan,
+                menyebabkan risiko kehilangan konsumen, mengancam akreditasi/sertifikasi, ancaman thd kegiatan dalam
+                organisasi, serta menyebabkan potensi pidana/perdata. (Tindakan koreksi bersifat wajib)</p>
+        </div>
+
+        <table class="approval">
+            <tr>
+                <td colspan="6" class="approval-title">Persetujuan</td>
+            </tr>
+            <tr>
+                <td class="role">Ketua<br>Auditor</td>
+                <td class="person">{{ $penugasan->auditor1?->nama_lengkap ?? '' }}</td>
+                <td class="ttd">
+                    @if ($rka->finalized_by_user_id)
+                    <img src="{{ $ketuaAuditorQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
                     @endif
-                @endforeach
-            @endif
-        </tbody>
-    </table>
-
-    <div class="definition">
-        <p><strong>*OB (Observasi) :</strong> KTS ringan atau kondisi yang tidak langsung mempengaruhi mutu, mudah diralat, dan tidak menghambat akreditasi/sertifikasi. (Tindakan koreksi bersifat opsional)</p>
-        <p><strong>*KTS (Ketidaksesuaian) :</strong> Kondisi yang berpengaruh besar terhadap mutu produk/pelayanan, menyebabkan risiko kehilangan konsumen, mengancam akreditasi/sertifikasi, ancaman thd kegiatan dalam organisasi, serta menyebabkan potensi pidana/perdata. (Tindakan koreksi bersifat wajib)</p>
+                </td>
+                <td class="role">Auditor<br>Anggota</td>
+                <td class="person">{{ $penugasan->auditor2?->nama_lengkap ?? '' }}</td>
+                <td class="ttd">
+                    @if ($rka->finalized_by_user_id)
+                    <img src="{{ $anggotaAuditorQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" class="approval-title">Direview oleh:</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="review-role">Kepala P4MP</td>
+                <td colspan="2" class="review-name">{{ $namaKepalaP4mp }}</td>
+                <td colspan="2" class="review-ttd">
+                    @if($rka->acc_p4mp == 1)
+                    <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
     </div>
-
-    <table class="approval">
-        <tr>
-            <td colspan="6" class="approval-title">Persetujuan</td>
-        </tr>
-        <tr>
-            <td class="role">Ketua<br>Auditor</td>
-            <td class="person">{{ $penugasan->auditor1?->nama_lengkap ?? '' }}</td>
-            <td class="ttd">Ttd.</td>
-            <td class="role">Auditor<br>Anggota</td>
-            <td class="person">{{ $penugasan->auditor2?->nama_lengkap ?? '' }}</td>
-            <td class="ttd">Ttd.</td>
-        </tr>
-        <tr>
-            <td colspan="6" class="approval-title">Direview oleh:</td>
-        </tr>
-        <tr>
-            <td colspan="2" class="review-role">Kepala P4MP</td>
-            <td colspan="2" class="review-name">{{ $namaKepalaP4mp }}</td>
-            <td colspan="2" class="review-sign">Ttd.</td>
-        </tr>
-    </table>
-</div>
 </body>
+
 </html>
