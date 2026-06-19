@@ -17,7 +17,10 @@ class TtdController extends Controller
         $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt'])
             ->where('penugasan_id', $uuid)
             ->first();
-        $kepala_p4mp = User::where('role', 'kepala_p4mp')->first();
+        $kepala_p4mp = User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
+            ->first()
+            ?: User::where('role', 'kepala_p4mp')->first();
 
         if ($prefix == 'rka_ketua') {
             // $redaful = RegistrasiDataFakultas::where('meta_key', 'dekan')->first();
@@ -33,7 +36,7 @@ class TtdController extends Controller
             $jabatan = "Anggota Auditor";
         } elseif ($prefix == 'rka_kepala') {
             // $redaful = RegistrasiDataFakultas::where('meta_key', 'dekan')->first();
-            $nama = $kepala_p4mp->name;
+            $nama = $kepala_p4mp?->name ?? 'Kepala P4MP';
             // $registrasi_code = substr($decode, 19);
             $judul = "Ringkasan Kondisi Audit";
             $jabatan = "Kepala P4MP";

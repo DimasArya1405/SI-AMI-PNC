@@ -73,6 +73,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::post('/admin/akun/kepala-p4mp/tambah', [KepalaP4mpController::class, 'tambah'])->name('admin.kepala_p4mp.tambah');
     Route::put('/admin/akun/kepala-p4mp/edit', [KepalaP4mpController::class, 'edit'])->name('admin.kepala_p4mp.edit');
     Route::delete('/admin/akun/kepala-p4mp/hapus', [KepalaP4mpController::class, 'hapus'])->name('admin.kepala_p4mp.hapus');
+    Route::put('/admin/akun/kepala-p4mp/aktivasi', [KepalaP4mpController::class, 'aktivasi'])->name('admin.kepala_p4mp.aktivasi');
     Route::get('/admin/akun/dosen', [DosenController::class, 'index'])->name('admin.akun.dosen');
     Route::post('/admin/akun/dosen/tambah', [DosenController::class, 'tambah'])->name('admin.dosen.tambah');
     Route::put('/admin/akun/dosen/edit', [DosenController::class, 'edit'])->name('admin.dosen.edit');

@@ -20,7 +20,18 @@ class CekStatusAktif
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Admin dan Kepala P4MP tidak memakai tabel profil status_aktif terpisah.
+            if ($user->role === 'kepala_p4mp' && !$user->status_aktif) {
+                Auth::guard('web')->logout();
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akun Kepala P4MP Anda sudah tidak aktif. Silakan hubungi admin.',
+                ]);
+            }
+
+            // Admin tidak memakai tabel profil status_aktif terpisah.
             if (!in_array($user->role, ['admin', 'kepala_p4mp'], true)) {
                 $statusAktif = false;
                 $dataRole = null;

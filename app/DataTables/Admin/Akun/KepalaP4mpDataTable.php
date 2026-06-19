@@ -14,20 +14,33 @@ class KepalaP4mpDataTable extends DataTable
     {
         return datatables()
             ->eloquent($query)
-            ->editColumn('created_at', function (User $row) {
-                return $row->created_at?->translatedFormat('d F Y H:i') ?? '-';
+            ->editColumn('status_aktif', function (User $row) {
+                if ($row->status_aktif) {
+                    return '<span class="bg-blue-200/80 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Aktif</span>';
+                }
+
+                return '<span class="bg-red-200/80 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Tidak Aktif</span>';
             })
             ->addColumn('action', function (User $row) {
-                $bolehHapus = User::where('role', 'kepala_p4mp')->count() > 1;
-                $hapusButton = $bolehHapus ? '
-                        <button data-modal-target="modal-hapus"
-                            data-modal-toggle="modal-hapus"
+                $statusButton = $row->status_aktif ? '
+                        <button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
                             data-id="' . e($row->id) . '"
+                            data-status="' . e($row->status_aktif) . '"
                             data-name="' . e($row->name) . '"
-                            class="button-hapus rounded bg-red-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-red-700">
-                            <i class="bi bi-trash text-xs"></i>
+                            class="button-aktivasi rounded bg-orange-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-orange-700">
+                            Nonaktifkan
                         </button>
-                ' : '';
+                ' : '
+                        <button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
+                            data-id="' . e($row->id) . '"
+                            data-status="' . e($row->status_aktif) . '"
+                            data-name="' . e($row->name) . '"
+                            class="button-aktivasi rounded bg-blue-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-blue-700">
+                            Aktifkan
+                        </button>
+                ';
 
                 return '
                     <div class="flex items-center gap-2">
@@ -39,17 +52,24 @@ class KepalaP4mpDataTable extends DataTable
                             data-email="' . e($row->email) . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
-                        ' . $hapusButton . '
+                        ' . $statusButton . '
+                        <button data-modal-target="modal-hapus"
+                            data-modal-toggle="modal-hapus"
+                            data-id="' . e($row->id) . '"
+                            data-name="' . e($row->name) . '"
+                            class="button-hapus rounded bg-red-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-red-700">
+                            <i class="bi bi-trash text-xs"></i>
+                        </button>
                     </div>
                 ';
             })
-            ->rawColumns(['action']);
+            ->rawColumns(['status_aktif', 'action']);
     }
 
     public function query(User $model): QueryBuilder
     {
         return $model->newQuery()
-            ->select(['id', 'name', 'email', 'created_at'])
+            ->select(['id', 'name', 'email', 'status_aktif'])
             ->where('role', 'kepala_p4mp');
     }
 
@@ -59,7 +79,7 @@ class KepalaP4mpDataTable extends DataTable
             ->setTableId('kepala-p4mp-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(3, 'desc')
+            ->orderBy(0, 'asc')
             ->parameters([
                 'responsive' => false,
                 'autoWidth' => false,
@@ -71,7 +91,7 @@ class KepalaP4mpDataTable extends DataTable
         return [
             ['data' => 'name', 'name' => 'name', 'title' => 'Nama'],
             ['data' => 'email', 'name' => 'email', 'title' => 'Email'],
-            ['data' => 'created_at', 'name' => 'created_at', 'title' => 'Tanggal Dibuat'],
+            ['data' => 'status_aktif', 'name' => 'status_aktif', 'title' => 'Status Aktif'],
             ['data' => 'action', 'name' => 'action', 'title' => 'Action', 'orderable' => false, 'searchable' => false],
         ];
     }
