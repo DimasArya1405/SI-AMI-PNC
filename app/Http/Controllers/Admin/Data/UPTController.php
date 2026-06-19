@@ -73,15 +73,37 @@ class UPTController extends Controller
             return redirect()->back()->with('error', 'Semua prodi yang dipilih sudah terdaftar');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'nama_upt' => 'required|string|max:255',
-            'kode_upt' => 'required|string|max:255|unique:upt,kode_upt',
+            'kode_upt' => 'required|string|max:255',
         ]);
+
+        $namaUpt = trim($validated['nama_upt']);
+        $kodeUpt = trim($validated['kode_upt']);
+
+        $kodeSudahAda = UPT::whereRaw('LOWER(TRIM(kode_upt)) = ?', [strtolower($kodeUpt)])
+            ->exists();
+
+        $namaUnitSudahAda = UPT::where('kategori_upt', 'Unit/Bagian')
+            ->whereRaw('LOWER(TRIM(nama_upt)) = ?', [strtolower($namaUpt)])
+            ->exists();
+
+        if ($namaUnitSudahAda) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Unit/Bagian ini sudah terdaftar.');
+        }
+
+        if ($kodeSudahAda) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Kode UPT ini sudah terdaftar.');
+        }
 
         $upt = new UPT();
         $upt->upt_id = Str::uuid();
-        $upt->kode_upt = $request->kode_upt;
-        $upt->nama_upt = $request->nama_upt;
+        $upt->kode_upt = $kodeUpt;
+        $upt->nama_upt = $namaUpt;
         $upt->kategori_upt = 'Unit/Bagian';
         $upt->save();
 

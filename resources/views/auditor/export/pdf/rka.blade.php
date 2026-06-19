@@ -218,7 +218,8 @@
 @php
     $kepalaP4mp = Auth::user()?->role === 'kepala_p4mp'
         ? Auth::user()
-        : \App\Models\User::where('role', 'kepala_p4mp')->first();
+        : (\App\Models\User::where('role', 'kepala_p4mp')->where('status_aktif', true)->first()
+            ?: \App\Models\User::where('role', 'kepala_p4mp')->first());
     $namaKepalaP4mp = $kepalaP4mp?->name ?? 'Kepala P4MP';
     $kategori = ($upt?->kategori_upt ?? null) === 'Prodi' ? 'Program Studi' : 'Unit';
     $tanggalAudit = $penugasan->tanggal_audit
