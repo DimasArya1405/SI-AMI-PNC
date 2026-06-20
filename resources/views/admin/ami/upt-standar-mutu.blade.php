@@ -785,7 +785,7 @@
                             required>
                     </div>
 
-                    <div class="flex justify-start gap-3 pt-4 border-t">
+                    <div class="flex justify-between gap-3 pt-4 border-t">
                         <button type="submit"
                             class="px-5 py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-700">
                             Import Excel
