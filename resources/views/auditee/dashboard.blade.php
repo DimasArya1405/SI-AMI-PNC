@@ -179,10 +179,10 @@
                             <p class="font-semibold">{{ $tanggal_audit }}</p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-xl">
+                        <!-- <div class="bg-gray-50 p-4 rounded-xl">
                             <p class="text-xs text-gray-400">Lokasi</p>
                             <p class="font-semibold">{{ $lokasi_audit }}</p>
-                        </div>
+                        </div> -->
 
                         <div class="bg-gray-50 p-4 rounded-xl">
                             <p class="text-xs text-gray-400">Audit Aktif</p>
