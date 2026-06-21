@@ -23,11 +23,11 @@
             <i class="bi bi-pencil-square mr-2 text-xl"></i> Pelaksanaan Audit
         </a>
 
-        <a href="{{ route('auditor.monitoring') }}"
+        <!-- <a href="{{ route('auditor.monitoring') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-graph-up mr-2 text-xl"></i> Monitoring
-        </a>
+        </a> -->
 
         <a href="{{ route('auditor.rka.index') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
