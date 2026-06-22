@@ -17,6 +17,7 @@ class Dosen extends Model
         'dosen_id',
         'user_id',
         'prodi_id',
+        'upt_id',
         'nip',
         'nama_lengkap',
         'jabatan',
@@ -38,5 +39,9 @@ class Dosen extends Model
     public function buktiDukung()
     {
         return $this->hasMany(JawabanAMI::class, 'dosen_id', 'dosen_id');
+    }
+    public function upt()
+    {
+        return $this->belongsTo(UPT::class, 'upt_id', 'upt_id');
     }
 }
