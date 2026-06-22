@@ -58,7 +58,7 @@
 
             <div class="bg-white p-6 rounded-lg shadow">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                    Informasi Prodi dan Auditee Terkait
+                    Informasi Auditee Terkait
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

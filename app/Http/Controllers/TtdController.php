@@ -17,7 +17,10 @@ class TtdController extends Controller
         $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt','rka','tindakanKoreksi'])
             ->where('penugasan_id', $uuid)
             ->first();
-        $kepala_p4mp = User::where('role', 'kepala_p4mp')->first();
+        $kepala_p4mp = User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
+            ->first()
+            ?: User::where('role', 'kepala_p4mp')->first();
 
         if ($prefix == 'rka_ketua') {
             $nama = $penugasan->auditor1->nama_lengkap;

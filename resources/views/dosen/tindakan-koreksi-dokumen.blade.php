@@ -36,7 +36,7 @@
 
             @if (!$upt || !$periode_now || !$penugasan)
                 <div class="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800">
-                    Belum ada periode aktif atau penugasan AMI untuk prodi Anda.
+                    Belum ada periode aktif atau penugasan AMI untuk unit Anda.
                 </div>
             @elseif ($tindakanKoreksi->isEmpty())
                 <div class="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800">

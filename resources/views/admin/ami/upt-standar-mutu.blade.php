@@ -519,14 +519,12 @@
                     </div>
 
                     {{-- Multi Select UPT --}}
-                    <div>
+                    <div class="relative">
                         <label class="block mb-2 text-sm font-medium text-gray-900">
                             Pilih UPT / Unit / Bagian
                         </label>
 
                         <button id="dropdownSearchButtonUpt"
-                            data-dropdown-toggle="dropdownSearchUpt"
-                            data-dropdown-placement="bottom"
                             type="button"
                             class="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300">
                             <span id="upt-selected-text">Pilih UPT</span>
@@ -539,23 +537,12 @@
                         </button>
 
                         <div id="dropdownSearchUpt"
-                            class="z-50 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+                            class="mt-2 hidden bg-white rounded-lg shadow-sm w-full border border-gray-200">
 
                             <div class="p-3 border-b border-gray-200">
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 20 20">
-                                            <path stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" stroke-width="2"
-                                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                                        </svg>
-                                    </div>
-
-                                    <input type="text" id="input-group-search-upt"
-                                        class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Cari UPT">
-                                </div>
+                                <input type="text" id="input-group-search-upt"
+                                    class="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Cari UPT">
                             </div>
 
                             <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
@@ -798,7 +785,7 @@
                             required>
                     </div>
 
-                    <div class="flex justify-start gap-3 pt-4 border-t">
+                    <div class="flex justify-between gap-3 pt-4 border-t">
                         <button type="submit"
                             class="px-5 py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-700">
                             Import Excel
@@ -822,10 +809,12 @@
         // JS MODAL COPY PERIODE
         document.addEventListener('DOMContentLoaded', function() {
             const periodeSumber = document.getElementById('periode_sumber_id');
+            const dropdownButton = document.getElementById('dropdownSearchButtonUpt');
+            const dropdownUpt = document.getElementById('dropdownSearchUpt');
             const searchInput = document.getElementById('input-group-search-upt');
             const uptList = document.getElementById('upt-list');
-            const checkboxAll = document.getElementById('checkbox-all-upt');
             const selectedText = document.getElementById('upt-selected-text');
+            const uptByPeriode = @json($uptByPeriode ?? []);
 
             function getUptCheckboxes() {
                 return document.querySelectorAll('.upt-checkbox');
@@ -847,7 +836,10 @@
                     selectedText.textContent = checked.length + ' UPT dipilih';
                 }
 
-                checkboxAll.checked = uptCheckboxes.length > 0 && checked.length === uptCheckboxes.length;
+                const currentCheckboxAll = document.getElementById('checkbox-all-upt');
+                if (currentCheckboxAll) {
+                    currentCheckboxAll.checked = uptCheckboxes.length > 0 && checked.length === uptCheckboxes.length;
+                }
             }
 
             function renderUptList(data) {
@@ -902,6 +894,10 @@
                 const newCheckboxAll = document.getElementById('checkbox-all-upt');
                 const uptCheckboxes = getUptCheckboxes();
 
+                if (!newCheckboxAll) {
+                    return;
+                }
+
                 newCheckboxAll.addEventListener('change', function() {
                     uptCheckboxes.forEach(function(checkbox) {
                         checkbox.checked = newCheckboxAll.checked;
@@ -927,19 +923,18 @@
                     return;
                 }
 
-                fetch(`/admin/ami/upt-standar-mutu/get-upt-by-periode/${periodeId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        renderUptList(data);
-                    })
-                    .catch(() => {
-                        uptList.innerHTML = `
-                    <li class="py-3 text-sm text-red-500">
-                        Gagal memuat data UPT.
-                    </li>
-                `;
-                        selectedText.textContent = 'Pilih UPT';
-                    });
+                renderUptList(uptByPeriode[periodeId] || []);
+                dropdownUpt.classList.remove('hidden');
+            });
+
+            dropdownButton.addEventListener('click', function() {
+                dropdownUpt.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!dropdownButton.contains(event.target) && !dropdownUpt.contains(event.target)) {
+                    dropdownUpt.classList.add('hidden');
+                }
             });
 
             searchInput.addEventListener('keyup', function() {

@@ -94,8 +94,6 @@
                             </label>
 
                             <button id="dropdownSearchButtonProdi"
-                                data-dropdown-toggle="dropdownSearchProdi"
-                                data-dropdown-placement="bottom"
                                 type="button"
                                 class="flex items-center justify-between w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300">
                                 <span id="prodi-selected-text">Pilih prodi</span>
@@ -107,22 +105,12 @@
                             </button>
 
                             <div id="dropdownSearchProdi"
-                                class="z-10 hidden bg-white rounded-lg shadow w-full border border-gray-200">
+                                class="mt-2 hidden bg-white rounded-lg shadow-sm w-full border border-gray-200">
                                 <div class="p-3 border-b border-gray-200">
                                     <label class="sr-only" for="input-group-search-prodi">Search</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-500" aria-hidden="true"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                                <path stroke="currentColor" stroke-linecap="round"
-                                                    stroke-linejoin="round" stroke-width="2"
-                                                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                                            </svg>
-                                        </div>
-                                        <input type="text" id="input-group-search-prodi"
-                                            class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder="Cari prodi">
-                                    </div>
+                                    <input type="text" id="input-group-search-prodi"
+                                        class="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Cari prodi">
                                 </div>
 
                                 <ul class="max-h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700"
@@ -247,10 +235,28 @@
                                 required="">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="kategori_upt" class="block mb-2.5 text-sm font-medium text-heading">Kategori UPT</label>
-                            <input type="text" name="kategori_upt" id="kategori_upt_edit"
-                                class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
-                                required="">
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Kategori UPT</label>
+                            <div class="flex items-center gap-6 py-2">
+                                <div class="flex items-center">
+                                    <input type="radio" name="kategori_upt" id="kategori_upt_edit_prodi"
+                                        value="Prodi"
+                                        class="w-4 h-4 text-brand bg-neutral-secondary-medium border-default-medium focus:ring-brand"
+                                        required>
+                                    <label for="kategori_upt_edit_prodi" class="ms-2 text-sm text-heading">
+                                        Prodi
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center">
+                                    <input type="radio" name="kategori_upt" id="kategori_upt_edit_unit"
+                                        value="Unit/Bagian"
+                                        class="w-4 h-4 text-brand bg-neutral-secondary-medium border-default-medium focus:ring-brand"
+                                        required>
+                                    <label for="kategori_upt_edit_unit" class="ms-2 text-sm text-heading">
+                                        Unit/Bagian
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
@@ -354,6 +360,8 @@
             const prodiSelectedText = document.getElementById('prodi-selected-text');
             const searchProdiInput = document.getElementById('input-group-search-prodi');
             const prodiItems = document.querySelectorAll('.prodi-item');
+            const prodiDropdownButton = document.getElementById('dropdownSearchButtonProdi');
+            const prodiDropdown = document.getElementById('dropdownSearchProdi');
 
             function updateProdiSelectedText() {
                 const checked = document.querySelectorAll('.prodi-checkbox:checked');
@@ -410,6 +418,18 @@
                 });
             }
 
+            if (prodiDropdownButton && prodiDropdown) {
+                prodiDropdownButton.addEventListener('click', function() {
+                    prodiDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!wrapperProdi.contains(event.target)) {
+                        prodiDropdown.classList.add('hidden');
+                    }
+                });
+            }
+
             toggleKategoriUpt();
             updateProdiSelectedText();
         });
@@ -423,7 +443,7 @@
             $('#upt_id_edit').val(upt_id);
             $('#nama_upt_edit').val(nama_upt);
             $('#kode_upt_edit').val(kode_upt);
-            $('#kategori_upt_edit').val(kategori_upt);
+            $('input[name="kategori_upt"][value="' + kategori_upt + '"]').prop('checked', true);
 
             $('#modal-edit').removeClass('hidden').addClass('flex');
         });
@@ -453,5 +473,7 @@
     </script>
     @endpush
 
-    {!! $dataTable->scripts() !!}
+    @push('js')
+        {!! $dataTable->scripts() !!}
+    @endpush
 </x-app-layout>

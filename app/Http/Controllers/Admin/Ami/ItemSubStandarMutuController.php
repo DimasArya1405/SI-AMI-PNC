@@ -70,9 +70,34 @@ class ItemSubStandarMutuController extends Controller
 
     public function edit(Request $request)
     {
-        $item_sub_standar_mutu = ItemSubStandarMutu::find($request->item_sub_standar_id);
+        $request->validate([
+            'item_sub_standar_id' => 'required|exists:item_sub_standar,item_sub_standar_id',
+            'nama_item' => 'required|string',
+            'parent_item_id' => 'nullable|exists:item_sub_standar,item_sub_standar_id',
+        ]);
+
+        $item_sub_standar_mutu = ItemSubStandarMutu::findOrFail($request->item_sub_standar_id);
+        $parent = null;
+
+        if ($request->filled('parent_item_id')) {
+            if ($request->parent_item_id === $item_sub_standar_mutu->item_sub_standar_id) {
+                return redirect()->back()->with('error', 'Item tidak bisa dijadikan parent untuk dirinya sendiri');
+            }
+
+            $parent = ItemSubStandarMutu::findOrFail($request->parent_item_id);
+
+            if ($parent->sub_standar_id !== $item_sub_standar_mutu->sub_standar_id || $this->isDescendantOf($parent, $item_sub_standar_mutu)) {
+                return redirect()->back()->with('error', 'Parent item yang dipilih tidak valid');
+            }
+        }
+
         $item_sub_standar_mutu->nama_item = $request->nama_item;
+        $item_sub_standar_mutu->parent_item_id = $parent?->item_sub_standar_id;
+        $item_sub_standar_mutu->level = $parent ? (($parent->level ?? 1) + 1) : 1;
         $item_sub_standar_mutu->save();
+
+        $this->syncChildLevels($item_sub_standar_mutu);
+
         return redirect()->back()->with('success', 'Item berhasil diubah');
     }
 
@@ -86,5 +111,32 @@ class ItemSubStandarMutuController extends Controller
         ItemSubStandarMutu::where('parent_item_id', $item_sub_standar_mutu->item_sub_standar_id)->delete();
         $item_sub_standar_mutu->delete();
         return redirect()->back()->with('success', 'Item berhasil dihapus');
+    }
+
+    private function isDescendantOf(ItemSubStandarMutu $candidateParent, ItemSubStandarMutu $item): bool
+    {
+        $current = $candidateParent;
+
+        while ($current?->parent_item_id) {
+            if ($current->parent_item_id === $item->item_sub_standar_id) {
+                return true;
+            }
+
+            $current = ItemSubStandarMutu::find($current->parent_item_id);
+        }
+
+        return false;
+    }
+
+    private function syncChildLevels(ItemSubStandarMutu $item): void
+    {
+        $children = ItemSubStandarMutu::where('parent_item_id', $item->item_sub_standar_id)->get();
+
+        foreach ($children as $child) {
+            $child->level = ($item->level ?? 1) + 1;
+            $child->save();
+
+            $this->syncChildLevels($child);
+        }
     }
 }

@@ -40,13 +40,17 @@ class ItemSubStandarMutuDataTable extends DataTable
                 ';
             })
             ->addColumn('action', function ($row) {
+                $parentLabel = $row->parent?->nama_item ?? 'Item Utama';
+
                 return '
                     <div class="flex items-center gap-2">
                         <button data-modal-target="modal-edit"
                             data-modal-toggle="modal-edit"
                             class="hover:bg-yellow-700 button-edit transition duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white"
-                            data-id="' . $row->item_sub_standar_id . '"
-                            data-nama="' . $row->nama_item . '">
+                            data-id="' . e($row->item_sub_standar_id) . '"
+                            data-nama="' . e($row->nama_item) . '"
+                            data-parent-item-id="' . e($row->parent_item_id ?? '') . '"
+                            data-parent-item-label="' . e($parentLabel) . '">
                             <i class="bi bi-pencil text-xs"></i>
                         </button>
                         <button data-modal-target="modal-hapus"

@@ -34,6 +34,12 @@ class NewPasswordController extends Controller
             'token' => ['required'],
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'token.required' => 'Token reset kata sandi tidak ditemukan.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Email harus berupa alamat email yang valid.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak sesuai.',
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we

@@ -359,6 +359,7 @@ class TindakanKoreksiController extends Controller
         $url = route('kepala_p4mp.tindakan_koreksi.show', $penugasan->penugasan_id);
 
         User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
             ->get()
             ->each(function (User $user) use ($penugasan, $pesan, $url) {
                 $sudahDikirim = $user->notifications()

@@ -11,6 +11,8 @@ use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Editor\Editor;
 use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
+use App\Models\Auditee;
+use Illuminate\Support\Facades\Auth;
 
 class DosenDataTable extends DataTable
 {
@@ -40,7 +42,7 @@ class DosenDataTable extends DataTable
                             data-nip="'.$row->nip.'"
                             data-nama="'.$row->nama_lengkap.'"
                             data-jabatan="'.$row->jabatan.'"
-                            data-prodi="'.$row->prodi_id.'"
+                            data-upt_id="' . $row->upt_id . '"
                             data-email="'.$row->email.'"
                             data-no_telp="'.$row->no_telp.'">
                             <i class="bi bi-pencil text-xs"></i>
@@ -63,16 +65,22 @@ class DosenDataTable extends DataTable
      */
     public function query(Dosen $model): QueryBuilder
     {
-        return $model->newQuery()->select(
-            'dosen_id',
-            'prodi_id',
-            'nip',
-            'nama_lengkap',
-            'jabatan',
-            'no_telp',
-            'email',
-            'status_aktif',
-        );
+        $auditee = Auditee::where('user_id', Auth::id())->first();
+
+        return $model->newQuery()
+            ->select(
+                'dosen_id',
+                'upt_id',
+                'nip',
+                'nama_lengkap',
+                'jabatan',
+                'no_telp',
+                'email',
+                'status_aktif',
+            )
+            ->when($auditee, function ($query) use ($auditee) {
+                $query->where('upt_id', $auditee->upt_id);
+            });
     }
 
     /**

@@ -30,17 +30,17 @@
             Dokumen TK
         </a>
 
-        <a href="#"
+        <!-- <a href="#"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('dosen.standar_mutu*') ? 'bg-blue-500 text-white' : '' }}">
 
             <i class="bi bi-ui-checks-grid mr-2 text-xl"></i>
             Standar Mutu
-        </a>
+        </a> -->
         <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
             <a href="{{ route('profile.edit') }}"
                 class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out">
-                <i class="bi bi-person-circle mr-2 text-xl"></i> Profile
+                <i class="bi bi-person-circle mr-2 text-xl"></i> Profil
             </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

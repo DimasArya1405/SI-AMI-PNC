@@ -25,37 +25,18 @@ class DosenController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
-
-        $dosen = Dosen::where('user_id', $userId)->first();
-
+        $dosen = Dosen::where('user_id', Auth::id())->first();
         $periodeNow = Periode::where('status', '1')->first();
 
-        $prodi = null;
-        $upt = null;
-        $auditee = null;
-
-        if ($dosen) {
-            $prodi = Prodi::where('prodi_id', $dosen->prodi_id)->first();
-
-            if ($prodi) {
-                $upt = UPT::where('nama_upt', $prodi->nama_prodi)->first();
-
-                if ($upt) {
-                    $auditee = Auditee::with('upt')
-                        ->where('upt_id', $upt->upt_id)
-                        ->first();
-                }
-            }
-        }
+        $upt = $dosen?->upt_id ? UPT::find($dosen->upt_id) : null;
+        $auditee = $upt ? Auditee::with('upt')->where('upt_id', $upt->upt_id)->first() : null;
 
         return view('dosen.dashboard', [
-            'dosen' => $dosen,
-            'prodi' => $prodi,
-            'upt' => $upt,
-            'auditee' => $auditee,
+            'dosen'      => $dosen,
+            'upt'        => $upt,
+            'auditee'    => $auditee,
             'periode_now' => $periodeNow,
-            'nama_unit' => $auditee?->upt?->nama_upt ?? '-',
+            'nama_unit'  => $upt?->nama_upt ?? '-',
         ]);
     }
 
@@ -288,14 +269,14 @@ class DosenController extends Controller
             $tindakanKoreksi = TindakanKoreksi::with([
                 'jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
                 'kebutuhanDokumenDosen',
-                'dokumenDosen' => fn ($query) => $query
+                'dokumenDosen' => fn($query) => $query
                     ->where('dosen_id', $context['dosen']->dosen_id)
                     ->latest(),
             ])
                 ->where('penugasan_id', $context['penugasan']->penugasan_id)
                 ->whereHas('kebutuhanDokumenDosen')
                 ->get()
-                ->sortBy(fn ($tk) => sprintf(
+                ->sortBy(fn($tk) => sprintf(
                     '%05d-%05d-%05d',
                     $tk->jawabanAudit?->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->urutan ?? 0,
                     $tk->jawabanAudit?->itemSubStandar?->uptSubStandar?->urutan ?? 0,
@@ -415,26 +396,27 @@ class DosenController extends Controller
 
     private function getDosenAuditContext(): array
     {
-        $dosen = Dosen::with('prodi')->where('user_id', Auth::id())->firstOrFail();
-        $prodi = $dosen->prodi;
+        $dosen = Dosen::where('user_id', Auth::id())->firstOrFail();
         $periodeNow = Periode::where('status', '1')->first();
-        $upt = $prodi ? UPT::where('nama_upt', $prodi->nama_prodi)->first() : null;
+
+        $upt = $dosen->upt_id ? UPT::find($dosen->upt_id) : null;
+
         $auditee = $upt ? Auditee::with('upt')->where('upt_id', $upt->upt_id)->first() : null;
+
         $penugasan = ($upt && $periodeNow)
             ? Penugasan::where('upt_id', $upt->upt_id)
-                ->where('periode_id', $periodeNow->id)
-                ->with('rka')
-                ->first()
+            ->where('periode_id', $periodeNow->id)
+            ->with('rka')
+            ->first()
             : null;
 
         return [
-            'dosen' => $dosen,
-            'prodi' => $prodi,
-            'upt' => $upt,
-            'auditee' => $auditee,
+            'dosen'      => $dosen,
+            'upt'        => $upt,
+            'auditee'    => $auditee,
             'periode_now' => $periodeNow,
-            'penugasan' => $penugasan,
-            'nama_unit' => $auditee?->upt?->nama_upt ?? $upt?->nama_upt ?? '-',
+            'penugasan'  => $penugasan,
+            'nama_unit'  => $upt?->nama_upt ?? '-',
         ];
     }
 

@@ -2,7 +2,7 @@
     @include('auditee.sidebar')
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
-             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     {{ __("Data Akun Dosen") }}
                 </div>
@@ -70,15 +70,20 @@
                                 required="">
                         </div>
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Prodi</label>
-                            <select id="" name="prodi"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Prodi</option>
-                                @foreach ($prodi as $item)
-                                    <option value="{{ $item->prodi_id }}">{{ $item->jenjang }} -
-                                        {{ $item->nama_prodi }}</option>
+                            <label class="block mb-2.5 text-sm font-medium text-heading">UPT</label>
+                            <select name="upt_id"
+                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs"
+                                disabled>
+                                @foreach ($upt as $item)
+                                <option value="{{ $item->upt_id }}"
+                                    {{ $auditee?->upt_id === $item->upt_id ? 'selected' : '' }}>
+                                    {{ $item->kode_upt }} - {{ $item->nama_upt }}
+                                </option>
                                 @endforeach
                             </select>
+                            {{-- hidden input karena disabled tidak terkirim via form --}}
+                            <input type="hidden" name="upt_id" value="{{ $auditee?->upt_id }}">
+                            <p class="mt-1 text-xs text-gray-400">UPT diisi otomatis berdasarkan akun Anda.</p>
                         </div>
                         <div class="col-span-2 sm:col-span-1">
                             <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Email</label>
@@ -161,15 +166,18 @@
                                 required="">
                         </div>
                         <div class="col-span-2">
-                            <label for="category" class="block mb-2.5 text-sm font-medium text-heading">Prodi</label>
-                            <select id="prodi" name="prodi"
-                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Prodi</option>
-                                @foreach ($prodi as $item)
-                                    <option value="{{ $item->prodi_id }}">{{ $item->jenjang }} -
-                                        {{ $item->nama_prodi }}</option>
+                            <label class="block mb-2.5 text-sm font-medium text-heading">UPT</label>
+                            <select id="upt_id" name="upt_id"
+                                class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs"
+                                disabled>
+                                @foreach ($upt as $item)
+                                <option value="{{ $item->upt_id }}"
+                                    {{ $auditee?->upt_id == $item->upt_id ? 'selected' : '' }}>
+                                    {{ $item->kode_upt }} - {{ $item->nama_upt }}
+                                </option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="upt_id" value="{{ $auditee?->upt_id }}">
                         </div>
                         <div class="col-span-2 sm:col-span-1">
                             <label for="price" class="block mb-2.5 text-sm font-medium text-heading">Email</label>
@@ -253,7 +261,6 @@
             let nip = $(this).data('nip');
             let nama = $(this).data('nama');
             let jabatan = $(this).data('jabatan');
-            let prodi = $(this).data('prodi');
             let email = $(this).data('email');
             let no_telp = $(this).data('no_telp');
 
@@ -261,7 +268,6 @@
             $('#nip').val(nip);
             $('#nama').val(nama);
             $('#jabatan').val(jabatan);
-            $('#prodi').val(prodi);
             $('#email').val(email);
             $('#no_telp').val(no_telp);
 

@@ -92,8 +92,7 @@
                             <input type="hidden" name="parent_item_id" id="parent_item_id">
 
                             {{-- tombol dropdown --}}
-                            <button id="dropdownParentButton" data-dropdown-toggle="dropdownParentMenu"
-                                data-dropdown-placement="bottom"
+                            <button id="dropdownParentButton"
                                 class="w-full flex items-center justify-between bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base px-3 py-2.5"
                                 type="button">
                                 <span id="dropdownParentLabel">Item Utama</span>
@@ -106,22 +105,13 @@
 
                             {{-- isi dropdown --}}
                             <div id="dropdownParentMenu"
-                                class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-full border border-gray-200">
+                                class="z-10 hidden mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-full border border-gray-200">
 
                                 <div class="p-3">
                                     <label for="search_parent_item" class="sr-only">Cari Parent Item</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                fill="none" viewBox="0 0 20 20">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                                            </svg>
-                                        </div>
-                                        <input type="text" id="search_parent_item"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full ps-10 p-2.5"
-                                            placeholder="Cari parent item...">
-                                    </div>
+                                    <input type="text" id="search_parent_item"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                                        placeholder="Cari parent item...">
                                 </div>
 
                                 <ul class="max-h-60 overflow-y-auto text-sm text-gray-700" id="parent_item_list">
@@ -200,6 +190,53 @@
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body"
                                 required></textarea>
                         </div>
+
+                        <!-- <div class="col-span-2">
+                            <label class="block mb-2.5 text-sm font-medium text-heading">Parent Item</label>
+                            <input type="hidden" name="parent_item_id" id="parent_item_id_edit">
+
+                            <button id="dropdownParentButtonEdit"
+                                class="w-full flex items-center justify-between bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base px-3 py-2.5"
+                                type="button">
+                                <span id="dropdownParentLabelEdit">Item Utama</span>
+                                <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="m1 1 4 4 4-4" />
+                                </svg>
+                            </button>
+
+                            <div id="dropdownParentMenuEdit"
+                                class="z-10 hidden mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-full border border-gray-200">
+                                <div class="p-3">
+                                    <label for="search_parent_item_edit" class="sr-only">Cari Parent Item</label>
+                                    <input type="text" id="search_parent_item_edit"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                                        placeholder="Cari parent item...">
+                                </div>
+
+                                <ul class="max-h-60 overflow-y-auto text-sm text-gray-700" id="parent_item_list_edit">
+                                    <li class="parent-item-row-edit" data-value="">
+                                        <button type="button"
+                                            class="parent-item-option-edit inline-flex w-full px-4 py-2 hover:bg-gray-100"
+                                            data-value="" data-label="Item Utama">
+                                            Item Utama
+                                        </button>
+                                    </li>
+
+                                    @foreach ($parentItems as $parent)
+                                    <li class="parent-item-row-edit" data-value="{{ $parent->item_sub_standar_id }}">
+                                        <button type="button"
+                                            class="parent-item-option-edit inline-flex w-full px-4 py-2 hover:bg-gray-100 text-left"
+                                            data-value="{{ $parent->item_sub_standar_id }}"
+                                            data-label="{{ $parent->nama_item }}">
+                                            {{ $parent->nama_item }}
+                                        </button>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div> -->
                     </div>
 
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
@@ -268,80 +305,114 @@
     @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ===== MODAL TAMBAH =====
-            const searchInput = document.getElementById('search_parent_item');
-            const hiddenInput = document.getElementById('parent_item_id');
-            const label = document.getElementById('dropdownParentLabel');
-            const options = document.querySelectorAll('.parent-item-option');
-            const rows = document.querySelectorAll('#parent_item_list li');
+            function setupParentDropdown(config) {
+                const button = document.getElementById(config.buttonId);
+                const menu = document.getElementById(config.menuId);
+                const searchInput = document.getElementById(config.searchId);
+                const hiddenInput = document.getElementById(config.hiddenId);
+                const label = document.getElementById(config.labelId);
+                const rows = document.querySelectorAll(config.rowSelector);
+                const options = document.querySelectorAll(config.optionSelector);
 
-            if (searchInput) {
-                searchInput.addEventListener('keyup', function() {
-                    const keyword = this.value.toLowerCase();
+                if (!button || !menu || !hiddenInput || !label) {
+                    return null;
+                }
 
-                    rows.forEach((row) => {
-                        const text = row.innerText.toLowerCase();
-                        row.style.display = text.includes(keyword) ? '' : 'none';
+                const closeMenu = () => menu.classList.add('hidden');
+
+                button.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    menu.classList.toggle('hidden');
+                });
+
+                menu.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+
+                document.addEventListener('click', closeMenu);
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const keyword = this.value.toLowerCase();
+
+                        rows.forEach((row) => {
+                            const text = row.innerText.toLowerCase();
+                            const isSelf = row.dataset.value && row.dataset.value === menu.dataset.currentItem;
+                            row.style.display = !isSelf && text.includes(keyword) ? '' : 'none';
+                        });
+                    });
+                }
+
+                options.forEach((option) => {
+                    option.addEventListener('click', function() {
+                        hiddenInput.value = this.dataset.value || '';
+                        label.textContent = this.dataset.label || 'Item Utama';
+                        closeMenu();
                     });
                 });
+
+                return {
+                    setValue(value, text) {
+                        hiddenInput.value = value || '';
+                        label.textContent = text || 'Item Utama';
+                    },
+                    reset() {
+                        hiddenInput.value = '';
+                        label.textContent = 'Item Utama';
+                        if (searchInput) {
+                            searchInput.value = '';
+                        }
+                        menu.dataset.currentItem = '';
+                        rows.forEach((row) => row.style.display = '');
+                        closeMenu();
+                    },
+                    hideCurrentItem(itemId) {
+                        menu.dataset.currentItem = itemId || '';
+                        rows.forEach((row) => {
+                            row.style.display = row.dataset.value && row.dataset.value === itemId ? 'none' : '';
+                        });
+                    }
+                };
             }
 
-            options.forEach((option) => {
-                option.addEventListener('click', function() {
-                    hiddenInput.value = this.dataset.value;
-                    label.textContent = this.dataset.label;
-                });
+            const tambahDropdown = setupParentDropdown({
+                buttonId: 'dropdownParentButton',
+                menuId: 'dropdownParentMenu',
+                searchId: 'search_parent_item',
+                hiddenId: 'parent_item_id',
+                labelId: 'dropdownParentLabel',
+                rowSelector: '#parent_item_list li',
+                optionSelector: '.parent-item-option',
             });
 
-            // ===== MODAL EDIT =====
-            const searchInputEdit = document.getElementById('search_parent_item_edit');
-            const hiddenInputEdit = document.getElementById('parent_item_id_edit');
-            const labelEdit = document.getElementById('dropdownParentLabelEdit');
-            const optionsEdit = document.querySelectorAll('.parent-item-option-edit');
-            const rowsEdit = document.querySelectorAll('#parent_item_list_edit li');
-
-            if (searchInputEdit) {
-                searchInputEdit.addEventListener('keyup', function() {
-                    const keyword = this.value.toLowerCase();
-
-                    rowsEdit.forEach((row) => {
-                        const text = row.innerText.toLowerCase();
-                        row.style.display = text.includes(keyword) ? '' : 'none';
-                    });
-                });
-            }
-
-            optionsEdit.forEach((option) => {
-                option.addEventListener('click', function() {
-                    hiddenInputEdit.value = this.dataset.value;
-                    labelEdit.textContent = this.dataset.label;
-                });
+            const editDropdown = setupParentDropdown({
+                buttonId: 'dropdownParentButtonEdit',
+                menuId: 'dropdownParentMenuEdit',
+                searchId: 'search_parent_item_edit',
+                hiddenId: 'parent_item_id_edit',
+                labelId: 'dropdownParentLabelEdit',
+                rowSelector: '#parent_item_list_edit li',
+                optionSelector: '.parent-item-option-edit',
             });
 
-            // ===== isi data saat klik tombol edit =====
             $(document).on('click', '.button-edit', function() {
-                let itemId = $(this).data('id');
-                let namaItem = $(this).data('nama_item');
-                let parentItemId = $(this).data('parent_item_id') ?? '';
-                let parentItemLabel = $(this).data('parent_item_label') ?? 'Item Utama';
+                const itemId = $(this).data('id') || '';
+                const namaItem = $(this).data('nama') || '';
+                const parentItemId = $(this).data('parentItemId') || '';
+                const parentItemLabel = $(this).data('parentItemLabel') || 'Item Utama';
 
                 $('#item_sub_standar_id').val(itemId);
                 $('#nama_item').val(namaItem);
-                $('#parent_item_id_edit').val(parentItemId);
-                $('#dropdownParentLabelEdit').text(parentItemLabel);
+                editDropdown?.setValue(parentItemId, parentItemLabel);
+                editDropdown?.hideCurrentItem(itemId);
+
+                $('#modal-edit').removeClass('hidden').addClass('flex');
             });
-        });
 
-        $(document).on('click', '.button-edit', function() {
-            let item_sub_standar_id = $(this).data('id');
-            let nama_item = $(this).data('nama');
-            let parent_item_id = $(this).data('parent');
-
-            $('#item_sub_standar_id').val(item_sub_standar_id);
-            $('#nama_item').val(nama_item);
-            $('#parent_item_id').val(parent_item_id);
-
-            $('#modal-edit').removeClass('hidden').addClass('flex');
+            $(document).on('click', '[data-modal-target="modal-tambah"]', function() {
+                tambahDropdown?.reset();
+                $('#modal-tambah').removeClass('hidden').addClass('flex');
+            });
         });
 
         $(document).on('click', '.button-hapus', function() {
@@ -365,10 +436,7 @@
             $('#modal-tambah').removeClass('flex').addClass('hidden');
         });
 
-        $(document).on('click', '[data-modal-target="modal-tambah"]', function() {
-            $('#modal-tambah').removeClass('hidden').addClass('flex');
-        });
     </script>
-    @endpush
     {!! $dataTable->scripts() !!}
+    @endpush
 </x-app-layout>

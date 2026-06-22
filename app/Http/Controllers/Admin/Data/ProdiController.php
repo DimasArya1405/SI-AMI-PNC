@@ -17,9 +17,30 @@ class ProdiController extends Controller
 
     public function tambah(Request $request)
     {
-        $prodi = new Prodi();
-        $prodi->prodi_id = Str::uuid();
-        $prodi->kode_prodi = $request->kode_prodi;
+        $request->validate([
+            'kode_prodi' => 'required|string|max:255',
+            'nama_prodi' => 'required|string|max:255',
+            'jenjang' => 'required|string|max:255',
+        ]);
+
+        $kodeProdi = strtoupper(trim($request->kode_prodi));
+        $prodi = Prodi::withTrashed()->where('kode_prodi', $kodeProdi)->first();
+
+        if ($prodi && !$prodi->trashed()) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Kode prodi sudah terdaftar.');
+        }
+
+        if ($prodi && $prodi->trashed()) {
+            $prodi->restore();
+        } else {
+            $prodi = new Prodi();
+            $prodi->prodi_id = Str::uuid();
+        }
+
+        $prodi->kode_prodi = $kodeProdi;
         $prodi->nama_prodi = $request->nama_prodi;
         $prodi->jenjang = $request->jenjang;
         $prodi->save();

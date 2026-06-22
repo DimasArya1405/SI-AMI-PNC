@@ -91,12 +91,12 @@
 
                     <button type="submit" 
                         class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm shadow-blue-200 transition-all duration-300 active:scale-95">
-                        MASUK KE DASHBOARD
+                        Login
                     </button>
                 </form>
 
                 <div class="pt-8 text-center border-t border-gray-100 text-xs text-gray-400">
-                    &copy; 2026 Audit Mutu Internal System. Semua Hak Dilindungi.
+                    &copy; 2026 Sistem Informasi Audit Mutu Internal.
                 </div>
             </div>
         </div>
