@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
 
 class TindakanKoreksiController extends Controller
@@ -133,6 +134,13 @@ class TindakanKoreksiController extends Controller
             ->header('Content-Type', Storage::disk('local')->mimeType($tindakanKoreksi->bukti_file_path) ?? 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
+    public function generateQrCode($prefix, $registrasi)
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        // dd($encodedCode);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
+    }
 
     public function export(string $penugasanId): Response
     {
@@ -141,8 +149,19 @@ class TindakanKoreksiController extends Controller
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'Tindakan-Koreksi-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+        $penugasan = Penugasan::with([
+            'tindakanKoreksi',
+            'auditor1',
+            'auditor2',
+            'periode',
+        ])
+            ->where('penugasan_id', $penugasanId)
+            ->firstOrFail();
+        $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
+        $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
+        $anggotaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode'))
+        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode','kepalaQR', 'ketuaQR', 'anggotaQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }
@@ -244,7 +263,7 @@ class TindakanKoreksiController extends Controller
             ->whereIn('upt_item_sub_standar_id', $itemIds)
             ->where('jawaban', 0)
             ->get()
-            ->sortBy(fn ($jawaban) => sprintf(
+            ->sortBy(fn($jawaban) => sprintf(
                 '%05d-%05d-%05d',
                 $jawaban->itemSubStandar?->uptSubStandar?->uptStandarMutu?->standar_mutu?->urutan ?? 0,
                 $jawaban->itemSubStandar?->uptSubStandar?->urutan ?? 0,
@@ -304,7 +323,7 @@ class TindakanKoreksiController extends Controller
                 $query->where('upt_id', $penugasan->upt_id);
 
                 if ($tahun) {
-                    $query->whereHas('periode', fn ($periodeQuery) => $periodeQuery->where('tahun', '<', $tahun));
+                    $query->whereHas('periode', fn($periodeQuery) => $periodeQuery->where('tahun', '<', $tahun));
                 }
             })
             ->get();
@@ -324,7 +343,7 @@ class TindakanKoreksiController extends Controller
             ->pluck('user')
             ->filter()
             ->unique('id')
-            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification(
+            ->each(fn($user) => $user->notify(new PenugasanAuditNotification(
                 $penugasan,
                 'Tindakan Koreksi Dirumuskan',
                 $pesan,
@@ -345,7 +364,7 @@ class TindakanKoreksiController extends Controller
                 $sudahDikirim = $user->notifications()
                     ->where('type', PenugasanAuditNotification::class)
                     ->get()
-                    ->contains(fn ($notifikasi) => ($notifikasi->data['jenis'] ?? null) === 'tk-menunggu-p4mp'
+                    ->contains(fn($notifikasi) => ($notifikasi->data['jenis'] ?? null) === 'tk-menunggu-p4mp'
                         && ($notifikasi->data['penugasan_id'] ?? null) === $penugasan->penugasan_id);
 
                 if ($sudahDikirim) {

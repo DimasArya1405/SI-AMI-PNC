@@ -122,7 +122,7 @@
         }
 
         .sign-space {
-            height: 32px;
+            height: 10px;
         }
 
         .section-list {
@@ -253,7 +253,14 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
-                <div class="sign-space"></div>
+                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
+                <div class="sign-space">
+                    
+                </div>
                 ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
             </td>
         </tr>
@@ -261,6 +268,11 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
+                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                    <img src="{{ $anggotaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $penugasan->auditor2?->nama_lengkap ?? '-' }} )
             </td>
@@ -284,6 +296,11 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRumusan }}
+                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
             </td>
@@ -292,6 +309,11 @@
             <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
                 Tgl : {{ $tanggalRumusan }}
+                  @if ($penugasan->tindakanKoreksi->first()->p4mp_verified_by_user_id)
+                    <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $namaP4mp }} )
             </td>
@@ -315,6 +337,11 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRumusan }}
+                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
             </td>
@@ -351,6 +378,11 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalPelaksanaan }}
+                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
             </td>
@@ -384,6 +416,7 @@
             <td class="sign-cell">
                 Kepala P4MP<br>
                 Tgl : {{ $tanggalP4mp }}
+                <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                 <div class="sign-space"></div>
                 ( {{ $namaP4mp }} )
             </td>
