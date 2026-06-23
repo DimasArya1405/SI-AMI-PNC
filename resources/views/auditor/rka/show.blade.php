@@ -170,7 +170,8 @@
                 </div>
 
                 @if ($isKetuaAuditor)
-                    <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:justify-end">
+                <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:justify-end">
+                        @if($rka->finalized_by_user_id == null)
                         <button type="submit" name="aksi" value="simpan"
                             class="inline-flex justify-center rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">
                             Simpan Draft
@@ -179,6 +180,9 @@
                             class="inline-flex justify-center rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
                             Finalisasi RKA
                         </button>
+                        @else
+                        <div class="px-2 py-1 bg-green-100 rounded-md text-sm text-green-700">Sudah Di Finalisasi</div>
+                        @endif
                     </div>
                 @endif
             </form>

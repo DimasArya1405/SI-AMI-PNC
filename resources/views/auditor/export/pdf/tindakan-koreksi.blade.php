@@ -308,7 +308,11 @@
         <tr>
             <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
-                Tgl : {{ $tanggalRumusan }}
+                Tgl : {{ $penugasan->tindakanKoreksi->first()->p4mp_verified_at
+    ? \Carbon\Carbon::parse($penugasan->tindakanKoreksi->first()->p4mp_verified_at)
+        ->locale('id')
+        ->translatedFormat('l, d F Y H:i')
+    : '-' }}
                   @if ($penugasan->tindakanKoreksi->first()->p4mp_verified_by_user_id)
                     <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
@@ -413,10 +417,18 @@
                     </ol>
                 @endif
             </td>
-            <td class="sign-cell">
-                Kepala P4MP<br>
-                Tgl : {{ $tanggalP4mp }}
-                <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                <td class="sign-cell">
+                Diketahui Ka. AMI / Ka. P4MP<br>
+                Tgl :  {{ $penugasan->tindakanKoreksi->first()->p4mp_verified_at
+    ? \Carbon\Carbon::parse($penugasan->tindakanKoreksi->first()->p4mp_verified_at)
+        ->locale('id')
+        ->translatedFormat('l, d F Y H:i')
+    : '-' }}
+                  @if ($penugasan->tindakanKoreksi->first()->p4mp_verified_by_user_id)
+                    <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    @else
+                    <i style="color:red;">Belum disetujui.</i>
+                    @endif
                 <div class="sign-space"></div>
                 ( {{ $namaP4mp }} )
             </td>

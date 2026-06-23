@@ -72,6 +72,13 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'auditor',
             ],
+            [
+                'id' => (string) Str::uuid(),
+                'name' => 'Arief Hidayat, M.Pd.',
+                'email' => 'kepala@pnc.ac.id',
+                'password' => Hash::make('password123'),
+                'role' => 'kepala_p4mp',
+            ],
         ];
 
         foreach ($users as $user) {
