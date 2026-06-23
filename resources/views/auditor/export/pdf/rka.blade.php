@@ -289,7 +289,7 @@
         </tr>
     </table>
 
-    <table class="audit-table">
+    {{-- <table class="audit-table">
         <thead>
             <tr>
                 <td class="institution">
@@ -302,7 +302,7 @@
                     <img src="{{ public_path('img/logo_pnc.png') }}" alt="Logo PNC">
                 </td>
             </tr>
-        </table>
+        </table> --}}
 
         <table class="main-box">
             <tr>

@@ -33,6 +33,7 @@ use App\Http\Controllers\Auditor\TindakanKoreksiController as AuditorTindakanKor
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
 use App\Http\Controllers\KepalaP4mp\DashboardController as KepalaP4mpDashboardController;
+use App\Http\Controllers\KepalaP4mp\RkaController as KepalaP4mpRkaController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TtdController;
@@ -149,7 +150,8 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 Route::middleware(['auth', 'checkRole:kepala_p4mp'])->group(function () {
     Route::get('/kepala-p4mp/dashboard', [KepalaP4mpDashboardController::class, 'index'])->name('kepala_p4mp.dashboard');
     Route::get('/kepala-p4mp/rka', [AdminRkaController::class, 'index'])->name('kepala_p4mp.rka.index');
-    Route::get('/kepala-p4mp/rka/{penugasan_id}/export', [AdminRkaController::class, 'export'])->name('kepala_p4mp.rka.export');
+    Route::get('/kepala-p4mp/rka/{id}/export', [AdminRkaController::class, 'export'])->name('kepala_p4mp.rka.export');
+    Route::put('/kepala-p4mp/rka/acc/{id}', [KepalaP4mpRkaController::class, 'acc'])->name('kepala_p4mp.rka.acc');
     Route::get('/kepala-p4mp/rka/{penugasan_id}', [AdminRkaController::class, 'show'])->name('kepala_p4mp.rka.show');
     Route::get('/kepala-p4mp/tindakan-koreksi', [MonitoringTindakanKoreksiController::class, 'index'])->name('kepala_p4mp.tindakan_koreksi.index');
     Route::get('/kepala-p4mp/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewBukti'])->name('kepala_p4mp.tindakan_koreksi.preview_bukti');

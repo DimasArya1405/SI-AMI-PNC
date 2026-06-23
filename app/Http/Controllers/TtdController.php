@@ -14,7 +14,7 @@ class TtdController extends Controller
         $decode = base64_decode($ttdcode);
         list($prefix, $uuid) = explode('||', $decode);
 
-        $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt'])
+        $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt','rka','tindakanKoreksi'])
             ->where('penugasan_id', $uuid)
             ->first();
         $kepala_p4mp = User::where('role', 'kepala_p4mp')
@@ -23,30 +23,35 @@ class TtdController extends Controller
             ?: User::where('role', 'kepala_p4mp')->first();
 
         if ($prefix == 'rka_ketua') {
-            // $redaful = RegistrasiDataFakultas::where('meta_key', 'dekan')->first();
             $nama = $penugasan->auditor1->nama_lengkap;
-            // $registrasi_code = substr($decode, 19);
             $judul = "Ringkasan Kondisi Audit";
             $jabatan = "Ketua Auditor";
+            $tgl = $penugasan->rka->finalized_at;
         } elseif ($prefix == 'rka_anggota') {
-            // $redaful = RegistrasiDataFakultas::where('meta_key', 'ketua')->first();
             $nama = $penugasan->auditor2->nama_lengkap;
-            // $registrasi_code = substr($decode, 19);
             $judul = "Ringkasan Kondisi Audit";
             $jabatan = "Anggota Auditor";
+            $tgl = $penugasan->rka->finalized_at;
         } elseif ($prefix == 'rka_kepala') {
-            // $redaful = RegistrasiDataFakultas::where('meta_key', 'dekan')->first();
-            $nama = $kepala_p4mp?->name ?? 'Kepala P4MP';
-            // $registrasi_code = substr($decode, 19);
+            $nama = $kepala_p4mp->name;
             $judul = "Ringkasan Kondisi Audit";
             $jabatan = "Kepala P4MP";
-        } elseif ($prefix == 'surat_penelitian_wirausaha') {
-            // $redaful = RegistrasiDataFakultas::where('meta_key', 'dekan')->first();
-            // $nama = $redaful->meta_value;
-            // $registrasi_code = substr($decode, 19);
-            $judul = "Ringkasan Kondisi Audit";
-            // $mv = 'Dekan';
-        } else {
+            $tgl = $penugasan->rka->acc_p4mp_at;
+        } elseif ($prefix == 'tk_kepala') {
+            $nama = $kepala_p4mp->name;
+            $judul = "Tindakan Koreksi";
+            $jabatan = "Kepala P4MP";
+            $tgl = $penugasan->tindakanKoreksi->p4mp_verified_at;
+        } elseif ($prefik = 'tk_ketua') {
+            $nama = $penugasan->auditor1->nama_lengkap;
+            $judul = "Tindakan Koreksi";
+            $jabatan = "Ketua Auditor";
+            $tgl = $penugasan->tindakanKoreksi->first()?->verified_at;
+        } elseif ($prefik = 'tk_anggota') {
+            $nama = $penugasan->auditor2->nama_lengkap;
+            $judul = "Tindakan Koreksi";
+            $jabatan = "Anggota Auditor";
+            $tgl = $penugasan->tindakanKoreksi->first()?->verified_at;
         }
 
         $tahun = $penugasan->periode->tahun;
@@ -55,8 +60,8 @@ class TtdController extends Controller
             'nama', 
             'judul',
             'tahun',
-            'penugasan'
-            // 'mv'
+            'penugasan',
+            'tgl'
         ));
     }
 }

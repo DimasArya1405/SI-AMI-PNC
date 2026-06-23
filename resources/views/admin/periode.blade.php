@@ -112,7 +112,7 @@
                     <form action="{{ route('admin.periode.hapus') }}" method="post">
                         @csrf
                         @method('delete')
-                        <input type="text" name="periode_id" id="periode_id" >
+                        <input type="text" name="periode_id" id="periode_id" hidden>
                         <div class="flex items-center space-x-4 justify-center">
                             <button data-modal-hide="modal-hapus" type="submit"
                                 class="text-white transition duration-300 ease-in-out bg-blue-500 box-border border border-transparent hover:bg-blue-700 focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">

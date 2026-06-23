@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +19,8 @@
             margin-bottom: 20px;
         }
 
-        h2, h3 {
+        h2,
+        h3 {
             margin: 10px 0;
         }
 
@@ -28,7 +30,8 @@
             margin: 20px auto;
             line-height: 1.5;
             max-width: 850px;
-            color: #1a56db; /* Memberi aksen pembeda untuk data utama */
+            color: #1a56db;
+            /* Memberi aksen pembeda untuk data utama */
         }
 
         .keterangan {
@@ -55,7 +58,7 @@
             font-size: 12px;
             color: #777;
         }
-        
+
         .keterangan-bottom {
             margin-top: 40px;
         }
@@ -74,6 +77,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="wrapper">
         <br>
@@ -82,15 +86,15 @@
         <img src="{{ asset('img/logo-pnc-1.png') }}" style="width: 100px;" alt="Logo Instansi">
 
         {{-- Header --}}
-        <h3>Pusat Penjaminan Mutu menyatakan bahwa dokumen {{$judul}} tahun {{$tahun}}</b></h3>
+        <h3>Pusat Penjaminan Mutu menyatakan bahwa dokumen {{ $judul }} tahun {{ $tahun }}</b></h3>
         <p class="keterangan">dengan lingkup:</p>
 
         {{-- Judul / Lingkup Audit --}}
         <div class="judul">
-            @if($penugasan->upt->kategori_upt == 'Prodi')
-            Prodi :
+            @if ($penugasan->upt->kategori_upt == 'Prodi')
+                Prodi :
             @else
-            Unit/Bagian :
+                Unit/Bagian :
             @endif
             {{ $penugasan->upt->nama_upt }}
         </div>
@@ -100,14 +104,19 @@
             adalah sah dan secara resmi ditandatangani secara digital oleh:
         </p>
 
+        <div style="font-size: 18px; margin-top: 20px;">
+            Cilacap, {{ $tgl }}
+        </div>
+
         <div class="penandatangan">
-            {{$nama}} <br>
-            <span style="font-weight: normal;">{{$jabatan}}</span>
+            {{ $nama }} <br>
+            <span style="font-weight: normal;">{{ $jabatan }}</span>
         </div>
 
         {{-- Footer --}}
         <div class="keterangan-bottom">
-            Sistem Informasi Audit Mutu Internal (AMI), Pusat Pengembangan Pembelajaran dan Penjaminan Mutu Pendidikan Politeknik Negeri Cilacap
+            Sistem Informasi Audit Mutu Internal (AMI), Pusat Pengembangan Pembelajaran dan Penjaminan Mutu Pendidikan
+            Politeknik Negeri Cilacap
         </div>
         <footer class="footer">
             <div class="footer-small">
@@ -116,4 +125,5 @@
         </footer>
     </div>
 </body>
+
 </html>

@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
 
 class RkaController extends Controller
@@ -61,21 +62,59 @@ class RkaController extends Controller
         return view('admin.rka.show', compact('penugasan', 'rka', 'ringkasan', 'temuanPerStandar'));
     }
 
-    public function export(string $penugasanId): Response
+    // public function export(string $penugasanId): Response
+    // {
+    //     $penugasan = $this->getPenugasan($penugasanId);
+    //     $rka = $this->getRka($penugasan);
+
+    //     $rka->load([
+    //         'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
+    //         'finalizedBy',
+    //     ]);
+
+    //     $upt = $penugasan->upt;
+    //     $periode = $penugasan->periode;
+    //     $namaFile = 'RKA-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+
+    //     return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan'))
+    //         ->setPaper('a4', 'portrait')
+    //         ->stream($namaFile);
+    // }
+        private function getPenugasanAuditor(string $penugasanId): Penugasan
     {
-        $penugasan = $this->getPenugasan($penugasanId);
-        $rka = $this->getRka($penugasan);
 
-        $rka->load([
+        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
+            ->where('penugasan_id', $penugasanId)
+            ->firstOrFail();
+    }
+        public function generateQrCode($prefix, $registrasi)
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        // dd($encodedCode);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
+    }
+        public function export(string $rkaId): Response
+    {
+        $rka = RingkasanKondisiAudit::with([
+            'penugasan.upt',
+            'penugasan.periode',
+            'penugasan.auditor1',
+            'penugasan.auditor2',
             'temuan.jawabanAudit.itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
-            'finalizedBy',
-        ]);
+        ])
+            ->where('rka_id', $rkaId)
+            ->firstOrFail();
 
+        $penugasan = $this->getPenugasanAuditor($rka->penugasan_id);
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'RKA-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+        $ketuaAuditorQR = $this->generateQrCode('rka_ketua||', $rka->penugasan_id);
+        $anggotaAuditorQR = $this->generateQrCode('rka_anggota||', $rka->penugasan_id);
+        $kepalaQR = $this->generateQrCode('rka_kepala||', $rka->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan'))
+        return Pdf::loadView('auditor.export.pdf.rka', compact('rka', 'upt', 'periode', 'penugasan', 'ketuaAuditorQR', 'anggotaAuditorQR', 'kepalaQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }
