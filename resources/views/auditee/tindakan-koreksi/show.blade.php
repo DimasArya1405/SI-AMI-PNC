@@ -29,6 +29,9 @@
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;
+                    $dokumenDosen = $tk?->dokumenDosen ?? collect();
+                    $dokumenDosenDisetujui = $dokumenDosen->where('status_validasi', 'diterima')->values();
+                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenDosenDisetujui->isNotEmpty();
                     $status = $tk?->status ?? 'belum_dibuat';
                     $kategori = $jawaban->rkaTemuan?->kategori_final ?: $jawaban->kategori_temuan;
                     $kondisi = $jawaban->rkaTemuan?->kondisi_final ?: $jawaban->catatan;
@@ -54,7 +57,7 @@
                     $nextAction = match (true) {
                         !$tk => 'Menunggu auditor membuat usulan tindakan koreksi.',
                         $p4mpStatus === 'perlu_perbaikan' => 'Unggah bukti perbaikan baru sesuai catatan P4MP.',
-                        !$tk->bukti_file_path => 'Isi pelaksanaan dan unggah bukti tindakan koreksi.',
+                        !$adaBuktiPelaksanaan => 'Isi pelaksanaan dan unggah bukti tindakan koreksi, atau setujui dokumen dosen yang sesuai.',
                         $status !== 'selesai' => 'Bukti sudah dikirim. Menunggu penilaian ulang auditor.',
                         !$p4mpStatus || $p4mpStatus === 'menunggu_verifikasi' => 'Menunggu verifikasi P4MP.',
                         $p4mpStatus === 'terverifikasi' => 'Tindakan koreksi sudah terverifikasi.',
@@ -63,7 +66,7 @@
                     $steps = [
                         ['label' => 'Temuan', 'done' => true],
                         ['label' => 'Usulan', 'done' => (bool) $tk?->rencana_koreksi],
-                        ['label' => 'Bukti', 'done' => (bool) $tk?->bukti_file_path],
+                        ['label' => 'Bukti', 'done' => $adaBuktiPelaksanaan],
                         ['label' => 'Dinilai', 'done' => $status === 'selesai'],
                         ['label' => 'P4MP', 'done' => $p4mpStatus === 'terverifikasi'],
                     ];
@@ -205,7 +208,6 @@
 
                             <section class="mt-4 rounded border border-indigo-100 bg-indigo-50 p-4">
                                 @php
-                                    $dokumenDosen = $tk->dokumenDosen ?? collect();
                                     $butuhDokumenDosen = (bool) $tk->kebutuhanDokumenDosen;
                                 @endphp
                                 <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -285,23 +287,22 @@
                                                     @if (!$tkLocked)
                                                         <form action="{{ route('auditee.tindakan_koreksi.dokumen_dosen.validasi', $dokumen->dokumen_tk_dosen_id) }}" method="POST"
                                                             data-scroll-target="tk-{{ $jawaban->id }}"
-                                                            class="mt-3 grid grid-cols-1 gap-3 border-t border-gray-100 pt-3 lg:grid-cols-3">
+                                                            class="mt-3 border-t border-gray-100 pt-3">
                                                             @csrf
                                                             @method('patch')
                                                             <div>
-                                                                <label class="text-xs font-medium text-gray-600">Status Validasi</label>
-                                                                <select name="status_validasi" required class="mt-1 block w-full rounded border-gray-300 text-sm">
-                                                                    <option value="diterima" @selected($dokumen->status_validasi === 'diterima')>Diterima</option>
-                                                                    <option value="ditolak" @selected($dokumen->status_validasi === 'ditolak')>Ditolak</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="lg:col-span-2">
-                                                                <label class="text-xs font-medium text-gray-600">Catatan</label>
+                                                                <label class="text-xs font-medium text-gray-600">Catatan validasi</label>
                                                                 <textarea name="catatan_validasi" rows="2" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ $dokumen->catatan_validasi }}</textarea>
+                                                                <p class="mt-1 text-xs text-gray-500">Opsional. Isi terutama jika dokumen ditolak.</p>
                                                             </div>
-                                                            <div class="lg:col-span-3">
-                                                                <button type="submit" class="rounded bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700">
-                                                                    Simpan Validasi Dokumen
+                                                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                                                <button type="submit" name="status_validasi" value="diterima"
+                                                                    class="rounded bg-green-600 px-3 py-2 text-xs font-medium text-white hover:bg-green-700">
+                                                                    Setujui
+                                                                </button>
+                                                                <button type="submit" name="status_validasi" value="ditolak"
+                                                                    class="rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700">
+                                                                    Tolak
                                                                 </button>
                                                             </div>
                                                         </form>

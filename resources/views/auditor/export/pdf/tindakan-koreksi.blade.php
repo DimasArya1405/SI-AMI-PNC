@@ -196,6 +196,7 @@
         ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
         : '-';
     $tkItems = $temuan->filter(fn ($jawaban) => $jawaban->tindakanKoreksi)->values();
+    $tkPertama = $penugasan->tindakanKoreksi?->first();
     $verifikasiTk = $penugasan->verifikasiTindakanKoreksi;
     $catatanUmumVerifikasi = trim((string) $verifikasiTk?->catatan_umum);
     $catatanUmumVerifikasi = preg_replace('/^\s*(\d+\.\s*)?Temuan\s+\d+\s+-\s*[^:]+:\s*/mi', '$1', $catatanUmumVerifikasi);
@@ -253,7 +254,7 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
-                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
                     <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -268,7 +269,7 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
-                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                  @if ($tkPertama?->verified_by_user_id && !empty($anggotaQR))
                     <img src="{{ $anggotaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -296,7 +297,7 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRumusan }}
-                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
                     <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -308,12 +309,12 @@
         <tr>
             <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
-                Tgl : {{ $penugasan->tindakanKoreksi->first()->p4mp_verified_at
-    ? \Carbon\Carbon::parse($penugasan->tindakanKoreksi->first()->p4mp_verified_at)
+                Tgl : {{ $tkPertama?->p4mp_verified_at
+    ? \Carbon\Carbon::parse($tkPertama->p4mp_verified_at)
         ->locale('id')
         ->translatedFormat('l, d F Y H:i')
     : '-' }}
-                  @if ($penugasan->tindakanKoreksi->first()->p4mp_verified_by_user_id)
+                  @if ($tkPertama?->p4mp_verified_by_user_id && !empty($kepalaQR))
                     <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -341,7 +342,7 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalRumusan }}
-                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
                     <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -382,7 +383,7 @@
             <td class="sign-cell">
                 Auditor<br>
                 Tgl : {{ $tanggalPelaksanaan }}
-                  @if ($penugasan->tindakanKoreksi->first()->verified_by_user_id)
+                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
                     <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -419,12 +420,12 @@
             </td>
                 <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
-                Tgl :  {{ $penugasan->tindakanKoreksi->first()->p4mp_verified_at
-    ? \Carbon\Carbon::parse($penugasan->tindakanKoreksi->first()->p4mp_verified_at)
+                Tgl :  {{ $tkPertama?->p4mp_verified_at
+    ? \Carbon\Carbon::parse($tkPertama->p4mp_verified_at)
         ->locale('id')
         ->translatedFormat('l, d F Y H:i')
     : '-' }}
-                  @if ($penugasan->tindakanKoreksi->first()->p4mp_verified_by_user_id)
+                  @if ($tkPertama?->p4mp_verified_by_user_id && !empty($kepalaQR))
                     <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>

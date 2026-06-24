@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\TindakanKoreksiDosen;
 use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\TindakanKoreksi;
@@ -18,16 +19,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 
 class TindakanKoreksiController extends Controller
 {
-    public function index(): View
+    use PeriodeFilterSupport;
+
+    public function index(Request $request): View
     {
         $auditee = $this->getAuditee();
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
 
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1.user', 'auditor2.user'])
             ->where('upt_id', $auditee->upt_id)
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) {
@@ -41,7 +49,7 @@ class TindakanKoreksiController extends Controller
                 return $penugasan;
             });
 
-        return view('auditee.tindakan-koreksi.index', compact('penugasan'));
+        return view('auditee.tindakan-koreksi.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
     public function show(string $penugasanId): View
@@ -212,10 +220,21 @@ class TindakanKoreksiController extends Controller
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'Tindakan-Koreksi-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+        $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
+        $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
+        $anggotaQR = $this->generateQrCode('tk_anggota||', $penugasan->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode'))
+        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
+    }
+
+    private function generateQrCode(string $prefix, string $registrasi): string
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
     private function getAuditee(): Auditee

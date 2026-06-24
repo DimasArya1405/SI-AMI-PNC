@@ -4,6 +4,7 @@
         $indexRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.index' : 'admin.monitoring_tk.index';
         $exportRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.export' : 'admin.monitoring_tk.export';
         $previewRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.preview_bukti' : 'admin.monitoring_tk.preview_bukti';
+        $previewDokumenDosenRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.dokumen_dosen.preview' : 'admin.monitoring_tk.dokumen_dosen.preview';
     @endphp
 
     @include($isKepalaP4mp ? 'kepala-p4mp.sidebar' : 'admin.sidebar')
@@ -49,6 +50,8 @@
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;
+                    $dokumenDosenDisetujui = $tk?->dokumenDosen ?? collect();
+                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenDosenDisetujui->isNotEmpty();
                     $status = $tk?->status ?? 'belum_dibuat';
                     $p4mpStatus = $tk?->p4mp_status;
                     $kategori = $jawaban->rkaTemuan?->kategori_final ?: $jawaban->kategori_temuan;
@@ -81,7 +84,7 @@
                     $steps = [
                         ['label' => 'Temuan', 'done' => true],
                         ['label' => 'Usulan', 'done' => (bool) $tk?->rencana_koreksi],
-                        ['label' => 'Bukti', 'done' => (bool) $tk?->bukti_file_path],
+                        ['label' => 'Bukti', 'done' => $adaBuktiPelaksanaan],
                         ['label' => 'Auditor', 'done' => $status === 'selesai'],
                         ['label' => 'P4MP', 'done' => $p4mpStatus === 'terverifikasi'],
                     ];
@@ -171,6 +174,37 @@
                                     <i class="bi bi-eye"></i>
                                     Lihat Bukti
                                 </button>
+                            @endif
+                            @if ($dokumenDosenDisetujui->isNotEmpty())
+                                <div class="mt-4 rounded border border-indigo-100 bg-indigo-50 p-3">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <p class="text-xs font-semibold uppercase text-indigo-700">Dokumen Dosen Disetujui Auditee</p>
+                                        <span class="rounded bg-white px-2 py-1 text-xs font-semibold text-indigo-700">{{ $dokumenDosenDisetujui->count() }} dokumen</span>
+                                    </div>
+                                    <div class="mt-3 space-y-2">
+                                        @foreach ($dokumenDosenDisetujui as $dokumenDosen)
+                                            <div class="rounded border border-indigo-100 bg-white p-3">
+                                                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div class="min-w-0">
+                                                        <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenDosen->nama_file }}</p>
+                                                        <p class="mt-1 text-xs text-gray-500">Dosen: {{ $dokumenDosen->dosen?->nama_lengkap ?? '-' }}</p>
+                                                        @if ($dokumenDosen->keterangan)
+                                                            <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenDosen->keterangan }}</p>
+                                                        @endif
+                                                    </div>
+                                                    <button type="button"
+                                                        data-preview-url="{{ route($previewDokumenDosenRouteName, $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                        data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
+                                                        data-file-name="{{ $dokumenDosen->nama_file }}"
+                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                                                        <i class="bi bi-eye"></i>
+                                                        Lihat
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @endif
                             <p class="mt-4 text-xs font-semibold uppercase text-gray-500">Hasil auditor</p>
                             <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->hasil_penilaian_auditor ?: '-' }}</p>

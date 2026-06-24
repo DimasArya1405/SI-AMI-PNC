@@ -7,6 +7,7 @@ use App\Models\Auditee;
 use App\Models\Auditor;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\RingkasanKondisiAudit;
 use App\Models\UptItemSubStandarMutu;
 use App\Notifications\PenugasanAuditNotification;
@@ -19,18 +20,24 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 
 class RkaController extends Controller
 {
-    public function index(): View
+    use PeriodeFilterSupport;
+
+    public function index(Request $request): View
     {
         $auditor = $this->getAuditor();
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
 
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
                     ->orWhere('auditor_id_2', $auditor->auditor_id);
             })
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) use ($auditor) {
@@ -45,7 +52,7 @@ class RkaController extends Controller
                 return $penugasan;
             });
 
-        return view('auditor.rka.index', compact('penugasan'));
+        return view('auditor.rka.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
     public function show(string $penugasanId): View
