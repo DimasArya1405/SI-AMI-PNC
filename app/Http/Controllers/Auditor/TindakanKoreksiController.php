@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditor;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\TindakanKoreksi;
+use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
@@ -20,18 +22,24 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 
 class TindakanKoreksiController extends Controller
 {
-    public function index(): View
+    use PeriodeFilterSupport;
+
+    public function index(Request $request): View
     {
         $auditor = $this->getAuditor();
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
 
         $penugasan = Penugasan::with(['periode', 'upt'])
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
                     ->orWhere('auditor_id_2', $auditor->auditor_id);
             })
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) {
@@ -45,7 +53,7 @@ class TindakanKoreksiController extends Controller
                 return $penugasan;
             });
 
-        return view('auditor.tindakan-koreksi.index', compact('penugasan'));
+        return view('auditor.tindakan-koreksi.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
     public function show(string $penugasanId): View
@@ -73,9 +81,13 @@ class TindakanKoreksiController extends Controller
 
         $this->getPenugasanKetuaAuditor($tindakanKoreksi->penugasan_id);
 
-        if ($validated['status'] === 'selesai' && !$tindakanKoreksi->bukti_file_path) {
+        $adaDokumenDosenDiterima = $tindakanKoreksi->dokumenDosen()
+            ->where('status_validasi', 'diterima')
+            ->exists();
+
+        if ($validated['status'] === 'selesai' && !$tindakanKoreksi->bukti_file_path && !$adaDokumenDosenDiterima) {
             return back()
-                ->withErrors(['status' => 'Tindakan koreksi baru bisa ditandai selesai setelah auditee mengunggah bukti.'])
+                ->withErrors(['status' => 'Tindakan koreksi baru bisa ditandai selesai setelah ada bukti auditee atau dokumen dosen yang disetujui auditee.'])
                 ->withInput();
         }
 
@@ -134,6 +146,25 @@ class TindakanKoreksiController extends Controller
             ->header('Content-Type', Storage::disk('local')->mimeType($tindakanKoreksi->bukti_file_path) ?? 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
+
+    public function previewDokumenDosen(string $dokumenId)
+    {
+        $dokumen = TindakanKoreksiDokumenDosen::with('tindakanKoreksi')
+            ->where('dokumen_tk_dosen_id', $dokumenId)
+            ->where('status_validasi', 'diterima')
+            ->firstOrFail();
+
+        $this->getPenugasanAuditor($dokumen->tindakanKoreksi->penugasan_id);
+
+        abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+        $namaFile = str_replace('"', '', $dokumen->nama_file);
+
+        return response(Storage::disk('local')->get($dokumen->file_path), 200)
+            ->header('Content-Type', Storage::disk('local')->mimeType($dokumen->file_path) ?? 'application/octet-stream')
+            ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
+    }
+
     public function generateQrCode($prefix, $registrasi)
     {
         $encodedCode = base64_encode($prefix . $registrasi);
@@ -159,7 +190,7 @@ class TindakanKoreksiController extends Controller
             ->firstOrFail();
         $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
         $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
-        $anggotaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
+        $anggotaQR = $this->generateQrCode('tk_anggota||', $penugasan->penugasan_id);
 
         return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode','kepalaQR', 'ketuaQR', 'anggotaQR'))
             ->setPaper('a4', 'portrait')
@@ -258,6 +289,11 @@ class TindakanKoreksiController extends Controller
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
             'tindakanKoreksi.p4mpVerifiedBy',
+            'tindakanKoreksi.dokumenDosen' => function ($query) {
+                $query->with('dosen')
+                    ->where('status_validasi', 'diterima')
+                    ->latest();
+            },
             'rkaTemuan',
         ])
             ->whereIn('upt_item_sub_standar_id', $itemIds)

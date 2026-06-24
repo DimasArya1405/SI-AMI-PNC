@@ -17,6 +17,7 @@ class TtdController extends Controller
         $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt','rka','tindakanKoreksi'])
             ->where('penugasan_id', $uuid)
             ->first();
+        $tindakanKoreksi = $penugasan?->tindakanKoreksi?->first();
         $kepala_p4mp = User::where('role', 'kepala_p4mp')
             ->where('status_aktif', true)
             ->first()
@@ -41,17 +42,17 @@ class TtdController extends Controller
             $nama = $kepala_p4mp->name;
             $judul = "Tindakan Koreksi";
             $jabatan = "Kepala P4MP";
-            $tgl = $penugasan->tindakanKoreksi->p4mp_verified_at;
-        } elseif ($prefik = 'tk_ketua') {
+            $tgl = $tindakanKoreksi?->p4mp_verified_at;
+        } elseif ($prefix == 'tk_ketua') {
             $nama = $penugasan->auditor1->nama_lengkap;
             $judul = "Tindakan Koreksi";
             $jabatan = "Ketua Auditor";
-            $tgl = $penugasan->tindakanKoreksi->first()?->verified_at;
-        } elseif ($prefik = 'tk_anggota') {
+            $tgl = $tindakanKoreksi?->verified_at;
+        } elseif ($prefix == 'tk_anggota') {
             $nama = $penugasan->auditor2->nama_lengkap;
             $judul = "Tindakan Koreksi";
             $jabatan = "Anggota Auditor";
-            $tgl = $penugasan->tindakanKoreksi->first()?->verified_at;
+            $tgl = $tindakanKoreksi?->verified_at;
         }
 
         $tahun = $penugasan->periode->tahun;

@@ -5,20 +5,28 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\RingkasanKondisiAudit;
 use App\Models\UptItemSubStandarMutu;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 
 class RkaController extends Controller
 {
-    public function index(): View
+    use PeriodeFilterSupport;
+
+    public function index(Request $request): View
     {
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'rka'])
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) {
@@ -41,7 +49,7 @@ class RkaController extends Controller
             'belum_rka' => $penugasan->filter(fn ($item) => $item->status_rka === 'belum_dibuat')->count(),
         ];
 
-        return view('admin.rka.index', compact('penugasan', 'ringkasan'));
+        return view('admin.rka.index', array_merge(compact('penugasan', 'ringkasan'), $periodeFilter));
     }
 
     public function show(string $penugasanId): View

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\JawabanAudit;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\TindakanKoreksi;
+use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\VerifikasiTindakanKoreksi;
 use App\Notifications\PenugasanAuditNotification;
@@ -18,13 +20,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Milon\Barcode\Facades\DNS2DFacade;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 
 class MonitoringTindakanKoreksiController extends Controller
 {
-    public function index(): View
+    use PeriodeFilterSupport;
+
+    public function index(Request $request): View
     {
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2'])
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
             ->get()
             ->map(function (Penugasan $penugasan) {
@@ -73,7 +82,7 @@ class MonitoringTindakanKoreksiController extends Controller
             'total_ob_naik_kts' => $penugasan->sum('ob_naik_kts'),
         ];
 
-        return view('admin.monitoring-tindakan-koreksi.index', compact('penugasan', 'ringkasan'));
+        return view('admin.monitoring-tindakan-koreksi.index', array_merge(compact('penugasan', 'ringkasan'), $periodeFilter));
     }
 
     public function show(string $penugasanId): View
@@ -203,6 +212,22 @@ class MonitoringTindakanKoreksiController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    public function previewDokumenDosen(string $dokumenId)
+    {
+        $dokumen = TindakanKoreksiDokumenDosen::with('tindakanKoreksi')
+            ->where('dokumen_tk_dosen_id', $dokumenId)
+            ->where('status_validasi', 'diterima')
+            ->firstOrFail();
+
+        abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+        $namaFile = str_replace('"', '', $dokumen->nama_file);
+
+        return response(Storage::disk('local')->get($dokumen->file_path), 200)
+            ->header('Content-Type', Storage::disk('local')->mimeType($dokumen->file_path) ?? 'application/octet-stream')
+            ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
+    }
+
     public function export(string $penugasanId): Response
     {
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'verifikasiTindakanKoreksi.finalizedBy'])
@@ -213,10 +238,21 @@ class MonitoringTindakanKoreksiController extends Controller
         $upt = $penugasan->upt;
         $periode = $penugasan->periode;
         $namaFile = 'Tindakan-Koreksi-' . Str::slug($upt?->nama_upt ?? 'unit') . '-' . ($periode?->tahun ?? 'periode') . '.pdf';
+        $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
+        $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
+        $anggotaQR = $this->generateQrCode('tk_anggota||', $penugasan->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode'))
+        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
+    }
+
+    private function generateQrCode(string $prefix, string $registrasi): string
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
     private function getTemuan(Penugasan $penugasan)
@@ -227,6 +263,9 @@ class MonitoringTindakanKoreksiController extends Controller
             'tindakanKoreksi.buktiUploadedBy',
             'tindakanKoreksi.verifiedBy',
             'tindakanKoreksi.p4mpVerifiedBy',
+            'tindakanKoreksi.dokumenDosen' => fn ($query) => $query
+                ->where('status_validasi', 'diterima')
+                ->with(['dosen', 'uploadedBy', 'validatedBy']),
             'rkaTemuan',
         ])
             ->whereIn('upt_item_sub_standar_id', $this->getItemIds($penugasan))

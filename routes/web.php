@@ -138,6 +138,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 
     Route::get('/admin/monitoring-tindakan-koreksi', [MonitoringTindakanKoreksiController::class, 'index'])->name('admin.monitoring_tk.index');
     Route::get('/admin/monitoring-tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewBukti'])->name('admin.monitoring_tk.preview_bukti');
+    Route::get('/admin/monitoring-tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewDokumenDosen'])->name('admin.monitoring_tk.dokumen_dosen.preview');
     Route::get('/admin/monitoring-tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [MonitoringTindakanKoreksiController::class, 'downloadBukti'])->name('admin.monitoring_tk.download_bukti');
     Route::get('/admin/monitoring-tindakan-koreksi/{penugasan_id}/export', [MonitoringTindakanKoreksiController::class, 'export'])->name('admin.monitoring_tk.export');
     Route::get('/admin/monitoring-tindakan-koreksi/{penugasan_id}', [MonitoringTindakanKoreksiController::class, 'show'])->name('admin.monitoring_tk.show');
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'checkRole:kepala_p4mp'])->group(function () {
     Route::get('/kepala-p4mp/rka/{penugasan_id}', [AdminRkaController::class, 'show'])->name('kepala_p4mp.rka.show');
     Route::get('/kepala-p4mp/tindakan-koreksi', [MonitoringTindakanKoreksiController::class, 'index'])->name('kepala_p4mp.tindakan_koreksi.index');
     Route::get('/kepala-p4mp/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewBukti'])->name('kepala_p4mp.tindakan_koreksi.preview_bukti');
+    Route::get('/kepala-p4mp/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [MonitoringTindakanKoreksiController::class, 'previewDokumenDosen'])->name('kepala_p4mp.tindakan_koreksi.dokumen_dosen.preview');
     Route::get('/kepala-p4mp/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [MonitoringTindakanKoreksiController::class, 'downloadBukti'])->name('kepala_p4mp.tindakan_koreksi.download_bukti');
     Route::post('/kepala-p4mp/tindakan-koreksi/{penugasan_id}/finalisasi', [MonitoringTindakanKoreksiController::class, 'finalisasi'])->name('kepala_p4mp.tindakan_koreksi.finalisasi');
     Route::get('/kepala-p4mp/tindakan-koreksi/{penugasan_id}/export', [MonitoringTindakanKoreksiController::class, 'export'])->name('kepala_p4mp.tindakan_koreksi.export');
@@ -194,6 +196,7 @@ Route::middleware(['auth', 'checkRole:auditor'])->group(function () {
     Route::get('/auditor/tindakan-koreksi', [AuditorTindakanKoreksiController::class, 'index'])->name('auditor.tindakan_koreksi.index');
     Route::get('/auditor/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [AuditorTindakanKoreksiController::class, 'previewBukti'])->name('auditor.tindakan_koreksi.preview_bukti');
     Route::get('/auditor/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [AuditorTindakanKoreksiController::class, 'downloadBukti'])->name('auditor.tindakan_koreksi.download_bukti');
+    Route::get('/auditor/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [AuditorTindakanKoreksiController::class, 'previewDokumenDosen'])->name('auditor.tindakan_koreksi.dokumen_dosen.preview');
     Route::get('/auditor/tindakan-koreksi/{penugasan_id}/export', [AuditorTindakanKoreksiController::class, 'export'])->name('auditor.tindakan_koreksi.export');
     Route::get('/auditor/tindakan-koreksi/{penugasan_id}', [AuditorTindakanKoreksiController::class, 'show'])->name('auditor.tindakan_koreksi.show');
     Route::post('/auditor/tindakan-koreksi/{penugasan_id}/{jawaban_audit_id}', [AuditorTindakanKoreksiController::class, 'rumuskan'])->name('auditor.tindakan_koreksi.rumuskan');

@@ -47,6 +47,8 @@
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;
+                    $dokumenDosenDisetujui = $tk?->dokumenDosen ?? collect();
+                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenDosenDisetujui->isNotEmpty();
                     $status = $tk?->status ?? 'belum_dibuat';
                     $kategori = $jawaban->rkaTemuan?->kategori_final ?: $jawaban->kategori_temuan;
                     $kondisi = $jawaban->rkaTemuan?->kondisi_final ?: $jawaban->catatan;
@@ -56,7 +58,7 @@
                     $itemPath = collect($jawaban->item_path ?? []);
                     $temuanItemId = $jawaban->upt_item_sub_standar_id;
                     $p4mpStatus = $tk?->p4mp_status;
-                    $currentStep = !$tk ? 2 : ($status === 'selesai' ? 5 : ($tk->bukti_file_path ? 4 : 4));
+                    $currentStep = !$tk ? 2 : ($status === 'selesai' ? 5 : ($adaBuktiPelaksanaan ? 4 : 4));
                     $statusClass = match ($status) {
                         'diajukan' => 'bg-blue-100 text-blue-700',
                         'ditolak' => 'bg-red-100 text-red-700',
@@ -73,7 +75,7 @@
                     $nextAction = match (true) {
                         !$tk && $isKetuaAuditor => 'Isi analisis dan usulan tindakan koreksi.',
                         !$tk => 'Menunggu ketua auditor menyusun tindakan koreksi.',
-                        !$tk->bukti_file_path => 'Menunggu auditee mengunggah bukti pelaksanaan.',
+                        !$adaBuktiPelaksanaan => 'Menunggu auditee mengunggah bukti pelaksanaan atau menyetujui dokumen dosen.',
                         $status !== 'selesai' && $isKetuaAuditor => 'Isi hasil penilaian ulang auditor.',
                         $status !== 'selesai' => 'Menunggu ketua auditor menilai ulang bukti.',
                         !$p4mpStatus || $p4mpStatus === 'menunggu_verifikasi' => 'Menunggu verifikasi P4MP.',
@@ -84,7 +86,7 @@
                         ['label' => 'Temuan', 'done' => true],
                         ['label' => 'Analisis', 'done' => (bool) $tk?->analisis_ketidaksesuaian],
                         ['label' => 'Usulan', 'done' => (bool) $tk?->rencana_koreksi],
-                        ['label' => 'Pelaksanaan', 'done' => (bool) $tk?->bukti_file_path],
+                        ['label' => 'Pelaksanaan', 'done' => $adaBuktiPelaksanaan],
                         ['label' => 'Verifikasi', 'done' => $p4mpStatus === 'terverifikasi'],
                     ];
                 @endphp
@@ -211,6 +213,38 @@
                                         <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->pelaksanaan_deskripsi ?: 'Belum ada uraian pelaksanaan dari auditee.' }}</p>
                                     </div>
 
+                                    @if ($dokumenDosenDisetujui->isNotEmpty())
+                                        <div class="mt-3 rounded border border-indigo-100 bg-indigo-50 p-3">
+                                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                                <p class="text-xs font-semibold uppercase text-indigo-700">Dokumen Dosen Disetujui Auditee</p>
+                                                <span class="rounded bg-white px-2 py-1 text-xs font-semibold text-indigo-700">{{ $dokumenDosenDisetujui->count() }} dokumen</span>
+                                            </div>
+                                            <div class="mt-3 space-y-2">
+                                                @foreach ($dokumenDosenDisetujui as $dokumenDosen)
+                                                    <div class="rounded border border-indigo-100 bg-white p-3">
+                                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                            <div class="min-w-0">
+                                                                <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenDosen->nama_file }}</p>
+                                                                <p class="mt-1 text-xs text-gray-500">Dosen: {{ $dokumenDosen->dosen?->nama_lengkap ?? '-' }}</p>
+                                                                @if ($dokumenDosen->keterangan)
+                                                                    <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenDosen->keterangan }}</p>
+                                                                @endif
+                                                            </div>
+                                                            <button type="button"
+                                                                data-preview-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.preview', $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                                data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
+                                                                data-file-name="{{ $dokumenDosen->nama_file }}"
+                                                                class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                                                                <i class="bi bi-eye"></i>
+                                                                Lihat
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     <label class="mt-3 block text-sm font-medium text-gray-700">Hasil Penilaian Ulang</label>
                                     <textarea name="hasil_penilaian_auditor" rows="3" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('hasil_penilaian_auditor', $tk->hasil_penilaian_auditor) }}</textarea>
 
@@ -258,6 +292,37 @@
                                                 <i class="bi bi-eye"></i>
                                                 Lihat Bukti
                                             </button>
+                                        @endif
+                                        @if ($dokumenDosenDisetujui->isNotEmpty())
+                                            <div class="mt-4 rounded border border-indigo-100 bg-white p-3">
+                                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                                    <p class="text-xs font-semibold uppercase text-indigo-700">Dokumen Dosen Disetujui Auditee</p>
+                                                    <span class="rounded bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700">{{ $dokumenDosenDisetujui->count() }} dokumen</span>
+                                                </div>
+                                                <div class="mt-3 space-y-2">
+                                                    @foreach ($dokumenDosenDisetujui as $dokumenDosen)
+                                                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                                <div class="min-w-0">
+                                                                    <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenDosen->nama_file }}</p>
+                                                                    <p class="mt-1 text-xs text-gray-500">Dosen: {{ $dokumenDosen->dosen?->nama_lengkap ?? '-' }}</p>
+                                                                    @if ($dokumenDosen->keterangan)
+                                                                        <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenDosen->keterangan }}</p>
+                                                                    @endif
+                                                                </div>
+                                                                <button type="button"
+                                                                    data-preview-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.preview', $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                                    data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
+                                                                    data-file-name="{{ $dokumenDosen->nama_file }}"
+                                                                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                                                                    <i class="bi bi-eye"></i>
+                                                                    Lihat
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>

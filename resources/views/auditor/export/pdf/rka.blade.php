@@ -289,52 +289,6 @@
         </tr>
     </table>
 
-    {{-- <table class="audit-table">
-        <thead>
-            <tr>
-                <td class="institution">
-                    <h1>POLITEKNIK NEGERI CILACAP</h1>
-                    <p>Jl.Dr. Soetomo No.1 Sidakaya, CILACAP 53212, Jawa Tengah</p>
-                    <p>E-mail: sekretariat@pnc.ac.id, Website: www.pnc.ac.id</p>
-                    <p>Telp : (0282) 537992 Fax : (0282) 533329</p>
-                </td>
-                <td class="logo-cell">
-                    <img src="{{ public_path('img/logo_pnc.png') }}" alt="Logo PNC">
-                </td>
-            </tr>
-        </table> --}}
-
-        <table class="main-box">
-            <tr>
-                <td colspan="3" class="title">RINGKASAN KONDISI AUDIT</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Kriteria</td>
-                <td class="meta-separator">:</td>
-                <td class="meta-value">Standar SPMI PNC</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Tgl Penilaian</td>
-                <td class="meta-separator">:</td>
-                <td class="meta-value">{{ $tanggalAudit }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Auditi</td>
-                <td class="meta-separator">:</td>
-                <td class="meta-value">{{ $kategori }} {{ $upt?->nama_upt ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Auditor</td>
-                <td class="meta-separator">:</td>
-                <td class="meta-value">1. {{ $penugasan->auditor1?->nama_lengkap ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label"></td>
-                <td class="meta-separator"></td>
-                <td class="meta-value">2. {{ $penugasan->auditor2?->nama_lengkap ?? '-' }}</td>
-            </tr>
-        </table>
-
         <table class="audit-table">
             <thead>
                 <tr>
@@ -430,7 +384,7 @@
                 <td class="role">Ketua<br>Auditor</td>
                 <td class="person">{{ $penugasan->auditor1?->nama_lengkap ?? '' }}</td>
                 <td class="ttd">
-                    @if ($rka->finalized_by_user_id)
+                    @if ($rka->finalized_by_user_id && !empty($ketuaAuditorQR))
                     <img src="{{ $ketuaAuditorQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -439,7 +393,7 @@
                 <td class="role">Auditor<br>Anggota</td>
                 <td class="person">{{ $penugasan->auditor2?->nama_lengkap ?? '' }}</td>
                 <td class="ttd">
-                    @if ($rka->finalized_by_user_id)
+                    @if ($rka->finalized_by_user_id && !empty($anggotaAuditorQR))
                     <img src="{{ $anggotaAuditorQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
@@ -453,7 +407,7 @@
                 <td colspan="2" class="review-role">Kepala P4MP</td>
                 <td colspan="2" class="review-name">{{ $namaKepalaP4mp }}</td>
                 <td colspan="2" class="review-ttd">
-                    @if($rka->acc_p4mp == 1)
+                    @if($rka->acc_p4mp == 1 && !empty($kepalaQR))
                     <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
