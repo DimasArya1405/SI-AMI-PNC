@@ -33,6 +33,7 @@ use App\Http\Controllers\Auditor\TindakanKoreksiController as AuditorTindakanKor
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Dosen\DosenController as RoleDosenController;
 use App\Http\Controllers\KepalaP4mp\DashboardController as KepalaP4mpDashboardController;
+use App\Http\Controllers\KepalaP4mp\PenugasanController as KepalaP4mpPenugasanController;
 use App\Http\Controllers\KepalaP4mp\RkaController as KepalaP4mpRkaController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
@@ -150,6 +151,9 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
 
 Route::middleware(['auth', 'checkRole:kepala_p4mp'])->group(function () {
     Route::get('/kepala-p4mp/dashboard', [KepalaP4mpDashboardController::class, 'index'])->name('kepala_p4mp.dashboard');
+    Route::get('/kepala-p4mp/penugasan', [KepalaP4mpPenugasanController::class, 'index'])->name('kepala_p4mp.penugasan.index');
+    Route::patch('/kepala-p4mp/penugasan/{periode_id}/tanda-tangan', [KepalaP4mpPenugasanController::class, 'tandaTangan'])->name('kepala_p4mp.penugasan.tanda_tangan');
+    Route::get('/kepala-p4mp/penugasan/{periode_id}/export', [KepalaP4mpPenugasanController::class, 'export'])->name('kepala_p4mp.penugasan.export');
     Route::get('/kepala-p4mp/rka', [AdminRkaController::class, 'index'])->name('kepala_p4mp.rka.index');
     Route::get('/kepala-p4mp/rka/{id}/export', [AdminRkaController::class, 'export'])->name('kepala_p4mp.rka.export');
     Route::put('/kepala-p4mp/rka/acc/{id}', [KepalaP4mpRkaController::class, 'acc'])->name('kepala_p4mp.rka.acc');
@@ -243,6 +247,7 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::patch('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/validasi', [AuditeeTindakanKoreksiController::class, 'validasiDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.validasi');
     Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.preview');
     Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/download', [AuditeeTindakanKoreksiController::class, 'downloadDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.download');
+    Route::patch('/auditee/tindakan-koreksi/{penugasan_id}/tanda-tangan', [AuditeeTindakanKoreksiController::class, 'tandaTangan'])->name('auditee.tindakan_koreksi.tanda_tangan');
     Route::get('/auditee/tindakan-koreksi/{penugasan_id}/export', [AuditeeTindakanKoreksiController::class, 'export'])->name('auditee.tindakan_koreksi.export');
     Route::get('/auditee/tindakan-koreksi/{penugasan_id}', [AuditeeTindakanKoreksiController::class, 'show'])->name('auditee.tindakan_koreksi.show');
 });

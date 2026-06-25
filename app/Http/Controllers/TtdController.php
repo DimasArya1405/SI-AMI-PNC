@@ -14,10 +14,11 @@ class TtdController extends Controller
         $decode = base64_decode($ttdcode);
         list($prefix, $uuid) = explode('||', $decode);
 
-        $penugasan = Penugasan::with(['periode','auditor1','auditor2','upt','rka','tindakanKoreksi'])
+        $penugasan = Penugasan::with(['periode','auditor1','auditor2','auditee.user','upt','rka','tindakanKoreksi','verifikasiTindakanKoreksi'])
             ->where('penugasan_id', $uuid)
             ->first();
         $tindakanKoreksi = $penugasan?->tindakanKoreksi?->first();
+        $verifikasiTk = $penugasan?->verifikasiTindakanKoreksi;
         $kepala_p4mp = User::where('role', 'kepala_p4mp')
             ->where('status_aktif', true)
             ->first()
@@ -43,6 +44,13 @@ class TtdController extends Controller
             $judul = "Tindakan Koreksi";
             $jabatan = "Kepala P4MP";
             $tgl = $tindakanKoreksi?->p4mp_verified_at;
+        } elseif ($prefix == 'tk_wadir') {
+            $nama = trim((string) ($verifikasiTk?->wadir1_nama ?: $tindakanKoreksi?->wadir1_nama));
+            abort_if($nama === '', 404);
+
+            $judul = "Tindakan Koreksi";
+            $jabatan = "Wadir I";
+            $tgl = $verifikasiTk?->finalized_at ?: $tindakanKoreksi?->p4mp_verified_at;
         } elseif ($prefix == 'tk_ketua') {
             $nama = $penugasan->auditor1->nama_lengkap;
             $judul = "Tindakan Koreksi";
@@ -53,8 +61,25 @@ class TtdController extends Controller
             $judul = "Tindakan Koreksi";
             $jabatan = "Anggota Auditor";
             $tgl = $tindakanKoreksi?->verified_at;
+        } elseif ($prefix == 'tk_auditee') {
+            $nama = $penugasan->auditee?->nama_lengkap
+                ?? $penugasan->auditee?->user?->name
+                ?? $penugasan->upt?->nama_upt
+                ?? 'Auditee';
+            $judul = "Tindakan Koreksi";
+            $jabatan = "Auditee / Kepala Unit Kerja";
+            $tgl = $tindakanKoreksi?->bukti_uploaded_at
+                ?? $tindakanKoreksi?->updated_at;
+        } elseif ($prefix == 'penugasan_kepala') {
+            $nama = $kepala_p4mp->name;
+            $judul = "Jadwal Audit Mutu Internal";
+            $jabatan = "Kepala P4MP";
+            $tgl = $penugasan?->acc_kepala_p4mp_at
+                ?? $penugasan?->updated_at;
+            $lingkup = 'Seluruh Jadwal AMI Periode ' . $penugasan->periode->tahun;
         }
 
+        $lingkup ??= null;
         $tahun = $penugasan->periode->tahun;
         return view('ttd.index', compact(
             'jabatan', 
@@ -62,7 +87,8 @@ class TtdController extends Controller
             'judul',
             'tahun',
             'penugasan',
-            'tgl'
+            'tgl',
+            'lingkup'
         ));
     }
 }

@@ -161,6 +161,35 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Status dokumen dosen berhasil diperbarui.');
     }
 
+    public function tandaTangan(string $penugasanId): RedirectResponse
+    {
+        $penugasan = $this->getPenugasanAuditee($penugasanId);
+        $temuan = $this->getTemuan($penugasan);
+        $tindakanKoreksi = $temuan
+            ->pluck('tindakanKoreksi')
+            ->filter()
+            ->values();
+
+        if ($tindakanKoreksi->isEmpty()) {
+            return back()->with('error', 'Belum ada tindakan koreksi yang bisa ditandatangani.');
+        }
+
+        $sudahPernahDitandatangani = $tindakanKoreksi->contains(fn (TindakanKoreksi $tk) => filled($tk->auditee_signed_at));
+
+        if ($sudahPernahDitandatangani) {
+            return back()->with('error', 'Tindakan koreksi sudah pernah ditandatangani auditee.');
+        }
+
+        $tindakanKoreksi->each(function (TindakanKoreksi $tk) {
+            $tk->update([
+                'auditee_signed_by_user_id' => Auth::id(),
+                'auditee_signed_at' => now(),
+            ]);
+        });
+
+        return back()->with('success', 'Tindakan koreksi berhasil ditandatangani oleh auditee.');
+    }
+
     public function downloadBukti(string $tindakanKoreksiId)
     {
         $tindakanKoreksi = TindakanKoreksi::with('penugasan')
@@ -223,8 +252,10 @@ class TindakanKoreksiController extends Controller
         $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
         $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
         $anggotaQR = $this->generateQrCode('tk_anggota||', $penugasan->penugasan_id);
+        $auditeeQR = $this->generateQrCode('tk_auditee||', $penugasan->penugasan_id);
+        $wadirQR = $this->generateQrCode('tk_wadir||', $penugasan->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR'))
+        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR', 'auditeeQR', 'wadirQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }
@@ -327,5 +358,15 @@ class TindakanKoreksiController extends Controller
     {
         return $tindakanKoreksi
             && ($tindakanKoreksi->p4mp_status === 'terverifikasi' || filled($tindakanKoreksi->p4mp_verified_at));
+    }
+
+    private function hasBuktiPelaksanaan(TindakanKoreksi $tindakanKoreksi): bool
+    {
+        $adaDokumenDosenDiterima = $tindakanKoreksi->relationLoaded('dokumenDosen')
+            && $tindakanKoreksi->dokumenDosen?->contains(fn ($dokumen) => $dokumen->status_validasi === 'diterima');
+
+        return filled($tindakanKoreksi->bukti_file_path)
+            || filled($tindakanKoreksi->pelaksanaan_deskripsi)
+            || $adaDokumenDosenDiterima;
     }
 }

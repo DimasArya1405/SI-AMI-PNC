@@ -83,6 +83,8 @@
 
         .section-table {
             margin-top: 12px;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .section-table th {
@@ -97,6 +99,8 @@
             border: 1.25px solid #444;
             padding: 6px;
             vertical-align: top;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .content-cell {
@@ -105,16 +109,16 @@
 
         .sign-cell {
             font-size: 10.5pt;
-            height: 82px;
+            height: auto;
             width: 25%;
         }
 
         .section-large .content-cell {
-            height: 185px;
+            height: 125px;
         }
 
         .section-medium .content-cell {
-            height: 145px;
+            height: 95px;
         }
 
         .section-small .content-cell {
@@ -123,6 +127,23 @@
 
         .sign-space {
             height: 10px;
+        }
+
+        .qr-code {
+            display: block;
+            height: 56px;
+            margin: 3px auto 2px;
+            object-fit: contain;
+            width: 56px;
+        }
+
+        .sign-block {
+            min-height: 74px;
+        }
+
+        .sign-divider {
+            border-top: 1.25px solid #444;
+            margin: 5px -6px 5px;
         }
 
         .section-list {
@@ -180,6 +201,16 @@
 </head>
 <body>
 @php
+    \Illuminate\Support\Carbon::setLocale('id');
+    $formatTanggal = function ($date, bool $withTime = false) {
+        if (!$date) {
+            return '-';
+        }
+
+        return \Illuminate\Support\Carbon::parse($date)
+            ->locale('id')
+            ->translatedFormat($withTime ? 'j F Y H:i' : 'j F Y');
+    };
     $kategori = ($upt?->kategori_upt ?? null) === 'Prodi' ? 'PRODI' : 'UNIT';
     $unitKerja = trim($kategori . ' ' . ($upt?->nama_upt ?? '-'));
     $auditeeTerkait = \App\Models\Auditee::with('user')
@@ -192,31 +223,37 @@
         ?? $auditeeTerkait?->nama_lengkap
         ?? $auditeeTerkait?->user?->name
         ?? $unitKerja;
-    $tanggalAudit = $penugasan->tanggal_audit
-        ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
-        : '-';
+    $tanggalAudit = $formatTanggal($penugasan->tanggal_audit);
     $tkItems = $temuan->filter(fn ($jawaban) => $jawaban->tindakanKoreksi)->values();
     $tkPertama = $penugasan->tindakanKoreksi?->first();
     $verifikasiTk = $penugasan->verifikasiTindakanKoreksi;
+    $auditeeSigned = $tkItems->isNotEmpty()
+        && $tkItems->every(fn ($jawaban) => filled($jawaban->tindakanKoreksi?->auditee_signed_at));
     $catatanUmumVerifikasi = trim((string) $verifikasiTk?->catatan_umum);
     $catatanUmumVerifikasi = preg_replace('/^\s*(\d+\.\s*)?Temuan\s+\d+\s+-\s*[^:]+:\s*/mi', '$1', $catatanUmumVerifikasi);
     $catatanItemVerifikasi = $tkItems
         ->map(fn ($jawaban) => trim((string) $jawaban->tindakanKoreksi?->p4mp_catatan))
         ->filter()
         ->values();
-    $tanggalRka = optional($temuan->first()?->rkaTemuan?->rka?->tanggal_rapat)->translatedFormat('j F Y');
-    $tanggalRka = $tanggalRka ?: $tanggalAudit;
-    $tanggalRumusan = optional($tkItems->first()?->tindakanKoreksi?->created_at)->translatedFormat('j F Y') ?: $tanggalAudit;
-    $tanggalPelaksanaan = optional($tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->tanggal_penilaian_ulang)?->tindakanKoreksi?->tanggal_penilaian_ulang)->translatedFormat('j F Y') ?: '-';
+    $tanggalRka = $formatTanggal($temuan->first()?->rkaTemuan?->rka?->tanggal_rapat);
+    $tanggalRka = $tanggalRka !== '-' ? $tanggalRka : $tanggalAudit;
+    $tanggalRumusan = $formatTanggal($tkItems->first()?->tindakanKoreksi?->created_at);
+    $tanggalRumusan = $tanggalRumusan !== '-' ? $tanggalRumusan : $tanggalAudit;
+    $tanggalPelaksanaan = $formatTanggal($tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->tanggal_penilaian_ulang)?->tindakanKoreksi?->tanggal_penilaian_ulang);
+    $tanggalAuditee = $formatTanggal($tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->auditee_signed_at)?->tindakanKoreksi?->auditee_signed_at);
     $tanggalP4mp = $verifikasiTk?->finalized_at
-        ? $verifikasiTk->finalized_at->translatedFormat('j F Y')
-        : (optional($tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->p4mp_verified_at)?->tindakanKoreksi?->p4mp_verified_at)->translatedFormat('j F Y') ?: '-');
+        ? $formatTanggal($verifikasiTk->finalized_at)
+        : $formatTanggal($tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->p4mp_verified_at)?->tindakanKoreksi?->p4mp_verified_at);
     $namaP4mp = $verifikasiTk?->finalizedBy?->name
         ?? $tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->p4mpVerifiedBy)?->tindakanKoreksi?->p4mpVerifiedBy?->name
         ?? 'Kepala P4MP';
-    $namaWadir = $verifikasiTk?->wadir1_nama
+    $namaWadir = trim((string) (
+        $verifikasiTk?->wadir1_nama
         ?? $tkItems->first(fn ($jawaban) => $jawaban->tindakanKoreksi?->wadir1_nama)?->tindakanKoreksi?->wadir1_nama
-        ?? 'Wadir I';
+        ?? ''
+    ));
+    $wadirDitandatangani = $namaWadir !== '' && !empty($wadirQR);
+    $placeholderWadir = '...................................';
 @endphp
 
 <div class="sheet">
@@ -255,7 +292,7 @@
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
                   @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
-                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    <img src="{{ $ketuaQR }}" alt="QR" class="qr-code">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
                     @endif
@@ -270,7 +307,7 @@
                 Auditor<br>
                 Tgl : {{ $tanggalRka }}
                   @if ($tkPertama?->verified_by_user_id && !empty($anggotaQR))
-                    <img src="{{ $anggotaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    <img src="{{ $anggotaQR }}" alt="QR" class="qr-code">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
                     @endif
@@ -298,7 +335,7 @@
                 Auditor<br>
                 Tgl : {{ $tanggalRumusan }}
                   @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
-                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    <img src="{{ $ketuaQR }}" alt="QR" class="qr-code">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
                     @endif
@@ -309,13 +346,9 @@
         <tr>
             <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
-                Tgl : {{ $tkPertama?->p4mp_verified_at
-    ? \Carbon\Carbon::parse($tkPertama->p4mp_verified_at)
-        ->locale('id')
-        ->translatedFormat('l, d F Y H:i')
-    : '-' }}
+                Tgl : {{ $tanggalP4mp }}
                   @if ($tkPertama?->p4mp_verified_by_user_id && !empty($kepalaQR))
-                    <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    <img src="{{ $kepalaQR }}" alt="QR" class="qr-code">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
                     @endif
@@ -330,7 +363,7 @@
             <th colspan="2">Usulan Tindakan Koreksi :</th>
         </tr>
         <tr>
-            <td rowspan="2" class="content-cell">
+            <td class="content-cell">
                 <ol class="section-list">
                     @forelse ($tkItems as $jawaban)
                         <li>{{ $jawaban->tindakanKoreksi?->rencana_koreksi ?: 'Belum ada usulan tindakan koreksi.' }}</li>
@@ -340,35 +373,39 @@
                 </ol>
             </td>
             <td class="sign-cell">
-                Auditor<br>
-                Tgl : {{ $tanggalRumusan }}
-                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
-                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                <div class="sign-block">
+                    Auditor<br>
+                    Tgl : {{ $tanggalRumusan }}
+                    @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
+                        <img src="{{ $ketuaQR }}" alt="QR" class="qr-code">
                     @else
-                    <i style="color:red;">Belum disetujui.</i>
+                        <i style="color:red;">Belum disetujui.</i>
                     @endif
-                <div class="sign-space"></div>
-                ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
-            </td>
-        </tr>
-        <tr>
-            <td class="sign-cell">
-                Diketahui Ka. Unit Kerja<br>
-                Tgl : {{ $tanggalRumusan }}
-                <div class="sign-space"></div>
-                ( {{ $namaAuditee }} )
+                    <div class="sign-space"></div>
+                    ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
+                </div>
+                <div class="sign-divider"></div>
+                <div class="sign-block">
+                    Diketahui Ka. Unit Kerja<br>
+                    Tgl : {{ $tanggalAuditee }}
+                    @if ($auditeeSigned && !empty($auditeeQR))
+                        <img src="{{ $auditeeQR }}" alt="QR" class="qr-code">
+                    @else
+                        <i style="color:red;">Belum disetujui.</i>
+                    @endif
+                    <div class="sign-space"></div>
+                    ( {{ $namaAuditee }} )
+                </div>
             </td>
         </tr>
     </table>
-</div>
 
-<div class="sheet page-break">
-    <table class="section-table section-large" style="margin-top: 28px;">
+    <table class="section-table section-large" style="margin-top: 12px;">
         <tr>
             <th colspan="2">Pelaksanaan Tindakan Koreksi :</th>
         </tr>
         <tr>
-            <td rowspan="2" class="content-cell">
+            <td class="content-cell">
                 <ol class="section-list">
                     @forelse ($tkItems as $jawaban)
                         @php
@@ -381,23 +418,29 @@
                 </ol>
             </td>
             <td class="sign-cell">
-                Auditor<br>
-                Tgl : {{ $tanggalPelaksanaan }}
-                  @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
-                    <img src="{{ $ketuaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                <div class="sign-block">
+                    Auditor<br>
+                    Tgl : {{ $tanggalPelaksanaan }}
+                    @if ($tkPertama?->verified_by_user_id && !empty($ketuaQR))
+                        <img src="{{ $ketuaQR }}" alt="QR" class="qr-code">
                     @else
-                    <i style="color:red;">Belum disetujui.</i>
+                        <i style="color:red;">Belum disetujui.</i>
                     @endif
-                <div class="sign-space"></div>
-                ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
-            </td>
-        </tr>
-        <tr>
-            <td class="sign-cell">
-                Disetujui Ka. Unit Kerja<br>
-                Tgl : {{ $tanggalPelaksanaan }}
-                <div class="sign-space"></div>
-                ( {{ $namaAuditee }} )
+                    <div class="sign-space"></div>
+                    ( {{ $penugasan->auditor1?->nama_lengkap ?? '-' }} )
+                </div>
+                <div class="sign-divider"></div>
+                <div class="sign-block">
+                    Disetujui Ka. Unit Kerja<br>
+                    Tgl : {{ $tanggalAuditee }}
+                    @if ($auditeeSigned && !empty($auditeeQR))
+                        <img src="{{ $auditeeQR }}" alt="QR" class="qr-code">
+                    @else
+                        <i style="color:red;">Belum disetujui.</i>
+                    @endif
+                    <div class="sign-space"></div>
+                    ( {{ $namaAuditee }} )
+                </div>
             </td>
         </tr>
     </table>
@@ -420,13 +463,9 @@
             </td>
                 <td class="sign-cell">
                 Diketahui Ka. AMI / Ka. P4MP<br>
-                Tgl :  {{ $tkPertama?->p4mp_verified_at
-    ? \Carbon\Carbon::parse($tkPertama->p4mp_verified_at)
-        ->locale('id')
-        ->translatedFormat('l, d F Y H:i')
-    : '-' }}
+                Tgl : {{ $tanggalP4mp }}
                   @if ($tkPertama?->p4mp_verified_by_user_id && !empty($kepalaQR))
-                    <img src="{{ $kepalaQR }}" alt="QR" style="margin: 10px auto 0; width: 80px;">
+                    <img src="{{ $kepalaQR }}" alt="QR" class="qr-code">
                     @else
                     <i style="color:red;">Belum disetujui.</i>
                     @endif
@@ -438,8 +477,11 @@
             <td class="sign-cell">
                 Wadir I<br>
                 Tgl : {{ $tanggalP4mp }}
+                @if ($wadirDitandatangani)
+                    <img src="{{ $wadirQR }}" alt="QR" class="qr-code">
+                @endif
                 <div class="sign-space"></div>
-                ( {{ $namaWadir }} )
+                ( {{ $namaWadir !== '' ? $namaWadir : $placeholderWadir }} )
             </td>
         </tr>
     </table>

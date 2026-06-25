@@ -38,7 +38,7 @@
                             Tindakan Koreksi
                         </a>
                         @if ($isKepalaP4mp)
-                            @if ($rka->acc_p4mp == '0')
+                            @if ($rka->acc_p4mp != '1')
                                 <button data-modal-target="modal-acc" data-modal-toggle="modal-acc"
                                     class="inline-flex items-center justify-center gap-2 rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
                                     <i class="bi bi-pen"></i> {{-- Menggunakan icon pena dari Bootstrap Icons --}}

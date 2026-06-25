@@ -241,8 +241,10 @@ class MonitoringTindakanKoreksiController extends Controller
         $kepalaQR = $this->generateQrCode('tk_kepala||', $penugasan->penugasan_id);
         $ketuaQR = $this->generateQrCode('tk_ketua||', $penugasan->penugasan_id);
         $anggotaQR = $this->generateQrCode('tk_anggota||', $penugasan->penugasan_id);
+        $auditeeQR = $this->generateQrCode('tk_auditee||', $penugasan->penugasan_id);
+        $wadirQR = $this->generateQrCode('tk_wadir||', $penugasan->penugasan_id);
 
-        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR'))
+        return Pdf::loadView('auditor.export.pdf.tindakan-koreksi', compact('penugasan', 'temuan', 'upt', 'periode', 'kepalaQR', 'ketuaQR', 'anggotaQR', 'auditeeQR', 'wadirQR'))
             ->setPaper('a4', 'portrait')
             ->stream($namaFile);
     }
