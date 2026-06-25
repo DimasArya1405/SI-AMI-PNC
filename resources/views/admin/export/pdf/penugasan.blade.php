@@ -4,24 +4,42 @@
     <style>
         body { font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.3; }
         
-        /* Tabel Header (Tanpa Border) */
         .table-header { width: 100%; border: none; margin-bottom: 20px; }
         .table-header td { border: none; vertical-align: middle; }
         .header-text h4 { margin: 0; padding: 0; font-size: 14pt; }
         .header-text p { margin: 2px 0; font-size: 9pt; }
         .logo-container { text-align: right; }
 
-        /* Tabel Data (Dengan Border) */
         .table-border { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .table-border th, 
         .table-border td { border: 1px solid black; padding: 6px; vertical-align: middle; }
         .table-border th { background-color: #f2f2f2; text-align: center; font-size: 9pt; }
         
         .center { text-align: center; }
-        .signature-container { margin-top: 30px; float: right; width: 250px; text-align: left; }
+        .signature-container {
+            margin-top: 30px;
+            float: right;
+            width: 220px;
+            text-align: center;
+        }
+
+        .qr-code {
+            display: block;
+            height: 80px;
+            width: 80px;
+            margin: 8px auto;
+        }
     </style>
 </head>
 <body>
+    @php
+        \Illuminate\Support\Carbon::setLocale('id');
+        $tanggalTtd = $tanggalTtd ?? null;
+        $kepalaP4mpName = $kepalaP4mpName ?? 'Artdhita Fajar Pratiwi, S.T., M.Eng.';
+        $sudahDitandatangani = $sudahDitandatangani ?? false;
+        $penugasanQR = $penugasanQR ?? null;
+    @endphp
+
     <table class="table-header">
         <tr>
             <td class="header-text">
@@ -86,10 +104,17 @@
     </table>
 
     <div class="signature-container">
-        Cilacap, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }} <br>
-        Kepala PPMRP, <br><br><br><br>
-        <strong>Artdhita Fajar Pratiwi, S.T., M.Eng.</strong><br>
-        NIP. 198506242019032013
+        Cilacap, {{ $tanggalTtd ?? \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} <br>
+        Kepala P4MP, <br>
+        @if ($sudahDitandatangani && !empty($penugasanQR))
+            <img src="{{ $penugasanQR }}" alt="QR Tanda Tangan" class="qr-code">
+        @else
+            <div style="height: 90px; display: flex; align-items: center; justify-content: center; color: #c0392b; font-style: italic; font-size: 8pt;">
+                Belum ditandatangani.
+            </div>
+        @endif
+        <br>
+        <strong>{{ $kepalaP4mpName }}</strong>
     </div>
 </body>
 </html>

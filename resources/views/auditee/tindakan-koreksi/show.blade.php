@@ -26,6 +26,45 @@
                 </div>
             </div>
 
+            @php
+                $tkUntukTtd = $temuan->pluck('tindakanKoreksi')->filter()->values();
+                $sudahPernahDitandatangani = $tkUntukTtd->contains(fn ($tk) => filled($tk->auditee_signed_at));
+                $tandaTanganAuditee = $tkUntukTtd->first(fn ($tk) => filled($tk->auditee_signed_at));
+                $bisaTandaTanganTk = $tkUntukTtd->isNotEmpty() && !$sudahPernahDitandatangani;
+            @endphp
+
+            @if ($tkUntukTtd->isNotEmpty())
+                <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h2 class="text-sm font-semibold text-blue-900">Tanda Tangan Auditee</h2>
+                            @if ($sudahPernahDitandatangani)
+                                <p class="mt-1 text-sm text-green-700">
+                                    Tindakan koreksi sudah ditandatangani auditee pada
+                                    {{ $tandaTanganAuditee?->auditee_signed_at?->locale('id')->translatedFormat('d F Y H:i') ?? '-' }}.
+                                </p>
+                            @else
+                                <p class="mt-1 text-sm text-blue-800">
+                                    Klik tombol ini untuk menampilkan barcode tanda tangan auditee pada export PDF tindakan koreksi.
+                                </p>
+                            @endif
+                        </div>
+
+                        @if ($bisaTandaTanganTk)
+                            <form action="{{ route('auditee.tindakan_koreksi.tanda_tangan', $penugasan->penugasan_id) }}" method="POST">
+                                @csrf
+                                @method('patch')
+                                <button type="submit"
+                                    class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                    <i class="bi bi-pen"></i>
+                                    Tanda Tangani
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;

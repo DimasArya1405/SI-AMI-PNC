@@ -42,6 +42,8 @@ class TindakanKoreksi extends Model
         'created_by_user_id',
         'verified_by_user_id',
         'verified_at',
+        'auditee_signed_by_user_id',
+        'auditee_signed_at',
     ];
 
     protected $casts = [
@@ -51,6 +53,7 @@ class TindakanKoreksi extends Model
         'verified_at' => 'datetime',
         'tanggal_penilaian_ulang' => 'date',
         'p4mp_verified_at' => 'datetime',
+        'auditee_signed_at' => 'datetime',
     ];
 
     public function penugasan()
@@ -81,6 +84,11 @@ class TindakanKoreksi extends Model
     public function p4mpVerifiedBy()
     {
         return $this->belongsTo(User::class, 'p4mp_verified_by_user_id', 'id');
+    }
+
+    public function auditeeSignedBy()
+    {
+        return $this->belongsTo(User::class, 'auditee_signed_by_user_id', 'id');
     }
 
     public function kebutuhanDokumenDosen()

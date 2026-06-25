@@ -25,11 +25,15 @@ class Penugasan extends Model
         'auditee_id',
         'tanggal_audit',
         'jam',
-        'status_penugasan'
+        'status_penugasan',
+        'acc_kepala_p4mp',
+        'acc_kepala_p4mp_at',
+        'acc_kepala_p4mp_by_user_id'
     ];
 
     protected $casts = [
         'tanggal_audit' => 'date',
+        'acc_kepala_p4mp_at' => 'datetime',
     ];
 
     public function periode()

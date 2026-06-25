@@ -75,6 +75,14 @@
             font-family: sans-serif;
             font-size: 14px;
         }
+
+        .lingkup {
+            font-size: 18px;
+            margin: 18px auto 10px;
+            line-height: 1.5;
+            max-width: 850px;
+            color: #1a56db;
+        }
     </style>
 </head>
 
@@ -90,13 +98,17 @@
         <p class="keterangan">dengan lingkup:</p>
 
         {{-- Judul / Lingkup Audit --}}
-        <div class="judul">
-            @if ($penugasan->upt->kategori_upt == 'Prodi')
-                Prodi :
+        <div class="judul {{ !empty($lingkup) ? 'lingkup' : '' }}">
+            @if (!empty($lingkup))
+                {{ $lingkup }}
             @else
-                Unit/Bagian :
+                @if ($penugasan->upt->kategori_upt == 'Prodi')
+                    Prodi :
+                @else
+                    Unit/Bagian :
+                @endif
+                {{ $penugasan->upt->nama_upt }}
             @endif
-            {{ $penugasan->upt->nama_upt }}
         </div>
 
         {{-- Pernyataan tanda tangan --}}
@@ -105,7 +117,7 @@
         </p>
 
         <div style="font-size: 18px; margin-top: 20px;">
-            Cilacap, {{ $tgl }}
+            Cilacap, {{ \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('d F Y') }}
         </div>
 
         <div class="penandatangan">

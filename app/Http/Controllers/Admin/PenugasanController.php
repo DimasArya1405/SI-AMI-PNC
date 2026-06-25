@@ -11,10 +11,12 @@ use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\Prodi;
 use App\Models\UPT;
+use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Milon\Barcode\Facades\DNS2DFacade;
 
 class PenugasanController extends Controller
 {
@@ -185,6 +187,12 @@ class PenugasanController extends Controller
     public function exportPdf($id)
     {
         // 1. Ambil data berdasarkan ID periode yang dikirim
+        $penugasan = Penugasan::with(['upt', 'auditor1', 'auditor2'])
+            ->where('periode_id', $id)
+            ->orderBy('tanggal_audit')
+            ->orderBy('jam')
+            ->get();
+
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
                 $query->where('periode_id', $id)->with(['auditor1', 'auditor2']);
@@ -198,13 +206,44 @@ class PenugasanController extends Controller
             ->get();
         $periode = Periode::where('id', $id)->first();
         $tahun = $periode->tahun;
+        $sudahDitandatangani = $penugasan->isNotEmpty()
+            && $penugasan->every(fn (Penugasan $item) => $item->acc_kepala_p4mp === '1');
+        $tanggalTtd = $penugasan->firstWhere('acc_kepala_p4mp', '1')
+            ?->acc_kepala_p4mp_at
+            ?->locale('id')
+            ->translatedFormat('d F Y');
+        $kepalaP4mp = User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
+            ->first()
+            ?: User::where('role', 'kepala_p4mp')->first();
+        $kepalaP4mpName = $kepalaP4mp?->name ?? 'Kepala P4MP';
+        $penugasanQR = $sudahDitandatangani && $penugasan->first()
+            ? $this->generateQrCode('penugasan_kepala||', $penugasan->first()->penugasan_id)
+            : null;
 
         // 2. Load View PDF (Gunakan file blade khusus PDF yang sudah kita buat sebelumnya)
-        $pdf = Pdf::loadView('admin.export.pdf.penugasan', compact('uptProdi', 'uptBagian', 'id', 'tahun'))
+        $pdf = Pdf::loadView('admin.export.pdf.penugasan', compact(
+            'uptProdi',
+            'uptBagian',
+            'id',
+            'tahun',
+            'kepalaP4mpName',
+            'sudahDitandatangani',
+            'tanggalTtd',
+            'penugasanQR'
+        ))
             ->setPaper('a4', 'portrait');
 
         // 3. Download atau Stream
         return $pdf->stream('Jadwal-AMI-PNC.pdf');
+    }
+
+    private function generateQrCode(string $prefix, string $registrasi): string
+    {
+        $encodedCode = base64_encode($prefix . $registrasi);
+        $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
+
+        return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
     private function kirimNotifikasiPenugasanDibuat(Penugasan $penugasan): void

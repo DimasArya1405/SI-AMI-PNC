@@ -10,6 +10,11 @@
                 {{ request()->routeIs('kepala_p4mp.dashboard') ? 'bg-blue-500 text-white' : '' }}">
                 <i class="bi bi-house-door mr-2 text-xl"></i> Dashboard
             </a>
+            <a href="{{ route('kepala_p4mp.penugasan.index') }}"
+                class="rounded-md px-6 py-2 text-gray-600 transition duration-200 ease-in-out hover:bg-blue-500 hover:text-white
+                {{ request()->routeIs('kepala_p4mp.penugasan.*') ? 'bg-blue-500 text-white' : '' }}">
+                <i class="bi bi-journal-check mr-2 text-xl"></i> Penugasan
+            </a>
             <a href="{{ route('kepala_p4mp.rka.index') }}"
                 class="rounded-md px-6 py-2 text-gray-600 transition duration-200 ease-in-out hover:bg-blue-500 hover:text-white
                 {{ request()->routeIs('kepala_p4mp.rka.*') ? 'bg-blue-500 text-white' : '' }}">
