@@ -43,7 +43,7 @@
                             Default menampilkan periode aktif. Pilih periode lain untuk melihat data tahun sebelumnya.
                         </p>
                         <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-                            <div class="w-full sm:max-w-xs">
+                            <div class="w-full sm:max-w-xs" style="max-width: 20rem;">
                                 <label class="mb-1 block text-xs font-medium text-gray-600">Periode</label>
                                 <select name="periode_id" id="periode_id" class="block w-full rounded border-gray-300 text-sm">
                                     @foreach ($periodeOptions as $periodeItem)
