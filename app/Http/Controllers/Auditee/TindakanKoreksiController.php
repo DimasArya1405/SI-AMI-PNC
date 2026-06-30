@@ -8,6 +8,7 @@ use App\Models\JawabanAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\TindakanKoreksiDosen;
+use App\Models\TindakanKoreksiDokumenAuditee;
 use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\TindakanKoreksi;
 use App\Models\UptItemSubStandarMutu;
@@ -33,7 +34,7 @@ class TindakanKoreksiController extends Controller
         $periodeFilter = $this->getPeriodeFilterContext($request);
         $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
 
-        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1.user', 'auditor2.user'])
+        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1.user', 'auditor2.user', 'rka'])
             ->where('upt_id', $auditee->upt_id)
             ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->latest()
@@ -45,6 +46,7 @@ class TindakanKoreksiController extends Controller
                 $penugasan->setAttribute('jumlah_temuan', $temuan->count());
                 $penugasan->setAttribute('tk_diajukan', $tk->whereIn('status', ['diajukan', 'disetujui', 'selesai'])->count());
                 $penugasan->setAttribute('tk_selesai', $tk->where('status', 'selesai')->count());
+                $penugasan->setAttribute('rka_ditandatangani', $this->rkaSudahDitandatangani($penugasan));
 
                 return $penugasan;
             });
@@ -55,38 +57,73 @@ class TindakanKoreksiController extends Controller
     public function show(string $penugasanId): View
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
+        $rkaDitandatangani = $this->rkaSudahDitandatangani($penugasan);
         $temuan = $this->getTemuan($penugasan);
 
-        return view('auditee.tindakan-koreksi.show', compact('penugasan', 'temuan'));
+        return view('auditee.tindakan-koreksi.show', compact('penugasan', 'temuan', 'rkaDitandatangani'));
     }
 
     public function uploadBukti(Request $request, string $tindakanKoreksiId): RedirectResponse
     {
         $validated = $request->validate([
             'pelaksanaan_deskripsi' => 'nullable|string|max:5000',
-            'bukti_koreksi' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
+            'bukti_koreksi' => 'required|array',
+            'bukti_koreksi.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
+        ], [
+            'bukti_koreksi.required' => 'File bukti wajib diupload.',
+            'bukti_koreksi.array' => 'File bukti tidak valid.',
+            'bukti_koreksi.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
+            'bukti_koreksi.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
 
         $tindakanKoreksi = TindakanKoreksi::with('penugasan')
             ->where('tindakan_koreksi_id', $tindakanKoreksiId)
             ->firstOrFail();
 
-        $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+        $penugasan = $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi belum dapat diunggah karena RKA belum ditandatangani Kepala P4MP.');
+        }
 
         if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
             return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Upload bukti tidak dapat dilakukan lagi.');
         }
 
-        $file = $validated['bukti_koreksi'];
-        $path = $file->store('bukti-tindakan-koreksi', 'local');
+        if ($tindakanKoreksi->bukti_file_path && $tindakanKoreksi->dokumenAuditee()
+            ->where('file_path', $tindakanKoreksi->bukti_file_path)
+            ->doesntExist()) {
+            TindakanKoreksiDokumenAuditee::create([
+                'dokumen_tk_auditee_id' => Str::uuid()->toString(),
+                'tindakan_koreksi_id' => $tindakanKoreksi->tindakan_koreksi_id,
+                'uploaded_by_user_id' => $tindakanKoreksi->bukti_uploaded_by_user_id,
+                'nama_file' => $tindakanKoreksi->bukti_nama_file,
+                'file_path' => $tindakanKoreksi->bukti_file_path,
+                'keterangan' => $tindakanKoreksi->pelaksanaan_deskripsi,
+            ]);
+        }
 
-        if ($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path)) {
-            Storage::disk('local')->delete($tindakanKoreksi->bukti_file_path);
+        $uploadedFiles = collect($request->file('bukti_koreksi'));
+        $dokumenPertama = null;
+
+        foreach ($uploadedFiles as $file) {
+            $path = $file->store('bukti-tindakan-koreksi', 'local');
+
+            $dokumen = TindakanKoreksiDokumenAuditee::create([
+                'dokumen_tk_auditee_id' => Str::uuid()->toString(),
+                'tindakan_koreksi_id' => $tindakanKoreksi->tindakan_koreksi_id,
+                'uploaded_by_user_id' => Auth::id(),
+                'nama_file' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'keterangan' => $validated['pelaksanaan_deskripsi'] ?? null,
+            ]);
+
+            $dokumenPertama ??= $dokumen;
         }
 
         $tindakanKoreksi->update([
-            'bukti_nama_file' => $file->getClientOriginalName(),
-            'bukti_file_path' => $path,
+            'bukti_nama_file' => $dokumenPertama?->nama_file ?? $tindakanKoreksi->bukti_nama_file,
+            'bukti_file_path' => $dokumenPertama?->file_path ?? $tindakanKoreksi->bukti_file_path,
             'bukti_uploaded_by_user_id' => Auth::id(),
             'bukti_uploaded_at' => now(),
             'pelaksanaan_deskripsi' => $validated['pelaksanaan_deskripsi'] ?? null,
@@ -109,7 +146,11 @@ class TindakanKoreksiController extends Controller
             ->where('tindakan_koreksi_id', $tindakanKoreksiId)
             ->firstOrFail();
 
-        $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+        $penugasan = $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Dokumen dosen belum dapat diatur karena RKA belum ditandatangani Kepala P4MP.');
+        }
 
         if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
             return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Kebutuhan dokumen dosen tidak dapat diubah lagi.');
@@ -145,7 +186,11 @@ class TindakanKoreksiController extends Controller
             ->where('dokumen_tk_dosen_id', $dokumenId)
             ->firstOrFail();
 
-        $this->getPenugasanAuditee($dokumen->tindakanKoreksi->penugasan_id);
+        $penugasan = $this->getPenugasanAuditee($dokumen->tindakanKoreksi->penugasan_id);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Validasi dokumen dosen belum dapat dilakukan karena RKA belum ditandatangani Kepala P4MP.');
+        }
 
         if ($this->isTindakanKoreksiVerified($dokumen->tindakanKoreksi)) {
             return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Validasi dokumen dosen tidak dapat diubah lagi.');
@@ -164,6 +209,11 @@ class TindakanKoreksiController extends Controller
     public function tandaTangan(string $penugasanId): RedirectResponse
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi belum dapat ditandatangani karena RKA belum ditandatangani Kepala P4MP.');
+        }
+
         $temuan = $this->getTemuan($penugasan);
         $tindakanKoreksi = $temuan
             ->pluck('tindakanKoreksi')
@@ -192,31 +242,18 @@ class TindakanKoreksiController extends Controller
 
     public function downloadBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
-            ->where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
 
-        $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
-
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        return Storage::disk('local')->download($tindakanKoreksi->bukti_file_path, $tindakanKoreksi->bukti_nama_file);
+        return Storage::disk('local')->download($dokumen['file_path'], $dokumen['nama_file']);
     }
 
     public function previewBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
-            ->where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
+        $namaFile = str_replace('"', '', $dokumen['nama_file']);
 
-        $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
-
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        $namaFile = str_replace('"', '', $tindakanKoreksi->bukti_nama_file);
-
-        return response(Storage::disk('local')->get($tindakanKoreksi->bukti_file_path), 200)
-            ->header('Content-Type', Storage::disk('local')->mimeType($tindakanKoreksi->bukti_file_path) ?? 'application/octet-stream')
+        return response(Storage::disk('local')->get($dokumen['file_path']), 200)
+            ->header('Content-Type', Storage::disk('local')->mimeType($dokumen['file_path']) ?? 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
@@ -279,7 +316,7 @@ class TindakanKoreksiController extends Controller
     {
         $auditee = $this->getAuditee();
 
-        return Penugasan::with(['periode', 'upt', 'auditor1.user', 'auditor2.user', 'auditee.user'])
+        return Penugasan::with(['periode', 'upt', 'auditor1.user', 'auditor2.user', 'auditee.user', 'rka'])
             ->where('penugasan_id', $penugasanId)
             ->where('upt_id', $auditee->upt_id)
             ->firstOrFail();
@@ -293,6 +330,7 @@ class TindakanKoreksiController extends Controller
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
             'tindakanKoreksi.p4mpVerifiedBy',
+            'tindakanKoreksi.dokumenAuditee.uploadedBy',
             'tindakanKoreksi.kebutuhanDokumenDosen',
             'tindakanKoreksi.dokumenDosen.dosen',
             'tindakanKoreksi.dokumenDosen.uploadedBy',
@@ -314,6 +352,17 @@ class TindakanKoreksiController extends Controller
                 return $jawaban;
             })
             ->values();
+    }
+
+    private function rkaSudahDitandatangani(Penugasan $penugasan): bool
+    {
+        $rka = $penugasan->relationLoaded('rka')
+            ? $penugasan->rka
+            : $penugasan->rka()->first();
+
+        return $rka
+            && $rka->status === 'final'
+            && (string) $rka->acc_p4mp === '1';
     }
 
     private function getItemPath(?UptItemSubStandarMutu $item): Collection
@@ -354,6 +403,37 @@ class TindakanKoreksiController extends Controller
         return $dokumen;
     }
 
+    private function findDokumenAuditeeAtauLegacy(string $id): array
+    {
+        $dokumen = TindakanKoreksiDokumenAuditee::with('tindakanKoreksi')
+            ->where('dokumen_tk_auditee_id', $id)
+            ->first();
+
+        if ($dokumen) {
+            $this->getPenugasanAuditee($dokumen->tindakanKoreksi->penugasan_id);
+
+            abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+            return [
+                'nama_file' => $dokumen->nama_file,
+                'file_path' => $dokumen->file_path,
+            ];
+        }
+
+        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
+            ->where('tindakan_koreksi_id', $id)
+            ->firstOrFail();
+
+        $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+
+        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
+
+        return [
+            'nama_file' => $tindakanKoreksi->bukti_nama_file,
+            'file_path' => $tindakanKoreksi->bukti_file_path,
+        ];
+    }
+
     private function isTindakanKoreksiVerified(?TindakanKoreksi $tindakanKoreksi): bool
     {
         return $tindakanKoreksi
@@ -365,7 +445,11 @@ class TindakanKoreksiController extends Controller
         $adaDokumenDosenDiterima = $tindakanKoreksi->relationLoaded('dokumenDosen')
             && $tindakanKoreksi->dokumenDosen?->contains(fn ($dokumen) => $dokumen->status_validasi === 'diterima');
 
+        $adaDokumenAuditee = $tindakanKoreksi->relationLoaded('dokumenAuditee')
+            && $tindakanKoreksi->dokumenAuditee?->isNotEmpty();
+
         return filled($tindakanKoreksi->bukti_file_path)
+            || $adaDokumenAuditee
             || filled($tindakanKoreksi->pelaksanaan_deskripsi)
             || $adaDokumenDosenDiterima;
     }

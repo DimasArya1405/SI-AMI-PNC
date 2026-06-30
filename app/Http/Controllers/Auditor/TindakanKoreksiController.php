@@ -8,6 +8,7 @@ use App\Models\JawabanAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\TindakanKoreksi;
+use App\Models\TindakanKoreksiDokumenAuditee;
 use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\User;
@@ -34,7 +35,7 @@ class TindakanKoreksiController extends Controller
         $periodeFilter = $this->getPeriodeFilterContext($request);
         $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
 
-        $penugasan = Penugasan::with(['periode', 'upt'])
+        $penugasan = Penugasan::with(['periode', 'upt', 'rka'])
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
                     ->orWhere('auditor_id_2', $auditor->auditor_id);
@@ -49,6 +50,7 @@ class TindakanKoreksiController extends Controller
                 $penugasan->setAttribute('jumlah_temuan', $temuan->count());
                 $penugasan->setAttribute('tk_menunggu', $tk->where('status', 'diajukan')->count());
                 $penugasan->setAttribute('tk_selesai', $tk->where('status', 'selesai')->count());
+                $penugasan->setAttribute('rka_ditandatangani', $this->rkaSudahDitandatangani($penugasan));
 
                 return $penugasan;
             });
@@ -61,10 +63,11 @@ class TindakanKoreksiController extends Controller
         $auditor = $this->getAuditor();
         $penugasan = $this->getPenugasanAuditor($penugasanId);
         $isKetuaAuditor = $penugasan->auditor_id_1 === $auditor->auditor_id;
+        $rkaDitandatangani = $this->rkaSudahDitandatangani($penugasan);
         $temuan = $this->getTemuan($penugasan);
         $carryForward = $this->getTemuanBelumSelesaiSiklusSebelumnya($penugasan);
 
-        return view('auditor.tindakan-koreksi.show', compact('penugasan', 'temuan', 'carryForward', 'isKetuaAuditor'));
+        return view('auditor.tindakan-koreksi.show', compact('penugasan', 'temuan', 'carryForward', 'isKetuaAuditor', 'rkaDitandatangani'));
     }
 
     public function verifikasi(Request $request, string $tindakanKoreksiId): RedirectResponse
@@ -79,13 +82,18 @@ class TindakanKoreksiController extends Controller
             ->where('tindakan_koreksi_id', $tindakanKoreksiId)
             ->firstOrFail();
 
-        $this->getPenugasanKetuaAuditor($tindakanKoreksi->penugasan_id);
+        $penugasan = $this->getPenugasanKetuaAuditor($tindakanKoreksi->penugasan_id);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi baru bisa diverifikasi setelah RKA ditandatangani Kepala P4MP.');
+        }
 
         $adaDokumenDosenDiterima = $tindakanKoreksi->dokumenDosen()
             ->where('status_validasi', 'diterima')
             ->exists();
+        $adaDokumenAuditee = $tindakanKoreksi->dokumenAuditee()->exists();
 
-        if ($validated['status'] === 'selesai' && !$tindakanKoreksi->bukti_file_path && !$adaDokumenDosenDiterima) {
+        if ($validated['status'] === 'selesai' && !$tindakanKoreksi->bukti_file_path && !$adaDokumenAuditee && !$adaDokumenDosenDiterima) {
             return back()
                 ->withErrors(['status' => 'Tindakan koreksi baru bisa ditandai selesai setelah ada bukti auditee atau dokumen dosen yang disetujui auditee.'])
                 ->withInput();
@@ -119,31 +127,18 @@ class TindakanKoreksiController extends Controller
 
     public function downloadBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
-            ->where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
 
-        $this->getPenugasanAuditor($tindakanKoreksi->penugasan_id);
-
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        return Storage::disk('local')->download($tindakanKoreksi->bukti_file_path, $tindakanKoreksi->bukti_nama_file);
+        return Storage::disk('local')->download($dokumen['file_path'], $dokumen['nama_file']);
     }
 
     public function previewBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
-            ->where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
+        $namaFile = str_replace('"', '', $dokumen['nama_file']);
 
-        $this->getPenugasanAuditor($tindakanKoreksi->penugasan_id);
-
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        $namaFile = str_replace('"', '', $tindakanKoreksi->bukti_nama_file);
-
-        return response(Storage::disk('local')->get($tindakanKoreksi->bukti_file_path), 200)
-            ->header('Content-Type', Storage::disk('local')->mimeType($tindakanKoreksi->bukti_file_path) ?? 'application/octet-stream')
+        return response(Storage::disk('local')->get($dokumen['file_path']), 200)
+            ->header('Content-Type', Storage::disk('local')->mimeType($dokumen['file_path']) ?? 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
@@ -207,6 +202,11 @@ class TindakanKoreksiController extends Controller
         ]);
 
         $penugasan = $this->getPenugasanKetuaAuditor($penugasanId);
+
+        if (!$this->rkaSudahDitandatangani($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi baru bisa disusun setelah RKA ditandatangani Kepala P4MP.');
+        }
+
         $jawabanAudit = $this->getJawabanTemuan($penugasan, $jawabanAuditId);
 
         $tindakanKoreksi = TindakanKoreksi::firstOrNew([
@@ -250,7 +250,7 @@ class TindakanKoreksiController extends Controller
     {
         $auditor = $this->getAuditor();
 
-        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'auditee.user'])
+        return Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'auditee.user', 'rka'])
             ->where('penugasan_id', $penugasanId)
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
@@ -263,7 +263,7 @@ class TindakanKoreksiController extends Controller
     {
         $auditor = $this->getAuditor();
 
-        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'auditee.user'])
+        $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'auditee.user', 'rka'])
             ->where('penugasan_id', $penugasanId)
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
@@ -291,6 +291,7 @@ class TindakanKoreksiController extends Controller
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
             'tindakanKoreksi.p4mpVerifiedBy',
+            'tindakanKoreksi.dokumenAuditee.uploadedBy',
             'tindakanKoreksi.dokumenDosen' => function ($query) {
                 $query->with('dosen')
                     ->where('status_validasi', 'diterima')
@@ -313,6 +314,17 @@ class TindakanKoreksiController extends Controller
                 return $jawaban;
             })
             ->values();
+    }
+
+    private function rkaSudahDitandatangani(Penugasan $penugasan): bool
+    {
+        $rka = $penugasan->relationLoaded('rka')
+            ? $penugasan->rka
+            : $penugasan->rka()->first();
+
+        return $rka
+            && $rka->status === 'final'
+            && (string) $rka->acc_p4mp === '1';
     }
 
     private function getItemPath(?UptItemSubStandarMutu $item): Collection
@@ -365,6 +377,37 @@ class TindakanKoreksiController extends Controller
                 }
             })
             ->get();
+    }
+
+    private function findDokumenAuditeeAtauLegacy(string $id): array
+    {
+        $dokumen = TindakanKoreksiDokumenAuditee::with('tindakanKoreksi')
+            ->where('dokumen_tk_auditee_id', $id)
+            ->first();
+
+        if ($dokumen) {
+            $this->getPenugasanAuditor($dokumen->tindakanKoreksi->penugasan_id);
+
+            abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+            return [
+                'nama_file' => $dokumen->nama_file,
+                'file_path' => $dokumen->file_path,
+            ];
+        }
+
+        $tindakanKoreksi = TindakanKoreksi::with('penugasan')
+            ->where('tindakan_koreksi_id', $id)
+            ->firstOrFail();
+
+        $this->getPenugasanAuditor($tindakanKoreksi->penugasan_id);
+
+        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
+
+        return [
+            'nama_file' => $tindakanKoreksi->bukti_nama_file,
+            'file_path' => $tindakanKoreksi->bukti_file_path,
+        ];
     }
 
     private function kirimNotifikasiTkDirumuskan(Penugasan $penugasan): void

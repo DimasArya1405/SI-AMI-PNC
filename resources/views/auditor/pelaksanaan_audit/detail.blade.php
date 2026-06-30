@@ -259,6 +259,18 @@
                                                                                                     - {{ $bukti->dosen->nama_lengkap }}
                                                                                                 @endif
                                                                                             </p>
+                                                                                            @if (filled($bukti->keterangan))
+                                                                                                <div class="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-900">
+                                                                                                    <span class="font-semibold">Catatan {{ ($bukti->sumber ?? 'auditee') === 'dosen' ? 'dosen' : 'auditee' }}:</span>
+                                                                                                    <span class="whitespace-pre-line">{{ $bukti->keterangan }}</span>
+                                                                                                </div>
+                                                                                            @endif
+                                                                                            @if (($bukti->sumber ?? null) === 'dosen' && filled($bukti->catatan_validasi))
+                                                                                                <div class="mt-2 rounded-md bg-green-50 px-3 py-2 text-xs text-green-900">
+                                                                                                    <span class="font-semibold">Catatan validasi auditee:</span>
+                                                                                                    <span class="whitespace-pre-line">{{ $bukti->catatan_validasi }}</span>
+                                                                                                </div>
+                                                                                            @endif
                                                                                         </div>
 
                                                                                         <div

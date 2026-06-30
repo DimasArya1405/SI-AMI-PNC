@@ -10,6 +10,11 @@
                         <p class="mt-1 text-sm text-gray-600">
                             {{ $penugasan->upt?->nama_upt ?? '-' }} &middot; Periode {{ $penugasan->periode?->tahun ?? '-' }}
                         </p>
+                        @unless ($rkaDitandatangani)
+                            <p class="mt-3 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                                Tindakan koreksi belum tersedia untuk dikerjakan karena RKA masih menunggu tanda tangan Kepala P4MP.
+                            </p>
+                        @endunless
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row">
                         <a href="{{ route('auditee.tindakan_koreksi.export', $penugasan->penugasan_id) }}" target="_blank"
@@ -33,7 +38,7 @@
                 $bisaTandaTanganTk = $tkUntukTtd->isNotEmpty() && !$sudahPernahDitandatangani;
             @endphp
 
-            @if ($tkUntukTtd->isNotEmpty())
+            @if ($rkaDitandatangani && $tkUntukTtd->isNotEmpty())
                 <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5">
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
@@ -68,9 +73,10 @@
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;
+                    $dokumenAuditee = $tk?->dokumenAuditee ?? collect();
                     $dokumenDosen = $tk?->dokumenDosen ?? collect();
                     $dokumenDosenDisetujui = $dokumenDosen->where('status_validasi', 'diterima')->values();
-                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenDosenDisetujui->isNotEmpty();
+                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenAuditee->isNotEmpty() || $dokumenDosenDisetujui->isNotEmpty();
                     $status = $tk?->status ?? 'belum_dibuat';
                     $kategori = $jawaban->rkaTemuan?->kategori_final ?: $jawaban->kategori_temuan;
                     $kondisi = $jawaban->rkaTemuan?->kondisi_final ?: $jawaban->catatan;
@@ -94,6 +100,7 @@
                         default => 'bg-gray-100 text-gray-700',
                     };
                     $nextAction = match (true) {
+                        !$rkaDitandatangani => 'Menunggu RKA ditandatangani Kepala P4MP.',
                         !$tk => 'Menunggu auditor membuat usulan tindakan koreksi.',
                         $p4mpStatus === 'perlu_perbaikan' => 'Unggah bukti perbaikan baru sesuai catatan P4MP.',
                         !$adaBuktiPelaksanaan => 'Isi pelaksanaan dan unggah bukti tindakan koreksi, atau setujui dokumen dosen yang sesuai.',
@@ -199,8 +206,29 @@
                                 <section class="rounded border border-blue-100 bg-blue-50 p-4">
                                     <h3 class="text-sm font-semibold text-blue-900">Pelaksanaan oleh Auditee</h3>
                                     <p class="mt-3 text-xs font-semibold uppercase text-blue-700">Bukti saat ini</p>
-                                    <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file ?: 'Belum ada bukti.' }}</p>
-                                    @if ($tk->bukti_file_path)
+                                    @if ($dokumenAuditee->isNotEmpty())
+                                        <div class="mt-2 space-y-2">
+                                            @foreach ($dokumenAuditee as $dokumenAuditeeItem)
+                                                <div class="flex flex-col gap-2 rounded border border-blue-100 bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div class="min-w-0">
+                                                        <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenAuditeeItem->nama_file }}</p>
+                                                        @if ($dokumenAuditeeItem->keterangan)
+                                                            <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
+                                                        @endif
+                                                    </div>
+                                                    <button type="button"
+                                                        data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                        data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
+                                                        data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
+                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">
+                                                        <i class="bi bi-eye"></i>
+                                                        Lihat
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @elseif ($tk->bukti_file_path)
+                                        <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
                                         <button type="button"
                                             data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $tk->tindakan_koreksi_id) }}"
                                             data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
@@ -209,13 +237,19 @@
                                             <i class="bi bi-eye"></i>
                                             Lihat Bukti
                                         </button>
+                                    @else
+                                        <p class="mt-1 text-sm text-gray-700">Belum ada bukti.</p>
                                     @endif
                                     <p class="mt-4 text-xs font-semibold uppercase text-blue-700">Uraian saat ini</p>
                                     <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->pelaksanaan_deskripsi ?: '-' }}</p>
                                 </section>
                             </div>
 
-                            @if ($tkLocked)
+                            @if (!$rkaDitandatangani)
+                                <div class="mt-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                                    Upload bukti pelaksanaan dan pengaturan dokumen dosen akan dibuka setelah RKA ditandatangani Kepala P4MP dan auditor menyusun tindakan koreksi.
+                                </div>
+                            @elseif ($tkLocked)
                                 <div class="mt-4 rounded border border-green-100 bg-green-50 p-4 text-sm text-green-800">
                                     Tindakan koreksi sudah diverifikasi P4MP. Upload bukti dan perubahan dokumen pendukung sudah dikunci.
                                 </div>
@@ -233,9 +267,9 @@
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-700">File Bukti</label>
-                                        <input type="file" name="bukti_koreksi" required
+                                        <input type="file" name="bukti_koreksi[]" multiple required
                                             class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-green-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-200">
-                                        <p class="mt-2 text-xs text-gray-500">PDF, Word, Excel, JPG, JPEG, atau PNG. Maksimal 5 MB.</p>
+                                        <p class="mt-2 text-xs text-gray-500">PDF, Word, Excel, JPG, JPEG, atau PNG. Maksimal 5 MB per file.</p>
                                     </div>
                                     <div class="flex items-end">
                                         <button type="submit" class="inline-flex justify-center rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
@@ -256,7 +290,12 @@
                                             Aktifkan jika tindakan koreksi ini membutuhkan dokumen dari dosen. Dosen hanya melihat tindakan yang diaktifkan di sini.
                                         </p>
                                     </div>
-                                    @if ($tkLocked)
+                                    @if (!$rkaDitandatangani)
+                                        <div class="flex shrink-0 items-center gap-2 rounded bg-white p-3 text-xs font-medium text-yellow-700">
+                                            <i class="bi bi-lock"></i>
+                                            Menunggu TTD RKA
+                                        </div>
+                                    @elseif ($tkLocked)
                                         <div class="flex shrink-0 items-center gap-2 rounded bg-white p-3 text-xs font-medium text-green-700">
                                             <i class="bi bi-lock"></i>
                                             Dokumen dosen terkunci
@@ -323,7 +362,7 @@
                                                         </div>
                                                     </div>
 
-                                                    @if (!$tkLocked)
+                                                    @if (!$tkLocked && $rkaDitandatangani)
                                                         <form action="{{ route('auditee.tindakan_koreksi.dokumen_dosen.validasi', $dokumen->dokumen_tk_dosen_id) }}" method="POST"
                                                             data-scroll-target="tk-{{ $jawaban->id }}"
                                                             class="mt-3 border-t border-gray-100 pt-3">

@@ -50,8 +50,9 @@
             @forelse ($temuan as $index => $jawaban)
                 @php
                     $tk = $jawaban->tindakanKoreksi;
+                    $dokumenAuditee = $tk?->dokumenAuditee ?? collect();
                     $dokumenDosenDisetujui = $tk?->dokumenDosen ?? collect();
-                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenDosenDisetujui->isNotEmpty();
+                    $adaBuktiPelaksanaan = (bool) $tk?->bukti_file_path || $dokumenAuditee->isNotEmpty() || $dokumenDosenDisetujui->isNotEmpty();
                     $status = $tk?->status ?? 'belum_dibuat';
                     $p4mpStatus = $tk?->p4mp_status;
                     $kategori = $jawaban->rkaTemuan?->kategori_final ?: $jawaban->kategori_temuan;
@@ -164,8 +165,31 @@
                         <section class="rounded border border-gray-200 p-4">
                             <h3 class="text-sm font-semibold text-gray-900">Bukti dan Penilaian</h3>
                             <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Bukti auditee</p>
-                            <p class="mt-1 text-sm text-gray-700">{{ $tk?->bukti_nama_file ?: '-' }}</p>
-                            @if ($tk?->bukti_file_path)
+                            @if ($dokumenAuditee->isNotEmpty())
+                                <div class="mt-2 space-y-2">
+                                    @foreach ($dokumenAuditee as $dokumenAuditeeItem)
+                                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                <div class="min-w-0">
+                                                    <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenAuditeeItem->nama_file }}</p>
+                                                    @if ($dokumenAuditeeItem->keterangan)
+                                                        <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
+                                                    @endif
+                                                </div>
+                                                <button type="button"
+                                                    data-preview-url="{{ route($previewRouteName, $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                    data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
+                                                    data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
+                                                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                                                    <i class="bi bi-eye"></i>
+                                                    Lihat
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @elseif ($tk?->bukti_file_path)
+                                <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
                                 <button type="button"
                                     data-preview-url="{{ route($previewRouteName, $tk->tindakan_koreksi_id) }}"
                                     data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
@@ -174,6 +198,8 @@
                                     <i class="bi bi-eye"></i>
                                     Lihat Bukti
                                 </button>
+                            @else
+                                <p class="mt-1 text-sm text-gray-700">-</p>
                             @endif
                             @if ($dokumenDosenDisetujui->isNotEmpty())
                                 <div class="mt-4 rounded border border-indigo-100 bg-indigo-50 p-3">
