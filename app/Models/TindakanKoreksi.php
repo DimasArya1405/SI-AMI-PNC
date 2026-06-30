@@ -100,4 +100,9 @@ class TindakanKoreksi extends Model
     {
         return $this->hasMany(TindakanKoreksiDokumenDosen::class, 'tindakan_koreksi_id', 'tindakan_koreksi_id');
     }
+
+    public function dokumenAuditee()
+    {
+        return $this->hasMany(TindakanKoreksiDokumenAuditee::class, 'tindakan_koreksi_id', 'tindakan_koreksi_id');
+    }
 }

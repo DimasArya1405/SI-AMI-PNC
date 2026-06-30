@@ -10,6 +10,7 @@ use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\RingkasanKondisiAudit;
 use App\Models\UptItemSubStandarMutu;
+use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -124,7 +125,7 @@ class RkaController extends Controller
         }
 
         return back()->with('success', $validated['aksi'] === 'finalisasi'
-            ? 'RKA berhasil difinalisasi dan dikirim ke auditee.'
+            ? 'RKA berhasil difinalisasi dan notifikasi dikirim ke auditee, admin, dan Kepala P4MP.'
             : 'Draft RKA berhasil disimpan.');
     }
         public function generateQrCode($prefix, $registrasi)
@@ -350,15 +351,23 @@ class RkaController extends Controller
         $penugasan = $rka->penugasan;
         $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
         $pesan = "RKA final untuk {$namaUpt} sudah tersedia setelah rapat internal tim auditor.";
-        $url = route('auditee.rka.show', $penugasan->penugasan_id);
-
-        Auditee::with('user')
+        $auditeeUsers = Auditee::with('user')
             ->where('upt_id', $penugasan->upt_id)
             ->get()
             ->pluck('user')
+            ->filter();
+
+        $adminUsers = User::where('role', 'admin')->get();
+        $kepalaP4mpUsers = User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
+            ->get();
+
+        $auditeeUsers
+            ->merge($adminUsers)
+            ->merge($kepalaP4mpUsers)
             ->filter()
             ->unique('id')
-            ->each(function ($user) use ($penugasan, $pesan, $url) {
+            ->each(function ($user) use ($penugasan, $pesan) {
                 $sudahDikirim = $user->notifications()
                     ->where('type', PenugasanAuditNotification::class)
                     ->get()
@@ -368,6 +377,12 @@ class RkaController extends Controller
                 if ($sudahDikirim) {
                     return;
                 }
+
+                $url = match ($user->role) {
+                    'admin' => route('admin.rka.show', $penugasan->penugasan_id),
+                    'kepala_p4mp' => route('kepala_p4mp.rka.show', $penugasan->penugasan_id),
+                    default => route('auditee.rka.show', $penugasan->penugasan_id),
+                };
 
                 $user->notify(new PenugasanAuditNotification(
                     $penugasan,

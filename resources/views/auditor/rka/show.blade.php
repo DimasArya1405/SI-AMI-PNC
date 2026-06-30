@@ -17,11 +17,19 @@
                             <i class="bi bi-download"></i>
                             Export PDF
                         </a>
-                        <a href="{{ route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id) }}"
-                            class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                            <i class="bi bi-clipboard-check"></i>
-                            Tindakan Koreksi
-                        </a>
+                        @if ($rka->acc_p4mp == '1')
+                            <a href="{{ route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id) }}"
+                                class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                <i class="bi bi-clipboard-check"></i>
+                                Tindakan Koreksi
+                            </a>
+                        @else
+                            <button type="button" disabled
+                                class="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded bg-gray-400 px-4 py-2 text-sm font-medium text-white">
+                                <i class="bi bi-lock"></i>
+                                Menunggu TTD RKA
+                            </button>
+                        @endif
                         <a href="{{ route('auditor.rka.index') }}"
                             class="inline-flex items-center justify-center gap-2 rounded bg-gray-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600">
                             <i class="bi bi-arrow-left"></i>

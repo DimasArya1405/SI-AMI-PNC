@@ -61,6 +61,9 @@
                                 <span class="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
                                     {{ $item->jumlah_temuan }} temuan
                                 </span>
+                                <span class="rounded-full px-2 py-1 text-xs font-medium {{ $item->rka_ditandatangani ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800' }}">
+                                    {{ $item->rka_ditandatangani ? 'RKA sudah ditandatangani' : 'Menunggu tanda tangan RKA' }}
+                                </span>
                             </div>
                             <div class="mt-3 flex flex-wrap gap-2 text-sm">
                                 <span class="rounded bg-yellow-50 px-2 py-1 text-yellow-700">{{ $item->tk_menunggu }} menunggu verifikasi</span>
@@ -69,7 +72,7 @@
                         </div>
 
                         <a href="{{ route('auditor.tindakan_koreksi.show', $item->penugasan_id) }}"
-                            class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                            class="inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium text-white {{ $item->rka_ditandatangani ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-500 hover:bg-gray-600' }}">
                             <i class="bi bi-eye"></i>
                             Lihat Detail
                         </a>

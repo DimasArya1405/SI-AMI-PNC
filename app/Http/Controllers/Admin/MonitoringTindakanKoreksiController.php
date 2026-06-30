@@ -8,6 +8,7 @@ use App\Models\JawabanAudit;
 use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\TindakanKoreksi;
+use App\Models\TindakanKoreksiDokumenAuditee;
 use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\VerifikasiTindakanKoreksi;
@@ -190,25 +191,18 @@ class MonitoringTindakanKoreksiController extends Controller
 
     public function downloadBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
 
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        return Storage::disk('local')->download($tindakanKoreksi->bukti_file_path, $tindakanKoreksi->bukti_nama_file);
+        return Storage::disk('local')->download($dokumen['file_path'], $dokumen['nama_file']);
     }
 
     public function previewBukti(string $tindakanKoreksiId)
     {
-        $tindakanKoreksi = TindakanKoreksi::where('tindakan_koreksi_id', $tindakanKoreksiId)
-            ->firstOrFail();
+        $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
+        $namaFile = str_replace('"', '', $dokumen['nama_file']);
 
-        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
-
-        $namaFile = str_replace('"', '', $tindakanKoreksi->bukti_nama_file);
-
-        return response(Storage::disk('local')->get($tindakanKoreksi->bukti_file_path), 200)
-            ->header('Content-Type', Storage::disk('local')->mimeType($tindakanKoreksi->bukti_file_path) ?? 'application/octet-stream')
+        return response(Storage::disk('local')->get($dokumen['file_path']), 200)
+            ->header('Content-Type', Storage::disk('local')->mimeType($dokumen['file_path']) ?? 'application/octet-stream')
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
@@ -265,6 +259,7 @@ class MonitoringTindakanKoreksiController extends Controller
             'tindakanKoreksi.buktiUploadedBy',
             'tindakanKoreksi.verifiedBy',
             'tindakanKoreksi.p4mpVerifiedBy',
+            'tindakanKoreksi.dokumenAuditee.uploadedBy',
             'tindakanKoreksi.dokumenDosen' => fn ($query) => $query
                 ->where('status_validasi', 'diterima')
                 ->with(['dosen', 'uploadedBy', 'validatedBy']),
@@ -329,6 +324,30 @@ class MonitoringTindakanKoreksiController extends Controller
                 }
             })
             ->get();
+    }
+
+    private function findDokumenAuditeeAtauLegacy(string $id): array
+    {
+        $dokumen = TindakanKoreksiDokumenAuditee::where('dokumen_tk_auditee_id', $id)->first();
+
+        if ($dokumen) {
+            abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+            return [
+                'nama_file' => $dokumen->nama_file,
+                'file_path' => $dokumen->file_path,
+            ];
+        }
+
+        $tindakanKoreksi = TindakanKoreksi::where('tindakan_koreksi_id', $id)
+            ->firstOrFail();
+
+        abort_unless($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path), 404);
+
+        return [
+            'nama_file' => $tindakanKoreksi->bukti_nama_file,
+            'file_path' => $tindakanKoreksi->bukti_file_path,
+        ];
     }
 
     private function kirimNotifikasiVerifikasiP4mp(TindakanKoreksi $tindakanKoreksi): void
