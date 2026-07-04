@@ -196,6 +196,12 @@
 
                     @if ($tk)
                         <div class="border-t border-gray-100 p-4 sm:p-5">
+                            <details class="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+                                <summary class="cursor-pointer text-sm font-semibold text-gray-900">Lihat detail analisis auditor</summary>
+                                <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Analisa Ketidaksesuaian</p>
+                                <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->analisis_ketidaksesuaian ?: '-' }}</p>
+                            </details>
+
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                 <section class="rounded border border-gray-200 bg-gray-50 p-4">
                                     <h3 class="text-sm font-semibold text-gray-900">Usulan dari Auditor</h3>
@@ -267,9 +273,22 @@
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-700">File Bukti</label>
-                                        <input type="file" name="bukti_koreksi[]" multiple required
+                                        <div data-file-upload-field>
+                                        <input type="file" name="bukti_koreksi[]" multiple required data-max-file-size="5242880"
                                             class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-green-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-200">
+                                        <p data-file-size-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
+                                        </div>
                                         <p class="mt-2 text-xs text-gray-500">PDF, Word, Excel, JPG, JPEG, atau PNG. Maksimal 5 MB per file.</p>
+                                        @php
+                                            $buktiErrors = collect($errors->get('bukti_koreksi'))
+                                                ->merge($errors->get('bukti_koreksi.*'))
+                                                ->filter();
+                                        @endphp
+                                        @if ($buktiErrors->isNotEmpty())
+                                            <div class="mt-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                                {{ $buktiErrors->first() }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="flex items-end">
                                         <button type="submit" class="inline-flex justify-center rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
@@ -392,11 +411,6 @@
                                 </div>
                             </section>
 
-                            <details class="mt-4 rounded border border-gray-200 bg-gray-50 p-4">
-                                <summary class="cursor-pointer text-sm font-semibold text-gray-900">Lihat detail analisis auditor</summary>
-                                <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Analisa Ketidaksesuaian</p>
-                                <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->analisis_ketidaksesuaian ?: '-' }}</p>
-                            </details>
                         </div>
                     @else
                         <div class="border-t border-gray-100 p-4 sm:p-5">
@@ -417,4 +431,53 @@
 
     @include('layouts.partials.smart-file-preview')
     @include('layouts.partials.back-to-top')
+
+    @push('js')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const formatMb = (bytes) => (bytes / 1024 / 1024).toFixed(2).replace('.', ',');
+
+                document.querySelectorAll('[data-max-file-size]').forEach((input) => {
+                    const field = input.closest('[data-file-upload-field]');
+                    const errorElement = field?.querySelector('[data-file-size-error]');
+                    const maxSize = Number(input.dataset.maxFileSize || 5242880);
+
+                    const showError = (message) => {
+                        if (errorElement) {
+                            errorElement.textContent = message;
+                            errorElement.classList.remove('hidden');
+                        }
+                        input.setCustomValidity(message);
+                    };
+
+                    const clearError = () => {
+                        if (errorElement) {
+                            errorElement.textContent = '';
+                            errorElement.classList.add('hidden');
+                        }
+                        input.setCustomValidity('');
+                    };
+
+                    const validateFiles = () => {
+                        const oversizedFile = Array.from(input.files || []).find((file) => file.size > maxSize);
+
+                        if (oversizedFile) {
+                            showError(`File "${oversizedFile.name}" berukuran ${formatMb(oversizedFile.size)} MB. Maksimal 5 MB per file.`);
+                            return false;
+                        }
+
+                        clearError();
+                        return true;
+                    };
+
+                    input.addEventListener('change', validateFiles);
+                    input.form?.addEventListener('submit', (event) => {
+                        if (!validateFiles()) {
+                            event.preventDefault();
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

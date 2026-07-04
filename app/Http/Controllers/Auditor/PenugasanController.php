@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auditor;
 
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\Auditor;
@@ -18,16 +19,19 @@ use Illuminate\Support\Str;
 
 class PenugasanController extends Controller
 {
-    public function index()
+    use PeriodeFilterSupport;
+
+    public function index(Request $request)
     {
         $id_user = Auth::user()->id;
         $auditor_login = Auditor::where('user_id', $id_user)->first();
         $auditor_id = $auditor_login->auditor_id;
-        $periode_now = Periode::where('status', '1')->first();
-        $periode_id = $periode_now?->id;
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriode = $periodeFilter['selectedPeriode'];
+        $periode_id = $selectedPeriode?->id;
         // Filter UPT Prodi yang ditugaskan ke auditor login
         $penugasanProdi = Penugasan::where('periode_id', $periode_id)
-            ->where('status_penugasan', 'aktif')
+            ->whereIn('status_penugasan', ['aktif', 'selesai'])
             ->where(function ($query) use ($auditor_id) {
                 $query->where('auditor_id_1', $auditor_id)
                     ->orWhere('auditor_id_2', $auditor_id);
@@ -43,7 +47,7 @@ class PenugasanController extends Controller
             $query->where('periode_id', $periode_id);
         }])->get();
         $penugasan_sekarang = Penugasan::where('periode_id', $periode_id)->get();
-        return view('auditor.penugasan.index', compact(
+        return view('auditor.penugasan.index', array_merge(compact(
             'penugasan',
             'penugasanProdi',
             'penugasan_sekarang',
@@ -51,12 +55,16 @@ class PenugasanController extends Controller
             'auditor',
             'upts',
             'auditor_id'
-        ));
+        ), $periodeFilter));
     }
     public function ajukan(Request $request)
     {
         $penugasan = Penugasan::findOrFail($request->penugasan_id);
         $auditor = Auditor::where('user_id', Auth::id())->firstOrFail();
+
+        if ($penugasan->status_penugasan !== 'aktif') {
+            return back()->with('error', 'Jadwal pada periode yang sudah selesai hanya dapat dilihat.');
+        }
 
         
         $pengajuan_jadwal = new PengajuanJadwalAudit;
@@ -82,6 +90,11 @@ class PenugasanController extends Controller
     public function setuju(Request $request)
     {
         $penugasan = Penugasan::findOrFail($request->penugasan_id);
+
+        if ($penugasan->status_penugasan !== 'aktif') {
+            return back()->with('error', 'Jadwal pada periode yang sudah selesai hanya dapat dilihat.');
+        }
+
         $pengajuan_jadwal = PengajuanJadwalAudit::where('penugasan_id', $request->penugasan_id)->firstOrFail();
         $sudahLengkapSebelumnya = $this->pengajuanSudahLengkap($pengajuan_jadwal);
 
@@ -107,6 +120,12 @@ class PenugasanController extends Controller
     public function tolak(Request $request)
     {
         $pengajuan_jadwal = PengajuanJadwalAudit::where('penugasan_id', $request->penugasan_id)->firstOrFail();
+        $penugasan = Penugasan::findOrFail($request->penugasan_id);
+
+        if ($penugasan->status_penugasan !== 'aktif') {
+            return back()->with('error', 'Jadwal pada periode yang sudah selesai hanya dapat dilihat.');
+        }
+
         $pengajuan_jadwal->delete();
         return back()->with('success', 'Penugasan berhasil ditolak');
     }
@@ -133,7 +152,7 @@ class PenugasanController extends Controller
         $penugasan->load('upt');
 
         $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
-        $tanggal = $penugasan->tanggal_audit ? Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-';
+        $tanggal = $penugasan->tanggal_audit ? Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-';
         $jam = $penugasan->jam ? date('H:i', strtotime($penugasan->jam)) : '-';
         $pesan = "Pengajuan jadwal audit untuk {$namaUpt} sudah disetujui semua pihak. Jadwal baru: {$tanggal} pukul {$jam}.";
 

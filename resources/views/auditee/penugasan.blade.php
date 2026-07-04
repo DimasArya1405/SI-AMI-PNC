@@ -17,6 +17,45 @@
                 </p>
             </div>
 
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                <form method="GET" action="{{ route('auditee.penugasan') }}"
+                    class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-800">Filter Periode</p>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Default menampilkan periode aktif. Pilih periode lain untuk melihat jadwal tahun sebelumnya.
+                        </p>
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                            <div class="w-full sm:max-w-xs" style="max-width: 20rem;">
+                                <label class="mb-1 block text-xs font-medium text-gray-600">Periode</label>
+                                <select name="periode_id" class="block w-full rounded border-gray-300 text-sm">
+                                    @foreach ($periodeOptions as $periodeItem)
+                                        <option value="{{ $periodeItem->id }}" @selected((string) $selectedPeriodeId === (string) $periodeItem->id)>
+                                            {{ $periodeItem->tahun }}{{ $periodeAktif?->id === $periodeItem->id ? ' (Aktif)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                class="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                Terapkan
+                            </button>
+                            @if (request()->filled('periode_id'))
+                                <a href="{{ route('auditee.penugasan') }}"
+                                    class="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Periode Aktif
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 lg:max-w-xs">
+                        <p class="font-semibold">Menampilkan</p>
+                        <p class="mt-1">Periode {{ $selectedPeriode?->tahun ?? '-' }}</p>
+                    </div>
+                </form>
+            </div>
+
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default">
@@ -60,6 +99,7 @@
                                 ?? 'Tidak Diketahui';
                                 }
                                 }
+                                $periodeSelesai = $item->status_penugasan === 'selesai';
                                 @endphp
 
                                 <tr class="bg-neutral-primary border-b border-default">
@@ -97,7 +137,7 @@
                                                 <div class="flex items-center gap-1.5 text-gray-500 line-through">
                                                     <i class="bi bi-calendar-event"></i>
                                                     <span class="font-medium">
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <span class="text-[11px] ml-5 text-gray-400 italic">
@@ -112,7 +152,7 @@
                                                 <div class="flex items-center gap-1.5 text-blue-900 font-bold">
                                                     <i class="bi bi-calendar-check"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->translatedFormat('d F Y') }}
+                                                        {{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <span class="text-[11px] ml-5 text-blue-700 font-medium">
@@ -124,7 +164,7 @@
                                                 <div class="flex items-center gap-1.5 font-bold text-gray-900">
                                                     <i class="bi bi-calendar-event text-gray-400"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
 
@@ -145,7 +185,7 @@
                                                 <div class="flex items-center gap-1.5 font-bold text-gray-800">
                                                     <i class="bi bi-calendar-event text-gray-400"></i>
                                                     <span>
-                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}
+                                                        {{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}
                                                     </span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
@@ -175,10 +215,18 @@
                                             data-done="{{ $done ? 1 : 0 }}"
                                             data-ispengaju="{{ $isPengaju ? 1 : 0 }}"
                                             data-sudahkonfirmasi="{{ $sudahKonfirmasi ? 1 : 0 }}"
+                                            data-periodeselesai="{{ $periodeSelesai ? 1 : 0 }}"
                                             class="button-lihat-pengajuan inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition mb-2">
                                             <i class="bi bi-eye mr-1"></i>
                                             Lihat Pengajuan
                                         </button>
+                                        @else
+                                        @if ($periodeSelesai)
+                                        <div
+                                            class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                                            <i class="bi bi-lock mr-1"></i>
+                                            Periode Selesai
+                                        </div>
                                         @else
                                         <button
                                             type="button"
@@ -191,6 +239,7 @@
                                             <i class="bi bi-calendar-check mr-1"></i>
                                             Ajukan Jadwal
                                         </button>
+                                        @endif
                                         @endif
                                     </td>
                                 </tr>
@@ -446,6 +495,7 @@
             let done = $(this).data('done');
             let isPengaju = $(this).data('ispengaju');
             let sudahKonfirmasi = $(this).data('sudahkonfirmasi');
+            let periodeSelesai = $(this).data('periodeselesai');
 
             $('#penugasan_id_detail').val($(this).data('idpenugasan'));
             $('#tanggal_detail').val($(this).data('tanggal'));
@@ -461,10 +511,15 @@
 
             $('#action-konfirmasi').addClass('hidden');
             $('#info-konfirmasi').addClass('hidden').removeClass(
-                'bg-green-100 border border-green-200 text-green-800 bg-blue-100 border-blue-200 text-blue-800'
+                'bg-green-100 border border-green-200 text-green-800 bg-blue-100 border-blue-200 text-blue-800 bg-gray-100 border-gray-200 text-gray-700'
             );
 
-            if (done == 1) {
+            if (periodeSelesai == 1) {
+                $('#info-konfirmasi')
+                    .removeClass('hidden')
+                    .addClass('bg-gray-100 border border-gray-200 text-gray-700')
+                    .html('<i class="bi bi-lock mr-1"></i> Periode audit sudah selesai. Pengajuan jadwal hanya dapat dilihat.');
+            } else if (done == 1) {
                 $('#info-konfirmasi')
                     .removeClass('hidden')
                     .addClass('bg-green-100 border border-green-200 text-green-800')

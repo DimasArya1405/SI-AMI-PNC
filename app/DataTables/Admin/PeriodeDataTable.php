@@ -51,11 +51,38 @@ class PeriodeDataTable extends DataTable
             })
             ->addColumn('action', function ($row) {
                 if (request()->routeIs('admin.periode')) {
+                    $statusButton = $row->status == '1'
+                        ? '<button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
+                            data-id="' . e($row->id) . '"
+                            data-tahun="' . e($row->tahun) . '"
+                            data-status="' . e($row->status) . '"
+                            class="button-aktivasi rounded bg-orange-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-orange-700">
+                            Nonaktifkan
+                        </button>'
+                        : '<button data-modal-target="modal-aktivasi"
+                            data-modal-toggle="modal-aktivasi"
+                            data-id="' . e($row->id) . '"
+                            data-tahun="' . e($row->tahun) . '"
+                            data-status="' . e($row->status) . '"
+                            class="button-aktivasi rounded bg-blue-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-blue-700">
+                            Aktifkan
+                        </button>';
+
                     return '
                     <div class="flex items-center gap-2">
+                        ' . $statusButton . '
+                        <button data-modal-target="modal-edit"
+                            data-modal-toggle="modal-edit"
+                            data-id="' . e($row->id) . '"
+                            data-tahun="' . e($row->tahun) . '"
+                            class="button-edit rounded bg-yellow-500 px-2 py-1 text-white transition duration-300 ease-in-out hover:bg-yellow-700">
+                            <i class="bi bi-pencil text-xs"></i>
+                        </button>
                         <button data-modal-target="modal-hapus"
                             data-modal-toggle="modal-hapus"
-                            data-id="' . $row->id . '"
+                            data-id="' . e($row->id) . '"
+                            data-tahun="' . e($row->tahun) . '"
                             class="hover:bg-red-700 transition button-hapus duration-300 ease-in-out py-1 px-2 bg-red-500 rounded text-white">
                             <i class="bi bi-trash text-xs"></i>
                         </button>
@@ -74,7 +101,14 @@ class PeriodeDataTable extends DataTable
                         </div>
                         ';
                 }else{
-                    return '<div class="text-red-500 text-sm">Periode tidak aktif</div>';
+                    return '
+                        <div class="flex items-center gap-2">
+                            <a href="' . route('admin.ami.penugasan.detail', $row->id) . '"
+                                class="bg-blue-500 hover:bg-blue-600 transition duration-200 ease-in-out px-2 py-1 text-white rounded">
+                                Lihat Jadwal
+                            </a>
+                        </div>
+                    ';
                 }
                 }
             })

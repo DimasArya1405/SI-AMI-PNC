@@ -5,11 +5,16 @@
         'admin.ami.item_sub_standar_mutu'
     );
     $dataAmiActive = request()->routeIs(
-        'admin.ami.penugasan',
+        'admin.ami.penugasan*',
+        'admin.ami.upt_standar_mutu',
+        'admin.upt_standar_mutu.*'
+    );
+    $pemetaanStandarMutuActive = request()->routeIs(
         'admin.ami.upt_standar_mutu',
         'admin.upt_standar_mutu.*'
     );
     $masterDataActive = request()->routeIs('admin.data.*') || $standarMutuActive;
+    $backupRestoreActive = request()->routeIs('admin.backup_restore.*');
 @endphp
 
 <div x-cloak x-data="{ sidebarOpen: false }" @toggle-sidebar.window="sidebarOpen = ! sidebarOpen">
@@ -64,46 +69,6 @@
                 </a>
             </li> -->
         </ul>
-        <div class="px-6 flex justify-between items-center py-2 rounded-md cursor-pointer transition duration-200 ease-in-out
-            {{ $dataAmiActive ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-blue-500 hover:text-white' }}"
-            aria-controls="dp-ami" data-collapse-toggle="data-ami">
-
-            <div>
-                <i class="bi bi-person mr-2 text-xl"></i> Data AMI
-            </div>
-            <i class="bi bi-chevron-down text-sm"></i>
-        </div>
-        <ul id="data-ami"
-            class="pl-6 py-2 flex flex-col gap-1 {{ $dataAmiActive ? '' : 'hidden' }}">
-            <li>
-                <a href="{{ route('admin.ami.penugasan') }}"
-                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.ami.penugasan') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
-                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Penugasan
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.ami.upt_standar_mutu') }}"
-                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.ami.upt_standar_mutu') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
-                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Pemetaan Standar Mutu
-                </a>
-            </li>
-            <!-- <li>
-                <a href="{{ route('admin.rka.index') }}"
-                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.rka.*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
-                    <i class="bi bi-chevron-right mr-3 text-xs"></i> RKA
-                </a>
-            </li> -->
-            {{-- <li>
-                <a href="{{ route('admin.akun.dosen') }}"
-                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
-                    {{ request()->routeIs('admin.akun.dosen') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
-                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Dosen
-                </a>
-            </li> --}}
-        </ul>
         <div class="px-6 flex justify-between items-center py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ $masterDataActive ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-blue-500 hover:text-white' }}"
             aria-controls="dp-audit" data-collapse-toggle="dp-audit">
@@ -148,6 +113,46 @@
                 </a>
             </li> -->
         </ul>
+        <div class="px-6 flex justify-between items-center py-2 rounded-md cursor-pointer transition duration-200 ease-in-out
+            {{ $dataAmiActive ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-blue-500 hover:text-white' }}"
+            aria-controls="dp-ami" data-collapse-toggle="data-ami">
+
+            <div>
+                <i class="bi bi-person mr-2 text-xl"></i> Data AMI
+            </div>
+            <i class="bi bi-chevron-down text-sm"></i>
+        </div>
+        <ul id="data-ami"
+            class="pl-6 py-2 flex flex-col gap-1 {{ $dataAmiActive ? '' : 'hidden' }}">
+            <li>
+                <a href="{{ route('admin.ami.penugasan') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ request()->routeIs('admin.ami.penugasan*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Penugasan
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.ami.upt_standar_mutu') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ $pemetaanStandarMutuActive ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Pemetaan Standar Mutu
+                </a>
+            </li>
+            <!-- <li>
+                <a href="{{ route('admin.rka.index') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ request()->routeIs('admin.rka.*') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> RKA
+                </a>
+            </li> -->
+            {{-- <li>
+                <a href="{{ route('admin.akun.dosen') }}"
+                    class="pl-5 flex items-center px-2 py-1.5 rounded-md transition duration-200 ease-in-out
+                    {{ request()->routeIs('admin.akun.dosen') ? 'font-semibold text-blue-500' : 'text-gray-600 hover:text-blue-500 hover:font-semibold' }}">
+                    <i class="bi bi-chevron-right mr-3 text-xs"></i> Dosen
+                </a>
+            </li> --}}
+        </ul>
         <a href="{{ route('admin.periode') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('admin.periode') ? 'bg-blue-500 text-white' : '' }}">
@@ -162,6 +167,11 @@
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
             {{ request()->routeIs('admin.monitoring_tk.*') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-clipboard-data mr-2 text-xl"></i> Tindakan Koreksi
+        </a>
+        <a href="{{ route('admin.backup_restore.index') }}"
+            class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
+            {{ $backupRestoreActive ? 'bg-blue-500 text-white' : '' }}">
+            <i class="bi bi-hdd-stack mr-2 text-xl"></i> Backup & Restore
         </a>
         <div class="mt-auto border-t border-gray-200 pt-2 md:hidden">
             <a href="{{ route('profile.edit') }}"

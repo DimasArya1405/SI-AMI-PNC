@@ -149,7 +149,7 @@
                                                 {{ $notifikasi->data['pesan'] ?? '' }}
                                             </p>
                                             <p class="text-[11px] text-gray-400 mt-1">
-                                                {{ $notifikasi->created_at->diffForHumans() }}
+                                                {{ $notifikasi->created_at->locale('id')->diffForHumans() }}
                                             </p>
                                         </div>
                                     </div>
@@ -247,7 +247,7 @@
                                                 {{ $notifikasi->data['pesan'] ?? '' }}
                                             </p>
                                             <p class="mt-1 text-[11px] text-gray-400">
-                                                {{ $notifikasi->created_at->diffForHumans() }}
+                                                {{ $notifikasi->created_at->locale('id')->diffForHumans() }}
                                             </p>
                                         </div>
                                     </div>

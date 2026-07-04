@@ -553,6 +553,18 @@
 
             const toastSuccess = document.getElementById('toast-success');
             const toastError = document.getElementById('toast-error');
+            const storedSuccess = sessionStorage.getItem('siami_toast_success');
+
+            if (storedSuccess && toastSuccess) {
+                const message = toastSuccess.querySelector('.ms-3');
+
+                if (message) {
+                    message.textContent = storedSuccess;
+                }
+
+                toastSuccess.style.opacity = "1";
+                sessionStorage.removeItem('siami_toast_success');
+            }
 
             if (toastSuccess) {
                 setTimeout(() => {

@@ -357,8 +357,23 @@
                                                             <input type="file"
                                                                 name="file_bukti[]"
                                                                 multiple
+                                                                data-max-file-size="5242880"
                                                                 class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
                                                                 required>
+                                                            <p data-file-size-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
+                                                            <p class="mt-2 text-xs text-gray-500">
+                                                                PDF, Word, Excel, JPG, JPEG, atau PNG. Maksimal 5 MB per file.
+                                                            </p>
+                                                            @php
+                                                                $fileBuktiErrors = collect($errors->get('file_bukti'))
+                                                                    ->merge($errors->get('file_bukti.*'))
+                                                                    ->filter();
+                                                            @endphp
+                                                            @if (old('target_scroll') === 'item-' . $item->upt_item_sub_standar_id && $fileBuktiErrors->isNotEmpty())
+                                                                <div class="mt-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                                                    {{ $fileBuktiErrors->first() }}
+                                                                </div>
+                                                            @endif
 
                                                             <textarea
                                                                 name="keterangan"
@@ -577,9 +592,54 @@
             });
         }
 
+        const formatFileSizeMb = (bytes) => (bytes / 1024 / 1024).toFixed(2).replace('.', ',');
+
+        function validateUploadFileSize(form) {
+            const input = form.querySelector('[data-max-file-size]');
+            const errorElement = form.querySelector('[data-file-size-error]');
+
+            if (!input) {
+                return true;
+            }
+
+            const maxSize = Number(input.dataset.maxFileSize || 5242880);
+            const oversizedFile = Array.from(input.files || []).find((file) => file.size > maxSize);
+
+            if (oversizedFile) {
+                const message = `File "${oversizedFile.name}" berukuran ${formatFileSizeMb(oversizedFile.size)} MB. Maksimal 5 MB per file.`;
+
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.remove('hidden');
+                }
+
+                input.setCustomValidity(message);
+                input.reportValidity();
+                return false;
+            }
+
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+            }
+
+            input.setCustomValidity('');
+            return true;
+        }
+
+        document.querySelectorAll('.formUploadBukti [data-max-file-size]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                validateUploadFileSize(input.closest('.formUploadBukti'));
+            });
+        });
+
         // JS LOADING UPLOAD BUKTI
         document.querySelectorAll('.formUploadBukti').forEach(function(form) {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function(event) {
+                if (!validateUploadFileSize(form)) {
+                    event.preventDefault();
+                    return;
+                }
 
                 document.getElementById('loadingOverlay').classList.remove('hidden');
                 document.getElementById('loadingText').textContent = 'Mengupload dokumen...';

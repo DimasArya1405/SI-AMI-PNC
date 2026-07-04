@@ -7,7 +7,7 @@
     <div class="flex min-h-full flex-col p-2 gap-1">
         <a href="{{ route('auditor.dashboard') }}"
             class="px-6 py-2 text-gray-600 rounded-md cursor-pointer hover:bg-blue-500 hover:text-white transition duration-200 ease-in-out
-            {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
+            {{ request()->routeIs('auditor.dashboard') ? 'bg-blue-500 text-white' : '' }}">
             <i class="bi bi-grid-1x2-fill mr-2 text-xl"></i> Dashboard
         </a>
 

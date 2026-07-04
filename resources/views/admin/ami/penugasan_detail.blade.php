@@ -3,8 +3,15 @@
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __('Data Penugasan - Buat Penugasan') }}
+                <div class="p-6 text-gray-900 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        {{ __('Data Penugasan - Buat Penugasan') }}
+                    </div>
+                    <a href="{{ route('admin.ami.penugasan') }}"
+                        class="inline-flex items-center justify-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition duration-200 ease-in-out hover:bg-gray-700">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Kembali
+                    </a>
                 </div>
             </div>
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
@@ -102,7 +109,7 @@
                                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
+                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <span
                                                                 class="text-xs ml-5 text-gray-400 italic">{{ $penugasan->jam ? $penugasan->jam . ' WIB' : '-' }}</span>
@@ -122,7 +129,7 @@
                                                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $pengajuan->tanggal_audit ? \Carbon\Carbon::parse($pengajuan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
+                                                                <span>{{ $pengajuan->tanggal_audit ? \Carbon\Carbon::parse($pengajuan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <span
                                                                 class="text-xs ml-5 text-blue-700">{{ $pengajuan->jam ? $pengajuan->jam . ' WIB' : '-' }}</span>
@@ -139,7 +146,7 @@
                                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                     </path>
                                                                 </svg>
-                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</span>
+                                                                <span>{{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}</span>
                                                             </div>
                                                             <div
                                                                 class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5">
@@ -250,7 +257,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             @if ($jam = $item->penugasan->first()?->jam)
-                                                {{ $item->penugasan->first()->tanggal_audit ? \Carbon\Carbon::parse($item->penugasan->first()->tanggal_audit)->translatedFormat('d F Y') : '-' }}
+                                                {{ $item->penugasan->first()->tanggal_audit ? \Carbon\Carbon::parse($item->penugasan->first()->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}
                                                 <br>
                                                 {{ $jam }} WIB
                                             @else
@@ -433,9 +440,12 @@
                     </button>
                 </div>
                 <!-- Modal body -->
-                <form action="{{ route('admin.ami.penugasan.tambah') }}" method="post">
+                <form id="form-tambah-penugasan" action="{{ route('admin.ami.penugasan.tambah') }}" method="post">
                     @csrf
                     @method('post')
+                    <div id="modal-penugasan-error"
+                        class="mt-2 hidden rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    </div>
                     <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
                         <input type="hidden" id="periode_id" name="periode_id">
                         <input type="hidden" id="upt_id" name="upt_id">
@@ -443,9 +453,9 @@
                             <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
                                 Ketua Auditor
                             </label>
-                            <select id="" name="auditor_1"
+                            <select id="auditor_1_tambah" name="auditor_1" required
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
+                                <option value="" selected disabled>Pilih Auditor</option>
                                 @foreach ($auditor as $item)
                                     <option value="{{ $item->auditor_id }}">{{ $item->nip }} -
                                         {{ $item->nama_lengkap }}</option>
@@ -456,9 +466,9 @@
                             <label for="category" class="block mb-2.5 text-sm font-medium text-heading">
                                 Anggota Auditor
                             </label>
-                            <select id="" name="auditor_2"
+                            <select id="auditor_2_tambah" name="auditor_2" required
                                 class="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs placeholder:text-body">
-                                <option selected="">Pilih Auditor</option>
+                                <option value="" selected disabled>Pilih Auditor</option>
                                 @foreach ($auditor as $item)
                                     <option value="{{ $item->auditor_id }}"> {{ $item->nip }} -
                                         {{ $item->nama_lengkap }}</option>
@@ -481,14 +491,14 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
-                        <button type="submit"
+                        <button id="btn-simpan-penugasan" type="submit"
                             class="inline-flex items-center  text-white bg-blue-500 hover:bg-brand-strong box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none hover:bg-blue-700 transition duration-200 ease-in-out">
                             <svg class="w-4 h-4 me-1.5 -ms-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                 width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="M5 12h14m-7 7V5" />
                             </svg>
-                            Simpan Penugasan
+                            <span id="btn-simpan-penugasan-text">Simpan Penugasan</span>
                         </button>
                         <button data-modal-hide="modal-penugasan" type="button"
                             class="text-body bg-white hover:bg-gray-200 transition duration-300 ease-in-out border border-gray-400 hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Batal</button>
@@ -673,6 +683,9 @@
                 let valUpt = $(this).attr('data-uptId');
                 let valPeriode = $(this).attr('data-periodeId');
 
+                $('#form-tambah-penugasan')[0].reset();
+                $('#modal-penugasan-error').addClass('hidden').text('');
+
                 // Masukkan nilainya ke dalam input hidden
                 // .val() digunakan untuk mengisi value
                 $('#upt_id').val(valUpt);
@@ -681,6 +694,47 @@
                 // Cek di console untuk memastikan (Tekan F12 di browser)
                 console.log("Isi UPT ID: " + valUpt);
             });
+
+            $('#form-tambah-penugasan').on('submit', function(e) {
+                e.preventDefault();
+
+                const form = this;
+                const formData = new FormData(form);
+                const $errorBox = $('#modal-penugasan-error');
+                const $submitButton = $('#btn-simpan-penugasan');
+                const $submitText = $('#btn-simpan-penugasan-text');
+
+                $errorBox.addClass('hidden').text('');
+                $submitButton.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+                $submitText.text('Menyimpan...');
+
+                $.ajax({
+                    url: form.action,
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        Accept: 'application/json'
+                    },
+                    success: function(response) {
+                        sessionStorage.setItem(
+                            'siami_toast_success',
+                            response?.message || 'Penugasan Berhasil Ditambahkan!'
+                        );
+                        window.location.reload();
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message ||
+                            'Penugasan gagal disimpan. Periksa kembali data yang diisi.';
+
+                        $errorBox.removeClass('hidden').text(message);
+                        $submitButton.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+                        $submitText.text('Simpan Penugasan');
+                    }
+                });
+            });
+
             $(document).on('click', '.button-edit-penugasan', function() {
                 let upt_id = $(this).data('uptid');
                 let periode_id = $(this).data('periodeid');

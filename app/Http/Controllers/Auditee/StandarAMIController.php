@@ -163,6 +163,8 @@ class StandarAMIController extends Controller
         ], [
             'file_bukti.required' => 'File bukti wajib diupload.',
             'file_bukti.array' => 'File bukti tidak valid.',
+            'file_bukti.*.uploaded' => 'Ukuran salah satu file terlalu besar atau gagal diupload. Maksimal 5 MB per file.',
+            'file_bukti.*.file' => 'File bukti tidak valid.',
             'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);

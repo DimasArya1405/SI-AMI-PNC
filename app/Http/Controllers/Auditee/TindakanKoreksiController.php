@@ -72,6 +72,8 @@ class TindakanKoreksiController extends Controller
         ], [
             'bukti_koreksi.required' => 'File bukti wajib diupload.',
             'bukti_koreksi.array' => 'File bukti tidak valid.',
+            'bukti_koreksi.*.uploaded' => 'Ukuran salah satu file terlalu besar atau gagal diupload. Maksimal 5 MB per file.',
+            'bukti_koreksi.*.file' => 'File bukti tidak valid.',
             'bukti_koreksi.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'bukti_koreksi.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
