@@ -1,6 +1,28 @@
 <x-app-layout>
     @include('admin.sidebar')
 
+    <style>
+        .siami-restore-button {
+            background-color: #ea580c !important;
+            color: #ffffff !important;
+        }
+
+        .siami-restore-button:hover {
+            background-color: #c2410c !important;
+            color: #ffffff !important;
+        }
+
+        .siami-restore-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .siami-restore-header {
+            background-color: #ea580c !important;
+            color: #ffffff !important;
+        }
+    </style>
+
     <div class="py-6 ml-60">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 flex flex-col gap-4">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -78,7 +100,7 @@
                                 class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
                         </div>
                         <button type="button" id="btn-open-restore-modal"
-                            class="inline-flex w-full items-center justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 sm:w-auto">
+                            class="siami-restore-button inline-flex w-full items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition sm:w-auto">
                             <i class="bi bi-upload mr-2"></i>
                             Restore Database
                         </button>
@@ -149,7 +171,7 @@
         class="hidden fixed inset-0 z-50 items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 p-4">
         <div class="relative w-full max-w-md">
             <div class="relative rounded-lg border border-gray-200 bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-gray-200 bg-orange-600 px-5 py-4 text-white">
+                <div class="siami-restore-header flex items-center justify-between border-b border-gray-200 px-5 py-4">
                     <h3 class="text-lg font-semibold">Konfirmasi Restore Database</h3>
                     <button type="button" data-restore-modal-close
                         class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/15 text-white transition hover:bg-white/25">
@@ -179,7 +201,7 @@
                         Batal
                     </button>
                     <button type="button" id="btn-confirm-restore"
-                        class="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700">
+                        class="siami-restore-button inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition">
                         <i class="bi bi-arrow-counterclockwise mr-2"></i>
                         Ya, Restore
                     </button>
