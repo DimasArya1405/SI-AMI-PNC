@@ -80,7 +80,9 @@ class StandarAMIDataTable extends DataTable
                 'upt.nama_upt',
                 'penugasan.periode_id',
                 'periode.tahun'
-            );
+            )
+            ->orderByDesc('periode.tahun')
+            ->orderByDesc('penugasan.created_at');
     }
 
     private function getPeriodeTampilId(?string $uptId): ?string
@@ -133,7 +135,7 @@ class StandarAMIDataTable extends DataTable
             ->setTableId('auditee-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1, 'asc')
+            ->orderBy(1, 'desc')
             ->parameters([
                 'responsive' => false,
                 'autoWidth' => false,
