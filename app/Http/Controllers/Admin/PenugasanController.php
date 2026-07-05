@@ -27,6 +27,10 @@ class PenugasanController extends Controller
     public function detail($id, Request $request)
     {
         $periode_id = $id;
+        $periode = Periode::findOrFail($id);
+        $periodeAktifDetail = $periode->status === '1';
+        $total_upt = UPT::count();
+
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
                 // Load kedua auditor sekaligus
@@ -77,10 +81,16 @@ class PenugasanController extends Controller
 
                 return $auditor;
             });
-        return view('admin.ami.penugasan_detail', compact('penugasan', 'rekapAuditor', 'uptProdi', 'penugasan_sekarang', 'uptBagian', 'periode_id', 'auditor', 'upts'));
+        return view('admin.ami.penugasan_detail', compact('penugasan', 'rekapAuditor', 'uptProdi', 'penugasan_sekarang', 'uptBagian', 'periode_id', 'auditor', 'upts', 'periode', 'periodeAktifDetail', 'total_upt'));
     }
     public function edit(Request $request)
     {
+        $periode = Periode::find($request->periode_id);
+
+        if (!$periode || $periode->status !== '1') {
+            return redirect()->back()->with('error', 'Penugasan hanya dapat diubah pada periode yang sedang aktif.');
+        }
+
         // 1. Validasi awal: Auditor tidak boleh orang yang sama
         if ($request->auditor_1 == $request->auditor_2) {
             return redirect()->back()->with('error', 'Auditor 1 dan Auditor 2 Tidak Boleh Sama!');
@@ -146,6 +156,12 @@ class PenugasanController extends Controller
 
         if ($validator->fails()) {
             return $this->penugasanFailedResponse($request, $validator->errors()->first());
+        }
+
+        $periode = Periode::find($request->periode_id);
+
+        if (!$periode || $periode->status !== '1') {
+            return $this->penugasanFailedResponse($request, 'Penugasan hanya dapat dibuat pada periode yang sedang aktif.');
         }
 
         if ($request->auditor_1 == $request->auditor_2) {
@@ -218,6 +234,12 @@ class PenugasanController extends Controller
     }
     public function aktifkan($id)
     {
+        $periode = Periode::find($id);
+
+        if (!$periode || $periode->status !== '1') {
+            return redirect()->back()->with('error', 'Penugasan hanya dapat diaktifkan pada periode yang sedang aktif.');
+        }
+
         // 1. Ambil semua data penugasan pada periode tersebut
         $penugasan = Penugasan::where('periode_id', $id);
 
