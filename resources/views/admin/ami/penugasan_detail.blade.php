@@ -6,6 +6,14 @@
                 <div class="p-6 text-gray-900 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         {{ __('Data Penugasan - Buat Penugasan') }}
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                            <span>Periode {{ $periode->tahun ?? '-' }}</span>
+                            @if ($periodeAktifDetail)
+                                <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Aktif</span>
+                            @else
+                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">Tidak Aktif</span>
+                            @endif
+                        </div>
                     </div>
                     <a href="{{ route('admin.ami.penugasan') }}"
                         class="inline-flex items-center justify-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white transition duration-200 ease-in-out hover:bg-gray-700">
@@ -14,6 +22,12 @@
                     </a>
                 </div>
             </div>
+            @unless ($periodeAktifDetail)
+                <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    Periode ini tidak aktif. Data penugasan tetap bisa dilihat dan diekspor, tetapi tidak bisa menambah,
+                    mengubah, atau mengaktifkan penugasan.
+                </div>
+            @endunless
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="flex justify-between items-center py-4 mx-4 border-b border-gray-300">
                     <div class="font-semibold">Program Studi</div>
@@ -163,27 +177,39 @@
                                             @php $tugas = $item->penugasan->first(); @endphp
 
                                             @if (!$tugas)
-                                                {{-- Tombol Buat Penugasan --}}
-                                                <button data-modal-target="modal-penugasan"
-                                                    data-modal-toggle="modal-penugasan"
-                                                    data-uptId="{{ $item->upt_id }}"
-                                                    data-periodeId="{{ $periode_id }}"
-                                                    class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    Buat Penugasan
-                                                </button>
-                                            @else
-                                                @if ($tugas->status_penugasan == 'pending')
-                                                    <button data-modal-target="modal-edit-penugasan"
-                                                        data-modal-toggle="modal-edit-penugasan"
+                                                @if (!$periodeAktifDetail)
+                                                    <span class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-500">
+                                                        Periode tidak aktif
+                                                    </span>
+                                                @else
+                                                    {{-- Tombol Buat Penugasan --}}
+                                                    <button data-modal-target="modal-penugasan"
+                                                        data-modal-toggle="modal-penugasan"
                                                         data-uptId="{{ $item->upt_id }}"
                                                         data-periodeId="{{ $periode_id }}"
-                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
-                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
-                                                        data-jam="{{ $tugas->jam }}"
-                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
-                                                        class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
-                                                        <i class="bi bi-edit text-xs"></i> Edit Penugasan
+                                                        class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
+                                                        Buat Penugasan
                                                     </button>
+                                                @endif
+                                            @else
+                                                @if ($tugas->status_penugasan == 'pending')
+                                                    @if (!$periodeAktifDetail)
+                                                        <span class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-500">
+                                                            Tidak dapat diubah
+                                                        </span>
+                                                    @else
+                                                        <button data-modal-target="modal-edit-penugasan"
+                                                            data-modal-toggle="modal-edit-penugasan"
+                                                            data-uptId="{{ $item->upt_id }}"
+                                                            data-periodeId="{{ $periode_id }}"
+                                                            data-auditorId_1="{{ $tugas->auditor_id_1 }}"
+                                                            data-auditorId_2="{{ $tugas->auditor_id_2 }}"
+                                                            data-jam="{{ $tugas->jam }}"
+                                                            data-tanggal="{{ $tugas->tanggal_audit }}"
+                                                            class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
+                                                            <i class="bi bi-edit text-xs"></i> Edit Penugasan
+                                                        </button>
+                                                    @endif
                                                 @else
                                                     <span class="text-green-500 font-semibold">Penugasan sudah
                                                         aktif</span>
@@ -268,27 +294,39 @@
                                             @php $tugas = $item->penugasan->first(); @endphp
 
                                             @if (!$tugas)
-                                                {{-- Tombol Buat Penugasan --}}
-                                                <button data-modal-target="modal-penugasan"
-                                                    data-modal-toggle="modal-penugasan"
-                                                    data-uptId="{{ $item->upt_id }}"
-                                                    data-periodeId="{{ $periode_id }}"
-                                                    class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
-                                                    Buat Penugasan
-                                                </button>
-                                            @else
-                                                @if ($tugas->status_penugasan == 'pending')
-                                                    <button data-modal-target="modal-edit-penugasan"
-                                                        data-modal-toggle="modal-edit-penugasan"
+                                                @if (!$periodeAktifDetail)
+                                                    <span class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-500">
+                                                        Periode tidak aktif
+                                                    </span>
+                                                @else
+                                                    {{-- Tombol Buat Penugasan --}}
+                                                    <button data-modal-target="modal-penugasan"
+                                                        data-modal-toggle="modal-penugasan"
                                                         data-uptId="{{ $item->upt_id }}"
                                                         data-periodeId="{{ $periode_id }}"
-                                                        data-auditorId_1="{{ $tugas->auditor_id_1 }}"
-                                                        data-auditorId_2="{{ $tugas->auditor_id_2 }}"
-                                                        data-jam="{{ $tugas->jam }}"
-                                                        data-tanggal="{{ $tugas->tanggal_audit }}"
-                                                        class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
-                                                        <i class="bi bi-edit text-xs"></i> Edit Penugasan
+                                                        class="hover:bg-green-700 transition button-penugasan duration-300 ease-in-out py-1 px-2 bg-green-500 rounded text-white">
+                                                        Buat Penugasan
                                                     </button>
+                                                @endif
+                                            @else
+                                                @if ($tugas->status_penugasan == 'pending')
+                                                    @if (!$periodeAktifDetail)
+                                                        <span class="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-500">
+                                                            Tidak dapat diubah
+                                                        </span>
+                                                    @else
+                                                        <button data-modal-target="modal-edit-penugasan"
+                                                            data-modal-toggle="modal-edit-penugasan"
+                                                            data-uptId="{{ $item->upt_id }}"
+                                                            data-periodeId="{{ $periode_id }}"
+                                                            data-auditorId_1="{{ $tugas->auditor_id_1 }}"
+                                                            data-auditorId_2="{{ $tugas->auditor_id_2 }}"
+                                                            data-jam="{{ $tugas->jam }}"
+                                                            data-tanggal="{{ $tugas->tanggal_audit }}"
+                                                            class="hover:bg-yellow-700 transition button-edit-penugasan duration-300 ease-in-out py-1 px-2 bg-yellow-500 rounded text-white">
+                                                            <i class="bi bi-edit text-xs"></i> Edit Penugasan
+                                                        </button>
+                                                    @endif
                                                 @else
                                                     <span class="text-green-500 font-semibold">Penugasan sudah
                                                         aktif</span>
@@ -312,7 +350,12 @@
                         </table>
                     </div>
                     <div class="flex justify-end">
-                        @if ($penugasan_sekarang->count() > 0)
+                        @if (!$periodeAktifDetail)
+                            <button disabled
+                                class="mb-2 rounded bg-gray-300 px-4 py-2 text-gray-600 cursor-not-allowed">
+                                Periode Tidak Aktif
+                            </button>
+                        @elseif ($penugasan_sekarang->count() > 0)
                             @if ($penugasan_sekarang->contains('status_penugasan', 'pending') || $penugasan_sekarang->count() < ($total_upt ?? 0))
                                 <button data-modal-target="modal-konfirmasi-aktif"
                                     data-modal-toggle="modal-konfirmasi-aktif"
@@ -567,7 +610,12 @@
                             $siapAktif = $upts->every(fn($u) => $u->penugasan_count > 0);
                         @endphp
 
-                        @if ($siapAktif)
+                        @if (!$periodeAktifDetail)
+                            <button disabled
+                                class="w-full text-white bg-gray-400 cursor-not-allowed font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                                Periode Tidak Aktif
+                            </button>
+                        @elseif ($siapAktif)
                             <form action="{{ route('admin.ami.penugasan.aktifkan', $periode_id) }}" method="POST"
                                 class="w-full">
                                 @csrf
