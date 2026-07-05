@@ -81,8 +81,7 @@ class StandarAMIDataTable extends DataTable
                 'penugasan.periode_id',
                 'periode.tahun'
             )
-            ->orderByDesc('periode.tahun')
-            ->orderByDesc('penugasan.created_at');
+            ->orderByDesc('periode.tahun');
     }
 
     private function getPeriodeTampilId(?string $uptId): ?string
