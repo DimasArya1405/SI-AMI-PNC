@@ -268,13 +268,18 @@ class TtdController extends Controller
         return JawabanAudit::with([
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
-            'tindakanKoreksi.buktiUploadedBy',
-            'tindakanKoreksi.verifiedBy',
-            'tindakanKoreksi.p4mpVerifiedBy',
-            'tindakanKoreksi.dokumenAuditee.uploadedBy',
-            'tindakanKoreksi.dokumenDosen' => fn ($query) => $query
-                ->where('status_validasi', 'diterima')
-                ->with(['dosen', 'uploadedBy', 'validatedBy']),
+            'tindakanKoreksi' => function ($query) use ($penugasan) {
+                $query->where('penugasan_id', $penugasan->penugasan_id)
+                    ->with([
+                        'buktiUploadedBy',
+                        'verifiedBy',
+                        'p4mpVerifiedBy',
+                        'dokumenAuditee.uploadedBy',
+                        'dokumenDosen' => fn ($query) => $query
+                            ->where('status_validasi', 'diterima')
+                            ->with(['dosen', 'uploadedBy', 'validatedBy']),
+                    ]);
+            },
             'rkaTemuan',
         ])
             ->whereIn('upt_item_sub_standar_id', $this->getItemIds($penugasan))

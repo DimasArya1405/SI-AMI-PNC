@@ -108,14 +108,13 @@
                                                             Lihat
                                                         </button>
                                                         @if (!$tkLocked && $dokumen->status_validasi !== 'diterima')
-                                                            <form action="{{ route('dosen.tindakan_koreksi_dokumen.hapus', $dokumen->dokumen_tk_dosen_id) }}" method="POST"
-                                                                data-scroll-target="tk-{{ $tk->tindakan_koreksi_id }}">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit" class="rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">
-                                                                    Hapus
-                                                                </button>
-                                                            </form>
+                                                            <button type="button"
+                                                                data-delete-dosen-doc-open
+                                                                data-delete-action="{{ route('dosen.tindakan_koreksi_dokumen.hapus', $dokumen->dokumen_tk_dosen_id) }}"
+                                                                data-delete-file="{{ $dokumen->nama_file }}"
+                                                                class="rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">
+                                                                Hapus
+                                                            </button>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -179,10 +178,82 @@
     @include('layouts.partials.smart-file-preview')
     @include('layouts.partials.back-to-top')
 
+    <div id="modal-hapus-dokumen-tk-dosen" tabindex="-1" aria-hidden="true"
+        class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 p-4">
+        <div class="relative w-full max-w-md max-h-full">
+            <div class="relative rounded-base border border-default bg-white p-4 shadow-sm md:p-6">
+                <button type="button" data-delete-dosen-doc-close
+                    class="absolute top-3 end-2.5 inline-flex h-9 w-9 items-center justify-center rounded-base bg-transparent text-body hover:bg-neutral-tertiary hover:text-heading">
+                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                        height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18 17.94 6M18 18 6.06 6" />
+                    </svg>
+                        <span class="sr-only">Tutup modal</span>
+                </button>
+                <div class="p-4 text-center md:p-5">
+                    <svg class="mx-auto mb-4 h-12 w-12 text-fg-disabled" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                        viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <h3 class="mb-3 text-body">Apakah anda yakin akan menghapus dokumen ini?</h3>
+                    <p id="nama-dokumen-hapus-tk-dosen" class="mb-6 break-all text-sm font-semibold text-gray-700">-</p>
+                    <form id="form-hapus-dokumen-tk-dosen" method="POST">
+                    @csrf
+                    @method('delete')
+                    <div class="flex items-center justify-center space-x-4">
+                        <button type="submit"
+                            class="rounded-base border border-transparent bg-blue-500 px-4 py-2.5 text-sm font-medium leading-5 text-white shadow-xs transition duration-300 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-danger-medium">
+                            Iya, saya yakin
+                        </button>
+                        <button type="button" data-delete-dosen-doc-close
+                            class="rounded-base border border-default-medium bg-white px-4 py-2.5 text-sm font-medium leading-5 text-body shadow-xs transition duration-300 ease-in-out hover:bg-gray-200 hover:text-heading focus:outline-none focus:ring-4 focus:ring-neutral-tertiary">
+                            Tidak, Batal
+                        </button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const formatMb = (bytes) => (bytes / 1024 / 1024).toFixed(2).replace('.', ',');
+                const deleteModal = document.getElementById('modal-hapus-dokumen-tk-dosen');
+                const deleteForm = document.getElementById('form-hapus-dokumen-tk-dosen');
+                const deleteFileName = document.getElementById('nama-dokumen-hapus-tk-dosen');
+
+                const closeDeleteModal = () => {
+                    deleteModal?.classList.add('hidden');
+                    deleteModal?.classList.remove('flex');
+                };
+
+                document.querySelectorAll('[data-delete-dosen-doc-open]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (!deleteModal || !deleteForm || !deleteFileName) {
+                            return;
+                        }
+
+                        deleteForm.action = button.dataset.deleteAction;
+                        deleteFileName.textContent = button.dataset.deleteFile || '-';
+                        deleteModal.classList.remove('hidden');
+                        deleteModal.classList.add('flex');
+                    });
+                });
+
+                document.querySelectorAll('[data-delete-dosen-doc-close]').forEach((button) => {
+                    button.addEventListener('click', closeDeleteModal);
+                });
+
+                deleteModal?.addEventListener('click', (event) => {
+                    if (event.target === deleteModal) {
+                        closeDeleteModal();
+                    }
+                });
 
                 document.querySelectorAll('[data-max-file-size]').forEach((input) => {
                     const field = input.closest('[data-file-upload-field]');

@@ -253,6 +253,7 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::post('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}', [AuditeeTindakanKoreksiController::class, 'uploadBukti'])->name('auditee.tindakan_koreksi.upload_bukti');
     Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewBukti'])->name('auditee.tindakan_koreksi.preview_bukti');
     Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [AuditeeTindakanKoreksiController::class, 'downloadBukti'])->name('auditee.tindakan_koreksi.download_bukti');
+    Route::delete('/auditee/tindakan-koreksi/bukti/{dokumen_id}', [AuditeeTindakanKoreksiController::class, 'hapusBukti'])->name('auditee.tindakan_koreksi.hapus_bukti');
     Route::patch('/auditee/tindakan-koreksi/{tindakan_koreksi_id}/dokumen-dosen', [AuditeeTindakanKoreksiController::class, 'aturKebutuhanDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.atur');
     Route::patch('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/validasi', [AuditeeTindakanKoreksiController::class, 'validasiDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.validasi');
     Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.preview');

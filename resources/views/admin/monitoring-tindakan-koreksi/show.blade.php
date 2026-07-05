@@ -143,9 +143,9 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 p-4 sm:p-5 xl:grid-cols-3">
-                        <section class="rounded border border-gray-200 p-4 xl:col-span-2">
+                        <section class="min-w-0 rounded border border-gray-200 p-4 xl:col-span-2">
                             <h3 class="text-sm font-semibold text-gray-900">Ringkasan Kondisi Audit</h3>
-                            <p class="mt-3 whitespace-pre-line rounded bg-gray-50 p-3 text-sm text-gray-700">{{ $kondisi ?: 'Belum ada kondisi final RKA.' }}</p>
+                            <p class="mt-3 whitespace-pre-wrap break-words rounded bg-gray-50 p-3 text-sm text-gray-700">{{ $kondisi ?: 'Belum ada kondisi final RKA.' }}</p>
                             <dl class="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
                                 <div>
                                     <dt class="text-xs uppercase text-gray-500">Ketua Auditor</dt>
@@ -162,18 +162,18 @@
                             </dl>
                         </section>
 
-                        <section class="rounded border border-gray-200 p-4">
+                        <section class="min-w-0 rounded border border-gray-200 p-4">
                             <h3 class="text-sm font-semibold text-gray-900">Bukti dan Penilaian</h3>
                             <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Bukti auditee</p>
                             @if ($dokumenAuditee->isNotEmpty())
                                 <div class="mt-2 space-y-2">
                                     @foreach ($dokumenAuditee as $dokumenAuditeeItem)
-                                        <div class="rounded border border-gray-200 bg-gray-50 p-3">
+                                        <div class="min-w-0 rounded border border-gray-200 bg-gray-50 p-3">
                                             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="min-w-0">
                                                     <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenAuditeeItem->nama_file }}</p>
                                                     @if ($dokumenAuditeeItem->keterangan)
-                                                        <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
+                                                        <p class="mt-1 whitespace-pre-wrap break-words text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
                                                     @endif
                                                 </div>
                                                 <button type="button"
@@ -209,13 +209,13 @@
                                     </div>
                                     <div class="mt-3 space-y-2">
                                         @foreach ($dokumenDosenDisetujui as $dokumenDosen)
-                                            <div class="rounded border border-indigo-100 bg-white p-3">
+                                            <div class="min-w-0 rounded border border-indigo-100 bg-white p-3">
                                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                                     <div class="min-w-0">
                                                         <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenDosen->nama_file }}</p>
                                                         <p class="mt-1 text-xs text-gray-500">Dosen: {{ $dokumenDosen->dosen?->nama_lengkap ?? '-' }}</p>
                                                         @if ($dokumenDosen->keterangan)
-                                                            <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenDosen->keterangan }}</p>
+                                                            <p class="mt-1 whitespace-pre-wrap break-words text-xs text-gray-600">{{ $dokumenDosen->keterangan }}</p>
                                                         @endif
                                                     </div>
                                                     <button type="button"
@@ -233,7 +233,7 @@
                                 </div>
                             @endif
                             <p class="mt-4 text-xs font-semibold uppercase text-gray-500">Hasil auditor</p>
-                            <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->hasil_penilaian_auditor ?: '-' }}</p>
+                            <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk?->hasil_penilaian_auditor ?: '-' }}</p>
                         </section>
                     </div>
 
@@ -243,15 +243,15 @@
                             <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
                                 <div>
                                     <p class="text-xs font-semibold uppercase text-gray-500">Analisa Ketidaksesuaian</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->analisis_ketidaksesuaian ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk?->analisis_ketidaksesuaian ?: '-' }}</p>
                                 </div>
                                 <div class="lg:col-span-2">
                                     <p class="text-xs font-semibold uppercase text-gray-500">Usulan Tindakan Koreksi</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->rencana_koreksi ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk?->rencana_koreksi ?: '-' }}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs font-semibold uppercase text-gray-500">Catatan dari Auditee</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->pelaksanaan_deskripsi ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk?->pelaksanaan_deskripsi ?: '-' }}</p>
                                 </div>
                             </div>
                         </details>
@@ -277,7 +277,7 @@
                             @elseif (!$isKepalaP4mp)
                                 <div class="mt-4 border-t border-indigo-200 pt-4">
                                     <p class="text-xs font-semibold uppercase text-indigo-700">Catatan item dari Kepala P4MP</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk?->p4mp_catatan ?: 'Belum ada catatan item.' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk?->p4mp_catatan ?: 'Belum ada catatan item.' }}</p>
                                 </div>
                             @else
                                 <p class="mt-4 rounded bg-white p-3 text-sm text-indigo-700">
@@ -372,7 +372,7 @@
 
                     <div class="mt-5 rounded bg-gray-50 p-4">
                         <p class="text-xs font-semibold uppercase text-gray-500">Catatan keseluruhan</p>
-                        <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $verifikasiTk?->catatan_umum ?: 'Belum ada catatan keseluruhan.' }}</p>
+                        <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $verifikasiTk?->catatan_umum ?: 'Belum ada catatan keseluruhan.' }}</p>
                     </div>
                 </section>
             @endif

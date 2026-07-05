@@ -64,10 +64,11 @@ class TindakanKoreksiController extends Controller
         $penugasan = $this->getPenugasanAuditor($penugasanId);
         $isKetuaAuditor = $penugasan->auditor_id_1 === $auditor->auditor_id;
         $rkaDitandatangani = $this->rkaSudahDitandatangani($penugasan);
+        $periodeAktif = $this->isPeriodeAktif($penugasan);
         $temuan = $this->getTemuan($penugasan);
         $carryForward = $this->getTemuanBelumSelesaiSiklusSebelumnya($penugasan);
 
-        return view('auditor.tindakan-koreksi.show', compact('penugasan', 'temuan', 'carryForward', 'isKetuaAuditor', 'rkaDitandatangani'));
+        return view('auditor.tindakan-koreksi.show', compact('penugasan', 'temuan', 'carryForward', 'isKetuaAuditor', 'rkaDitandatangani', 'periodeAktif'));
     }
 
     public function verifikasi(Request $request, string $tindakanKoreksiId): RedirectResponse
@@ -82,21 +83,18 @@ class TindakanKoreksiController extends Controller
             ->where('tindakan_koreksi_id', $tindakanKoreksiId)
             ->firstOrFail();
 
+        if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
+            return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Penilaian auditor tidak dapat diubah lagi.');
+        }
+
         $penugasan = $this->getPenugasanKetuaAuditor($tindakanKoreksi->penugasan_id);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat diubah.');
+        }
 
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Tindakan koreksi baru bisa diverifikasi setelah RKA ditandatangani Kepala P4MP.');
-        }
-
-        $adaDokumenDosenDiterima = $tindakanKoreksi->dokumenDosen()
-            ->where('status_validasi', 'diterima')
-            ->exists();
-        $adaDokumenAuditee = $tindakanKoreksi->dokumenAuditee()->exists();
-
-        if ($validated['status'] === 'selesai' && !$tindakanKoreksi->bukti_file_path && !$adaDokumenAuditee && !$adaDokumenDosenDiterima) {
-            return back()
-                ->withErrors(['status' => 'Tindakan koreksi baru bisa ditandai selesai setelah ada bukti auditee atau dokumen dosen yang disetujui auditee.'])
-                ->withInput();
         }
 
         if ($validated['status'] === 'selesai' && empty($validated['hasil_penilaian_auditor'])) {
@@ -203,6 +201,10 @@ class TindakanKoreksiController extends Controller
 
         $penugasan = $this->getPenugasanKetuaAuditor($penugasanId);
 
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat diubah.');
+        }
+
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Tindakan koreksi baru bisa disusun setelah RKA ditandatangani Kepala P4MP.');
         }
@@ -214,6 +216,10 @@ class TindakanKoreksiController extends Controller
             'jawaban_audit_id' => $jawabanAudit->id,
         ]);
 
+        if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
+            return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Analisis dan usulan tidak dapat diubah lagi.');
+        }
+
         if (!$tindakanKoreksi->exists) {
             $tindakanKoreksi->tindakan_koreksi_id = Str::uuid()->toString();
         }
@@ -224,16 +230,22 @@ class TindakanKoreksiController extends Controller
             'rencana_koreksi' => $validated['rencana_koreksi'],
             'penanggung_jawab' => null,
             'target_selesai' => null,
-            'status' => 'diajukan',
-            'catatan_auditor' => null,
-            'p4mp_status' => null,
-            'p4mp_catatan' => null,
-            'p4mp_verified_by_user_id' => null,
-            'p4mp_verified_at' => null,
+            'status' => $tindakanKoreksi->exists ? $tindakanKoreksi->status : 'diajukan',
             'created_by_user_id' => Auth::id(),
-            'verified_by_user_id' => Auth::id(),
-            'verified_at' => now(),
         ]);
+
+        if (!$tindakanKoreksi->exists) {
+            $tindakanKoreksi->fill([
+                'catatan_auditor' => null,
+                'p4mp_status' => null,
+                'p4mp_catatan' => null,
+                'p4mp_verified_by_user_id' => null,
+                'p4mp_verified_at' => null,
+                'verified_by_user_id' => Auth::id(),
+                'verified_at' => now(),
+            ]);
+        }
+
         $tindakanKoreksi->save();
 
         $this->kirimNotifikasiTkDirumuskan($penugasan);
@@ -290,12 +302,17 @@ class TindakanKoreksiController extends Controller
         return JawabanAudit::with([
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
-            'tindakanKoreksi.p4mpVerifiedBy',
-            'tindakanKoreksi.dokumenAuditee.uploadedBy',
-            'tindakanKoreksi.dokumenDosen' => function ($query) {
-                $query->with('dosen')
-                    ->where('status_validasi', 'diterima')
-                    ->latest();
+            'tindakanKoreksi' => function ($query) use ($penugasan) {
+                $query->where('penugasan_id', $penugasan->penugasan_id)
+                    ->with([
+                        'p4mpVerifiedBy',
+                        'dokumenAuditee.uploadedBy',
+                        'dokumenDosen' => function ($query) {
+                            $query->with('dosen')
+                                ->where('status_validasi', 'diterima')
+                                ->latest();
+                        },
+                    ]);
             },
             'rkaTemuan',
         ])
@@ -325,6 +342,21 @@ class TindakanKoreksiController extends Controller
         return $rka
             && $rka->status === 'final'
             && (string) $rka->acc_p4mp === '1';
+    }
+
+    private function isTindakanKoreksiVerified(?TindakanKoreksi $tindakanKoreksi): bool
+    {
+        return $tindakanKoreksi
+            && ($tindakanKoreksi->p4mp_status === 'terverifikasi' || filled($tindakanKoreksi->p4mp_verified_at));
+    }
+
+    private function isPeriodeAktif(Penugasan $penugasan): bool
+    {
+        $periode = $penugasan->relationLoaded('periode')
+            ? $penugasan->periode
+            : $penugasan->periode()->first();
+
+        return (string) ($periode?->status) === '1';
     }
 
     private function getItemPath(?UptItemSubStandarMutu $item): Collection

@@ -67,6 +67,12 @@
                 @method('patch')
                 <input type="hidden" name="tanggal_rapat" value="{{ old('tanggal_rapat', optional($rka->tanggal_rapat)->format('Y-m-d')) }}">
 
+                @if (!$periodeAktif)
+                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                        Periode ini tidak aktif. RKA hanya dapat dilihat dan tidak dapat diubah.
+                    </div>
+                @endif
+
                 <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
                     <h2 class="text-base font-semibold text-gray-800">Tim Auditor</h2>
 
@@ -152,13 +158,13 @@
                                                 <div class="lg:col-span-2">
                                                     <label class="text-sm font-medium text-gray-700">Kondisi Final RKA</label>
                                                     <textarea name="temuan[{{ $temuan->rka_temuan_id }}][kondisi_final]" rows="3" required
-                                                        @disabled(!$isKetuaAuditor)
+                                                        @disabled(!$isKetuaAuditor || !$periodeAktif || $rka->finalized_by_user_id)
                                                         class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old("temuan.{$temuan->rka_temuan_id}.kondisi_final", $temuan->kondisi_final) }}</textarea>
                                                 </div>
                                                 <div>
                                                     <label class="text-sm font-medium text-gray-700">Kategori Final</label>
                                                     <select name="temuan[{{ $temuan->rka_temuan_id }}][kategori_final]" required
-                                                        @disabled(!$isKetuaAuditor)
+                                                        @disabled(!$isKetuaAuditor || !$periodeAktif || $rka->finalized_by_user_id)
                                                         class="mt-1 block w-full rounded border-gray-300 text-sm">
                                                         <option value="KTS" @selected(old("temuan.{$temuan->rka_temuan_id}.kategori_final", $temuan->kategori_final) === 'KTS')>KTS</option>
                                                         <option value="OB" @selected(old("temuan.{$temuan->rka_temuan_id}.kategori_final", $temuan->kategori_final) === 'OB')>OB</option>
@@ -177,7 +183,7 @@
                     </div>
                 </div>
 
-                @if ($isKetuaAuditor)
+                @if ($isKetuaAuditor && $periodeAktif)
                 <div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:justify-end">
                         @if($rka->finalized_by_user_id == null)
                         <button type="submit" name="aksi" value="simpan"

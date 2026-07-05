@@ -94,9 +94,11 @@ class PelaksanaanAuditController extends Controller
             ->get()
             ->groupBy('upt_sub_standar_id');
 
-        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+        $penugasan = Penugasan::with('rka')
+            ->where('upt_id', $auditee->upt_id)
             ->where('periode_id', $periode_id)
             ->firstOrFail();
+        $rkaFinal = $penugasan->rka?->status === 'final';
 
         $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
             ->where('status_validasi', 'diterima')
@@ -121,6 +123,7 @@ class PelaksanaanAuditController extends Controller
             'auditee',
             'ketua',
             'jawabanAudit',
+            'rkaFinal',
             // 'adaPeriode'
         ));
     }
@@ -139,11 +142,30 @@ class PelaksanaanAuditController extends Controller
 
         abort_unless($uptStandarMutu, 404, 'Pemetaan item standar tidak ditemukan.');
 
-        Penugasan::where('upt_id', $uptStandarMutu->upt_id)
+        $penugasan = Penugasan::with(['rka', 'periode'])
+            ->where('upt_id', $uptStandarMutu->upt_id)
             ->where('periode_id', $uptStandarMutu->periode_id)
-            ->where('status_penugasan', 'aktif')
+            ->whereIn('status_penugasan', ['aktif', 'selesai'])
             ->where('auditor_id_1', $auditor->auditor_id)
             ->firstOrFail();
+
+        if ((string) $penugasan->periode?->status !== '1') {
+            return redirect()->back()->with([
+                'error' => 'Penilaian tidak dapat diubah karena periode audit tidak aktif.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+        }
+
+        if ($penugasan->rka?->status === 'final') {
+            return redirect()->back()->with([
+                'error' => 'Penilaian tidak dapat diubah karena RKA sudah difinalisasi.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+        }
 
         $nilaiJawaban = $validated['jawaban'] === 'Ya';
 

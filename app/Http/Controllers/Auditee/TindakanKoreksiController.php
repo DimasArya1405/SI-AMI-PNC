@@ -58,9 +58,10 @@ class TindakanKoreksiController extends Controller
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
         $rkaDitandatangani = $this->rkaSudahDitandatangani($penugasan);
+        $periodeAktif = $this->isPeriodeAktif($penugasan);
         $temuan = $this->getTemuan($penugasan);
 
-        return view('auditee.tindakan-koreksi.show', compact('penugasan', 'temuan', 'rkaDitandatangani'));
+        return view('auditee.tindakan-koreksi.show', compact('penugasan', 'temuan', 'rkaDitandatangani', 'periodeAktif'));
     }
 
     public function uploadBukti(Request $request, string $tindakanKoreksiId): RedirectResponse
@@ -83,6 +84,10 @@ class TindakanKoreksiController extends Controller
             ->firstOrFail();
 
         $penugasan = $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat diubah.');
+        }
 
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Tindakan koreksi belum dapat diunggah karena RKA belum ditandatangani Kepala P4MP.');
@@ -150,6 +155,10 @@ class TindakanKoreksiController extends Controller
 
         $penugasan = $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
 
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat diubah.');
+        }
+
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Dokumen dosen belum dapat diatur karena RKA belum ditandatangani Kepala P4MP.');
         }
@@ -177,6 +186,67 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Tindakan koreksi tidak lagi ditampilkan ke dosen.');
     }
 
+    public function hapusBukti(string $dokumenId): RedirectResponse
+    {
+        $dokumen = TindakanKoreksiDokumenAuditee::with('tindakanKoreksi.penugasan')
+            ->where('dokumen_tk_auditee_id', $dokumenId)
+            ->first();
+
+        $tindakanKoreksi = $dokumen?->tindakanKoreksi;
+
+        if (!$tindakanKoreksi) {
+            $tindakanKoreksi = TindakanKoreksi::with('penugasan')
+                ->where('tindakan_koreksi_id', $dokumenId)
+                ->firstOrFail();
+        }
+
+        $penugasan = $this->getPenugasanAuditee($tindakanKoreksi->penugasan_id);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Periode sudah tidak aktif. Bukti tindakan koreksi tidak dapat dihapus lagi.');
+        }
+
+        if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
+            return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Bukti tidak dapat dihapus lagi.');
+        }
+
+        if ($dokumen) {
+            if ($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path)) {
+                Storage::disk('local')->delete($dokumen->file_path);
+            }
+
+            $dokumen->delete();
+
+            $dokumenPengganti = $tindakanKoreksi->dokumenAuditee()
+                ->latest()
+                ->first();
+
+            if ($tindakanKoreksi->bukti_file_path === $dokumen->file_path) {
+                $tindakanKoreksi->update([
+                    'bukti_nama_file' => $dokumenPengganti?->nama_file,
+                    'bukti_file_path' => $dokumenPengganti?->file_path,
+                    'bukti_uploaded_by_user_id' => $dokumenPengganti?->uploaded_by_user_id,
+                    'bukti_uploaded_at' => $dokumenPengganti?->created_at,
+                ]);
+            }
+
+            return back()->with('success', 'Bukti tindakan koreksi berhasil dihapus.');
+        }
+
+        if ($tindakanKoreksi->bukti_file_path && Storage::disk('local')->exists($tindakanKoreksi->bukti_file_path)) {
+            Storage::disk('local')->delete($tindakanKoreksi->bukti_file_path);
+        }
+
+        $tindakanKoreksi->update([
+            'bukti_nama_file' => null,
+            'bukti_file_path' => null,
+            'bukti_uploaded_by_user_id' => null,
+            'bukti_uploaded_at' => null,
+        ]);
+
+        return back()->with('success', 'Bukti tindakan koreksi berhasil dihapus.');
+    }
+
     public function validasiDokumenDosen(Request $request, string $dokumenId): RedirectResponse
     {
         $validated = $request->validate([
@@ -189,6 +259,10 @@ class TindakanKoreksiController extends Controller
             ->firstOrFail();
 
         $penugasan = $this->getPenugasanAuditee($dokumen->tindakanKoreksi->penugasan_id);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat diubah.');
+        }
 
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Validasi dokumen dosen belum dapat dilakukan karena RKA belum ditandatangani Kepala P4MP.');
@@ -211,6 +285,10 @@ class TindakanKoreksiController extends Controller
     public function tandaTangan(string $penugasanId): RedirectResponse
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'Tindakan koreksi periode yang tidak aktif tidak dapat ditandatangani.');
+        }
 
         if (!$this->rkaSudahDitandatangani($penugasan)) {
             return back()->with('error', 'Tindakan koreksi belum dapat ditandatangani karena RKA belum ditandatangani Kepala P4MP.');
@@ -331,12 +409,17 @@ class TindakanKoreksiController extends Controller
         return JawabanAudit::with([
             'itemSubStandar.parent.parent.parent',
             'itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu',
-            'tindakanKoreksi.p4mpVerifiedBy',
-            'tindakanKoreksi.dokumenAuditee.uploadedBy',
-            'tindakanKoreksi.kebutuhanDokumenDosen',
-            'tindakanKoreksi.dokumenDosen.dosen',
-            'tindakanKoreksi.dokumenDosen.uploadedBy',
-            'tindakanKoreksi.dokumenDosen.validatedBy',
+            'tindakanKoreksi' => function ($query) use ($penugasan) {
+                $query->where('penugasan_id', $penugasan->penugasan_id)
+                    ->with([
+                        'p4mpVerifiedBy',
+                        'dokumenAuditee.uploadedBy',
+                        'kebutuhanDokumenDosen',
+                        'dokumenDosen.dosen',
+                        'dokumenDosen.uploadedBy',
+                        'dokumenDosen.validatedBy',
+                    ]);
+            },
             'rkaTemuan',
         ])
             ->whereIn('upt_item_sub_standar_id', $itemIds)
@@ -440,6 +523,15 @@ class TindakanKoreksiController extends Controller
     {
         return $tindakanKoreksi
             && ($tindakanKoreksi->p4mp_status === 'terverifikasi' || filled($tindakanKoreksi->p4mp_verified_at));
+    }
+
+    private function isPeriodeAktif(Penugasan $penugasan): bool
+    {
+        $periode = $penugasan->relationLoaded('periode')
+            ? $penugasan->periode
+            : $penugasan->periode()->first();
+
+        return (string) ($periode?->status) === '1';
     }
 
     private function hasBuktiPelaksanaan(TindakanKoreksi $tindakanKoreksi): bool

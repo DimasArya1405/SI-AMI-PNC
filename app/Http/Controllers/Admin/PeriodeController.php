@@ -105,6 +105,8 @@ class PeriodeController extends Controller
 
             $periode->status = '1';
             $periode->save();
+
+            $this->aktifkanPenugasanPeriode($periode);
         });
 
         return redirect()->back()->with('success', 'Periode berhasil diaktifkan. Periode lain otomatis dinonaktifkan.');
@@ -132,6 +134,13 @@ class PeriodeController extends Controller
 
         Penugasan::where('periode_id', $periodeAktif->id)
             ->update(['status_penugasan' => 'selesai']);
+    }
+
+    private function aktifkanPenugasanPeriode(Periode $periode): void
+    {
+        Penugasan::where('periode_id', $periode->id)
+            ->where('status_penugasan', 'selesai')
+            ->update(['status_penugasan' => 'aktif']);
     }
 
     private function pastikanHanyaSatuAktif(): void
