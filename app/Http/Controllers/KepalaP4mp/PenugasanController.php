@@ -32,10 +32,13 @@ class PenugasanController extends Controller
 
         $sudahDitandatangani = $penugasan->isNotEmpty()
             && $penugasan->every(fn (Penugasan $item) => $item->acc_kepala_p4mp === '1');
+        $penugasanSudahDiaktifkan = $penugasan->isNotEmpty()
+            && $penugasan->every(fn (Penugasan $item) => in_array($item->status_penugasan, ['aktif', 'selesai'], true));
 
         return view('kepala-p4mp.penugasan.index', array_merge(compact(
             'penugasan',
-            'sudahDitandatangani'
+            'sudahDitandatangani',
+            'penugasanSudahDiaktifkan'
         ), $periodeFilter));
     }
 
@@ -46,6 +49,14 @@ class PenugasanController extends Controller
 
         if ($jumlahPenugasan === 0) {
             return back()->with('error', 'Belum ada penugasan pada periode ini.');
+        }
+
+        $masihAdaDraft = Penugasan::where('periode_id', $periode->id)
+            ->where('status_penugasan', 'pending')
+            ->exists();
+
+        if ($masihAdaDraft) {
+            return back()->with('error', 'Penugasan belum dapat ditandatangani karena belum diaktifkan oleh admin.');
         }
 
         Penugasan::where('periode_id', $periode->id)->update([

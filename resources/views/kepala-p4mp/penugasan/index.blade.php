@@ -19,7 +19,7 @@
                                 Export PDF
                             </a>
                         @endif
-                        @if ($selectedPeriode && $penugasan->isNotEmpty() && !$sudahDitandatangani)
+                        @if ($selectedPeriode && $penugasanSudahDiaktifkan && !$sudahDitandatangani)
                             <form action="{{ route('kepala_p4mp.penugasan.tanda_tangan', $selectedPeriode->id) }}" method="POST">
                                 @csrf
                                 @method('patch')
@@ -85,6 +85,11 @@
                         <span class="inline-flex items-center gap-2 rounded bg-green-100 px-3 py-2 text-sm font-semibold text-green-700">
                             <i class="bi bi-check-circle"></i>
                             Sudah ditandatangani
+                        </span>
+                    @elseif (!$penugasanSudahDiaktifkan)
+                        <span class="inline-flex items-center gap-2 rounded bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600">
+                            <i class="bi bi-hourglass-split"></i>
+                            Menunggu aktivasi admin
                         </span>
                     @else
                         <span class="inline-flex items-center gap-2 rounded bg-yellow-100 px-3 py-2 text-sm font-semibold text-yellow-700">
