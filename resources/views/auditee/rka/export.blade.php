@@ -58,7 +58,7 @@
     <table class="meta">
         <tr>
             <td>Tanggal Audit</td>
-            <td>{{ $penugasan->tanggal_audit ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }}</td>
+            <td>{{ $penugasan->tanggal_audit ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
         </tr>
         <tr>
             <td>Tim Auditor</td>
@@ -71,11 +71,11 @@
         </tr>
         <tr>
             <td>Tanggal Rapat Internal</td>
-            <td>{{ optional($rka->tanggal_rapat)->translatedFormat('d F Y') ?? '-' }}</td>
+            <td>{{ $rka->tanggal_rapat?->locale('id')->translatedFormat('d F Y') ?? '-' }}</td>
         </tr>
         <tr>
             <td>Finalisasi</td>
-            <td>{{ optional($rka->finalized_at)->translatedFormat('d F Y H:i') ?? '-' }}</td>
+            <td>{{ $rka->finalized_at?->locale('id')->translatedFormat('d F Y H:i') ?? '-' }}</td>
         </tr>
     </table>
 

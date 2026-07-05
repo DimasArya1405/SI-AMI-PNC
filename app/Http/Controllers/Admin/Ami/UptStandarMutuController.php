@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class UptStandarMutuController extends Controller
 {
@@ -442,7 +447,9 @@ class UptStandarMutuController extends Controller
                     $urutanSub = 1;
                     $urutanItem = 1;
 
-                    for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
+                    $startRow = $this->getStartRowImport($sheet);
+
+                    for ($row = $startRow; $row <= $sheet->getHighestRow(); $row++) {
                         $colA = trim((string) $sheet->getCell("A{$row}")->getCalculatedValue());
                         $colB = trim((string) $sheet->getCell("B{$row}")->getCalculatedValue());
 
@@ -452,7 +459,7 @@ class UptStandarMutuController extends Controller
 
                         if (
                             strtoupper($colA) === 'NO' ||
-                            strtoupper($colB) === 'PERTANYAAN DAN PERNYATAAN'
+                            str_contains(strtoupper($colB), 'PERTANYAAN')
                         ) {
                             continue;
                         }
@@ -530,6 +537,41 @@ class UptStandarMutuController extends Controller
         }
     }
 
+    public function downloadTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getProperties()
+            ->setCreator('SIAMI PNC')
+            ->setTitle('Template Import Pemetaan Standar Mutu');
+
+        $petunjuk = $spreadsheet->getActiveSheet();
+        $petunjuk->setTitle('PETUNJUK');
+        $this->isiSheetPetunjukTemplate($petunjuk);
+
+        $standarList = StandarMutu::orderBy('urutan', 'asc')
+            ->orderBy('nama_standar_mutu', 'asc')
+            ->get();
+
+        foreach ($standarList as $standar) {
+            $sheet = $spreadsheet->createSheet();
+            $sheet->setTitle($this->sanitizeSheetTitle($standar->nama_standar_mutu));
+            $this->isiSheetTemplateStandar($sheet, $standar->nama_standar_mutu);
+        }
+
+        if ($standarList->isNotEmpty()) {
+            $spreadsheet->setActiveSheetIndex(1);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'Template Import Pemetaan Standar Mutu.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
     public function export($upt_id, $periode_id)
     {
         $upt = Upt::findOrFail($upt_id);
@@ -558,5 +600,165 @@ class UptStandarMutuController extends Controller
             });
 
         return response()->json($uptList);
+    }
+
+    private function isiSheetPetunjukTemplate($sheet): void
+    {
+        $sheet->setCellValue('A1', 'PETUNJUK TEMPLATE IMPORT PEMETAAN STANDAR MUTU');
+        $sheet->setCellValue('A3', '1. Isi data pada sheet standar yang sesuai.');
+        $sheet->setCellValue('A4', '2. Nama standar dibaca sistem dari sel E6. Jangan mengubah isi E6.');
+        $sheet->setCellValue('A5', '3. Nama sub standar ditulis di kolom A, sedangkan kolom B pada baris tersebut dikosongkan.');
+        $sheet->setCellValue('A6', '4. Item level 1: isi nomor di kolom A dan pertanyaan/pernyataan di kolom B.');
+        $sheet->setCellValue('A7', '5. Item level 2: kosongkan kolom A, lalu awali teks di kolom B dengan huruf, contoh: a. Dokumen tersedia.');
+        $sheet->setCellValue('A8', '6. Item level 3: kosongkan kolom A, lalu awali teks di kolom B dengan tanda minus, contoh: - Bukti pelaksanaan.');
+        $sheet->setCellValue('A10', 'Contoh struktur pengisian');
+        $sheet->setCellValue('A11', 'Kolom A');
+        $sheet->setCellValue('B11', 'Kolom B');
+        $sheet->setCellValue('A12', 'STANDAR HASIL PENELITIAN');
+        $sheet->setCellValue('B12', '(kosong untuk baris sub standar)');
+        $sheet->setCellValue('A13', '1');
+        $sheet->setCellValue('B13', 'Periksa dokumen luaran penelitian dosen.');
+        $sheet->setCellValue('A14', '(kosong)');
+        $sheet->setCellValue('B14', 'a. Periksa bukti publikasi.');
+        $sheet->setCellValue('A15', '(kosong)');
+        $sheet->setCellValue('B15', '- Artikel jurnal atau prosiding.');
+
+        $sheet->mergeCells('A1:F1');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle('A10:B11')->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'EAF2FF'],
+            ],
+        ]);
+        $sheet->getStyle('A11:B15')->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+        ]);
+        $sheet->getStyle('A1:F15')->getAlignment()->setWrapText(true);
+        $sheet->getColumnDimension('A')->setWidth(24);
+        $sheet->getColumnDimension('B')->setWidth(72);
+        $sheet->getColumnDimension('C')->setWidth(16);
+        $sheet->getColumnDimension('D')->setWidth(16);
+        $sheet->getColumnDimension('E')->setWidth(28);
+        $sheet->getColumnDimension('F')->setWidth(20);
+    }
+
+    private function isiSheetTemplateStandar($sheet, string $namaStandar): void
+    {
+        $sheet->setCellValue('A1', 'FORMULIR AUDIT MUTU INTERNAL');
+        $sheet->setCellValue('A4', 'Standar Mutu');
+        $sheet->setCellValue('E6', $namaStandar);
+        $sheet->setCellValue('A8', 'Isi data mulai baris 10. Kolom A untuk sub standar/nomor, kolom B untuk pertanyaan dan pernyataan.');
+        $sheet->setCellValue('A9', 'NO');
+        $sheet->setCellValue('B9', 'PERTANYAAN DAN PERNYATAAN');
+        $sheet->setCellValue('C9', 'YA');
+        $sheet->setCellValue('D9', 'TIDAK');
+        $sheet->setCellValue('E9', 'CATATAN AUDITOR');
+        $sheet->setCellValue('F9', 'BUKTI AUDITEE');
+
+        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A8:F8');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle('A4:F6')->applyFromArray([
+            'font' => ['bold' => true],
+        ]);
+        $sheet->getStyle('A9:F9')->applyFromArray([
+            'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9EAF7'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000'],
+                ],
+            ],
+        ]);
+        $sheet->getStyle('A10:F100')->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+        ]);
+        $sheet->getStyle('A1:F100')->getAlignment()->setWrapText(true);
+
+        $sheet->getColumnDimension('A')->setWidth(18);
+        $sheet->getColumnDimension('B')->setWidth(72);
+        $sheet->getColumnDimension('C')->setWidth(10);
+        $sheet->getColumnDimension('D')->setWidth(10);
+        $sheet->getColumnDimension('E')->setWidth(38);
+        $sheet->getColumnDimension('F')->setWidth(24);
+        $sheet->getRowDimension(1)->setRowHeight(26);
+        $sheet->getRowDimension(9)->setRowHeight(24);
+    }
+
+    private function sanitizeSheetTitle(string $title): string
+    {
+        $title = strtoupper(str_replace(['\\', '/', '?', '*', '[', ']', ':'], '', $title));
+        $title = trim($title) ?: 'STANDAR';
+
+        return substr($title, 0, 31);
+    }
+
+    private function getStartRowImport($sheet): int
+    {
+        for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
+            $colA = strtoupper(trim((string) $sheet->getCell("A{$row}")->getCalculatedValue()));
+            $colB = strtoupper(trim((string) $sheet->getCell("B{$row}")->getCalculatedValue()));
+
+            if ($colA === 'NO' || str_contains($colB, 'PERTANYAAN')) {
+                $startRow = $row + 1;
+
+                for ($candidateRow = $row - 1; $candidateRow >= 1; $candidateRow--) {
+                    $candidateA = trim((string) $sheet->getCell("A{$candidateRow}")->getCalculatedValue());
+                    $candidateB = trim((string) $sheet->getCell("B{$candidateRow}")->getCalculatedValue());
+
+                    if ($candidateA === '' && $candidateB === '') {
+                        break;
+                    }
+
+                    if ($this->isImportSubStandarRow($candidateA, $candidateB)) {
+                        $startRow = $candidateRow;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                return $startRow;
+            }
+        }
+
+        return 1;
+    }
+
+    private function isImportSubStandarRow(string $colA, string $colB): bool
+    {
+        if ($colA === '' || $colB !== '' || is_numeric($colA)) {
+            return false;
+        }
+
+        $normalized = strtoupper(trim($colA));
+
+        return str_starts_with($normalized, 'STANDAR ') || str_starts_with($normalized, 'INDIKATOR ');
     }
 }

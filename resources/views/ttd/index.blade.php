@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifikasi Dokumen AMI - Dummy Preview</title>
+    <title>Verifikasi Dokumen AMI</title>
 
     <style>
         .wrapper {
@@ -31,7 +31,6 @@
             line-height: 1.5;
             max-width: 850px;
             color: #1a56db;
-            /* Memberi aksen pembeda untuk data utama */
         }
 
         .keterangan {
@@ -43,6 +42,23 @@
             font-size: 18px;
             font-weight: bold;
             margin-top: 30px;
+        }
+
+        .digital-file {
+            margin: 30px auto 10px;
+            text-align: center;
+        }
+
+        .digital-file a.button {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #1a56db;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         footer {
@@ -63,19 +79,6 @@
             margin-top: 40px;
         }
 
-        /* Alert Box tanda dummy aktif agar tidak membingungkan saat dev */
-        .dummy-badge {
-            background-color: #fef3c7;
-            color: #92400e;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            display: inline-block;
-            font-family: sans-serif;
-            font-size: 14px;
-        }
-
         .lingkup {
             font-size: 18px;
             margin: 18px auto 10px;
@@ -90,14 +93,11 @@
     <div class="wrapper">
         <br>
 
-        {{-- Logo Placeholder (Menggunakan layanan generator gambar agar tidak broken) --}}
         <img src="{{ asset('img/logo-pnc-1.png') }}" style="width: 100px;" alt="Logo Instansi">
 
-        {{-- Header --}}
-        <h3>Pusat Penjaminan Mutu menyatakan bahwa dokumen {{ $judul }} tahun {{ $tahun }}</b></h3>
+        <h3>Pusat Penjaminan Mutu menyatakan bahwa dokumen {{ $judul }} tahun {{ $tahun }}</h3>
         <p class="keterangan">dengan lingkup:</p>
 
-        {{-- Judul / Lingkup Audit --}}
         <div class="judul {{ !empty($lingkup) ? 'lingkup' : '' }}">
             @if (!empty($lingkup))
                 {{ $lingkup }}
@@ -111,13 +111,15 @@
             @endif
         </div>
 
-        {{-- Pernyataan tanda tangan --}}
         <p class="keterangan">
             adalah sah dan secara resmi ditandatangani secara digital oleh:
         </p>
 
         <div style="font-size: 18px; margin-top: 20px;">
-            Cilacap, {{ \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('d F Y') }}
+            Cilacap,
+            {{ $tgl ? \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('d F Y') : '-' }}
+            pukul
+            {{ $tgl ? \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('H:i') : '-' }}
         </div>
 
         <div class="penandatangan">
@@ -125,7 +127,10 @@
             <span style="font-weight: normal;">{{ $jabatan }}</span>
         </div>
 
-        {{-- Footer --}}
+        <div class="digital-file">
+            <a href="{{ $downloadUrl }}" class="button" target="_blank" rel="noopener">Lihat File Digital</a>
+        </div>
+
         <div class="keterangan-bottom">
             Sistem Informasi Audit Mutu Internal (AMI), Pusat Pengembangan Pembelajaran dan Penjaminan Mutu Pendidikan
             Politeknik Negeri Cilacap

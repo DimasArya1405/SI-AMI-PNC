@@ -62,12 +62,21 @@ class RkaController extends Controller
         $penugasan = $this->getPenugasanAuditor($penugasanId);
         $isKetuaAuditor = $penugasan->auditor_id_1 === $auditor->auditor_id;
         $progress = $this->getAuditProgress($penugasan);
+        $periodeAktif = $this->isPeriodeAktif($penugasan);
 
         abort_unless($progress['selesai'], 403, 'Draft RKA baru bisa disusun setelah seluruh item dinilai.');
 
         if ($isKetuaAuditor) {
-            $rka = $this->getOrCreateDraftRka($penugasan);
-            $this->sinkronkanTemuanDraft($rka, $penugasan);
+            $rka = $penugasan->rka;
+
+            if (!$rka) {
+                abort_unless($periodeAktif, 403, 'RKA periode yang tidak aktif hanya dapat dilihat jika sudah pernah disusun.');
+                $rka = $this->getOrCreateDraftRka($penugasan);
+            }
+
+            if ($periodeAktif) {
+                $this->sinkronkanTemuanDraft($rka, $penugasan);
+            }
         } else {
             $rka = $penugasan->rka;
             abort_unless($rka, 403, 'Draft RKA belum disusun oleh ketua auditor.');
@@ -82,7 +91,7 @@ class RkaController extends Controller
         $ringkasan = $this->getRingkasan($progress['item_ids'], $rka);
         $temuanPerStandar = $this->getTemuanPerStandar($rka);
 
-        return view('auditor.rka.show', compact('penugasan', 'rka', 'ringkasan', 'temuanPerStandar', 'isKetuaAuditor'));
+        return view('auditor.rka.show', compact('penugasan', 'rka', 'ringkasan', 'temuanPerStandar', 'isKetuaAuditor', 'periodeAktif'));
     }
 
     public function update(Request $request, string $rkaId): RedirectResponse
@@ -91,7 +100,11 @@ class RkaController extends Controller
             ->where('rka_id', $rkaId)
             ->firstOrFail();
 
-        $this->getPenugasanKetuaAuditor($rka->penugasan_id);
+        $penugasan = $this->getPenugasanKetuaAuditor($rka->penugasan_id);
+
+        if (!$this->isPeriodeAktif($penugasan)) {
+            return back()->with('error', 'RKA periode yang tidak aktif tidak dapat diubah.');
+        }
 
         $validated = $request->validate([
             'tanggal_rapat' => 'nullable|date',
@@ -198,6 +211,15 @@ class RkaController extends Controller
         );
 
         return $penugasan;
+    }
+
+    private function isPeriodeAktif(Penugasan $penugasan): bool
+    {
+        $periode = $penugasan->relationLoaded('periode')
+            ? $penugasan->periode
+            : $penugasan->periode()->first();
+
+        return (string) ($periode?->status) === '1';
     }
 
     private function getOrCreateDraftRka(Penugasan $penugasan): RingkasanKondisiAudit

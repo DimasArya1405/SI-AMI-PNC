@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AkunDosenController;
+use App\Http\Controllers\Admin\BackupRestoreController;
 use App\Http\Controllers\Admin\Akun\AuditeeController;
 use App\Http\Controllers\Auditee\AuditeeController as RoleAuditeeController;
 use App\Http\Controllers\Admin\Akun\AuditorController as AdminAkunAuditorController;
@@ -45,6 +46,7 @@ Route::get('/', function () {
 });
 // ROUTE TANDA TANGAN
 Route::get('/ttd2', [TtdController::class, 'ttdShow'])->name('ttdcode.show');
+Route::get('/ttd2/download', [TtdController::class, 'download'])->name('ttdcode.download');
 
 // Route umum setelah login. Setiap role tetap diarahkan ke dashboard masing-masing.
 Route::get('/dashboard', function () {
@@ -62,6 +64,11 @@ Route::get('/dashboard', function () {
 // Grouping berdasarkan role
 Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/backup-restore', [BackupRestoreController::class, 'index'])->name('admin.backup_restore.index');
+    Route::post('/admin/backup-restore/backup', [BackupRestoreController::class, 'store'])->name('admin.backup_restore.store');
+    Route::post('/admin/backup-restore/restore', [BackupRestoreController::class, 'restore'])->name('admin.backup_restore.restore');
+    Route::get('/admin/backup-restore/download/{filename}', [BackupRestoreController::class, 'download'])->name('admin.backup_restore.download');
+    Route::delete('/admin/backup-restore/{filename}', [BackupRestoreController::class, 'destroy'])->name('admin.backup_restore.destroy');
     Route::get('/admin/akun/auditor', [AdminAkunAuditorController::class, 'index'])->name('admin.akun.auditor');
     Route::post('/admin/akun/auditor/tambah', [AdminAkunAuditorController::class, 'tambah'])->name('admin.auditor.tambah');
     Route::put('/admin/akun/auditor/edit', [AdminAkunAuditorController::class, 'edit'])->name('admin.auditor.edit');
@@ -89,6 +96,8 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     // ROUTE PERIODE
     Route::get('/admin/periode', [PeriodeController::class, 'index'])->name('admin.periode');
     Route::post('/admin/periode/tambah', [PeriodeController::class, 'tambah'])->name('admin.periode.tambah');
+    Route::put('/admin/periode/edit', [PeriodeController::class, 'edit'])->name('admin.periode.edit');
+    Route::put('/admin/periode/aktivasi', [PeriodeController::class, 'aktivasi'])->name('admin.periode.aktivasi');
     Route::delete('/admin/periode/hapus', [PeriodeController::class, 'hapus'])->name('admin.periode.hapus');
 
     Route::get('/admin/data/upt', [UPTController::class, 'index'])->name('admin.data.upt');
@@ -118,6 +127,7 @@ Route::middleware(['auth', 'checkRole:admin'])->group(function () {
     Route::delete('/admin/ami/pemetaan-standar-mutu/hapus', [UptStandarMutuController::class, 'hapus'])->name('admin.upt_standar_mutu.hapus');
     Route::post('/admin/ami/pemetaan-standar/copy-periode', [UptStandarMutuController::class, 'copyPeriode'])->name('admin.upt_standar_mutu.copy_periode');
     Route::get('/admin/ami/upt-standar-mutu/get-upt-by-periode/{periode_id}', [UptStandarMutuController::class, 'getUptByPeriode'])->name('admin.upt_standar_mutu.get_upt_by_periode');
+    Route::get('/admin/ami/pemetaan-standar/template-import', [UptStandarMutuController::class, 'downloadTemplate'])->name('admin.upt_standar_mutu.template');
     Route::post('/admin/ami/pemetaan-standar/import', [UptStandarMutuController::class, 'import'])->name('admin.upt_standar_mutu.import');
     Route::get('/admin/ami/pemetaan-standar/export/{upt_id}/{periode_id}', [UptStandarMutuController::class, 'export'])->name('admin.upt_standar_mutu.export');
 
@@ -243,6 +253,7 @@ Route::middleware(['auth', 'checkRole:auditee'])->group(function () {
     Route::post('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}', [AuditeeTindakanKoreksiController::class, 'uploadBukti'])->name('auditee.tindakan_koreksi.upload_bukti');
     Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewBukti'])->name('auditee.tindakan_koreksi.preview_bukti');
     Route::get('/auditee/tindakan-koreksi/bukti/{tindakan_koreksi_id}/download', [AuditeeTindakanKoreksiController::class, 'downloadBukti'])->name('auditee.tindakan_koreksi.download_bukti');
+    Route::delete('/auditee/tindakan-koreksi/bukti/{dokumen_id}', [AuditeeTindakanKoreksiController::class, 'hapusBukti'])->name('auditee.tindakan_koreksi.hapus_bukti');
     Route::patch('/auditee/tindakan-koreksi/{tindakan_koreksi_id}/dokumen-dosen', [AuditeeTindakanKoreksiController::class, 'aturKebutuhanDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.atur');
     Route::patch('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/validasi', [AuditeeTindakanKoreksiController::class, 'validasiDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.validasi');
     Route::get('/auditee/tindakan-koreksi/dokumen-dosen/{dokumen_id}/preview', [AuditeeTindakanKoreksiController::class, 'previewDokumenDosen'])->name('auditee.tindakan_koreksi.dokumen_dosen.preview');

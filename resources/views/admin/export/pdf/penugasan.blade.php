@@ -88,7 +88,7 @@
                 <tr>
                     <td class="center">{{ $iteration++ }}</td>
                     <td>
-                        {{ $info && $info->tanggal_audit ? \Carbon\Carbon::parse($info->tanggal_audit)->translatedFormat('l, d F Y') : '-' }}
+                        {{ $info && $info->tanggal_audit ? \Carbon\Carbon::parse($info->tanggal_audit)->locale('id')->translatedFormat('l, d F Y') : '-' }}
                     </td>
                     <td class="center">
                         {{ $info && $info->jam ? \Carbon\Carbon::parse($info->jam)->format('H:i') . ' WIB' : '-' }}

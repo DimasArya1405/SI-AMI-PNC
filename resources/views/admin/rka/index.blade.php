@@ -104,7 +104,7 @@
                             <div class="mt-4 grid grid-cols-1 gap-2 text-sm text-gray-600 sm:grid-cols-3">
                                 <p>
                                     <i class="bi bi-calendar3 mr-1 text-blue-600"></i>
-                                    {{ $item->tanggal_audit ? \Illuminate\Support\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') : '-' }}
+                                    {{ $item->tanggal_audit ? \Illuminate\Support\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }}
                                 </p>
                                 <p>
                                     <i class="bi bi-person-check mr-1 text-blue-600"></i>

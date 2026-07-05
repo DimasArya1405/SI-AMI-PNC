@@ -3,6 +3,46 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900"> {{ __('Data Penugasan') }} </div>
             </div>
+
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                <form method="GET" action="{{ route('auditor.penugasan') }}"
+                    class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-800">Filter Periode</p>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Default menampilkan periode aktif. Pilih periode lain untuk melihat jadwal tahun sebelumnya.
+                        </p>
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                            <div class="w-full sm:max-w-xs" style="max-width: 20rem;">
+                                <label class="mb-1 block text-xs font-medium text-gray-600">Periode</label>
+                                <select name="periode_id" class="block w-full rounded border-gray-300 text-sm">
+                                    @foreach ($periodeOptions as $periodeItem)
+                                        <option value="{{ $periodeItem->id }}" @selected((string) $selectedPeriodeId === (string) $periodeItem->id)>
+                                            {{ $periodeItem->tahun }}{{ $periodeAktif?->id === $periodeItem->id ? ' (Aktif)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                class="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                Terapkan
+                            </button>
+                            @if (request()->filled('periode_id'))
+                                <a href="{{ route('auditor.penugasan') }}"
+                                    class="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Periode Aktif
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 lg:max-w-xs">
+                        <p class="font-semibold">Menampilkan</p>
+                        <p class="mt-1">Periode {{ $selectedPeriode?->tahun ?? '-' }}</p>
+                    </div>
+                </form>
+            </div>
+
             <div class="relative overflow-x-auto bg-white shadow-xs rounded-lg border border-default">
                 <div class="dt-responsive table-responsive p-4 pt-4">
                     <div
@@ -54,6 +94,7 @@
                                             ? $dataPengajuan->auditor->nama_lengkap ??
                                                 ($dataPengajuan->upt == 1 ? ($item->upt->nama_upt ?? 'UPT / Auditee') : 'Tidak Diketahui')
                                             : 'Tidak Ada';
+                                        $periodeSelesai = $item->status_penugasan === 'selesai';
                                     @endphp
                                     <tr class="bg-neutral-primary border-b border-default">
                                         <td class="px-6 py-4 font-medium text-center">{{ $loop->iteration }}</td>
@@ -89,7 +130,7 @@
                                                                 </path>
                                                             </svg>
                                                             <span
-                                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
+                                                                class="font-medium">{{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <span
                                                             class="text-[11px] ml-5 text-gray-400 italic">{{ $item->jam }}
@@ -109,7 +150,7 @@
                                                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->translatedFormat('d F Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($dataPengajuan->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <span
                                                             class="text-[11px] ml-5 text-blue-700 font-medium">{{ $dataPengajuan->jam }}
@@ -126,7 +167,7 @@
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <div
                                                             class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
@@ -154,7 +195,7 @@
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                 </path>
                                                             </svg>
-                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->translatedFormat('d F Y') }}</span>
+                                                            <span>{{ \Carbon\Carbon::parse($item->tanggal_audit)->locale('id')->translatedFormat('d F Y') }}</span>
                                                         </div>
                                                         <div
                                                             class="flex items-center gap-1.5 mt-1 text-xs text-gray-500 ml-5 font-medium">
@@ -179,6 +220,12 @@
                                                     class="inline-flex button-lihat-pengajuan items-center px-3 py-1.5 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition mb-2">
                                                     <i class="bi bi-eye mr-1"></i> Lihat Pengajuan </button>
                                             @else
+                                                @if ($periodeSelesai)
+                                                    <div
+                                                        class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                                                        <i class="bi bi-lock mr-1"></i> Periode Selesai
+                                                    </div>
+                                                @else
                                                 <div data-modal-target="modal-ajukan" data-modal-toggle="modal-ajukan"
                                                     data-idpenugasan="{{ $item->penugasan_id }}"
                                                     data-tanggal="{{ $item->tanggal_audit }}"
@@ -186,6 +233,7 @@
                                                     class="inline-flex ajukan-jadwal cursor-pointer items-center px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition">
                                                     <i class="bi bi-calendar-check mr-1"></i> Ajukan Jadwal
                                                 </div>
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>
@@ -327,7 +375,12 @@
                                                     <div
                                                         class="p-4 md:px-6 border-t border-default bg-gray-50 rounded-b-base">
                                                         <div class="flex items-center space-x-3">
-                                                            @if (!$isPengaju && !$sudahSetuju)
+                                                            @if ($periodeSelesai)
+                                                                <div
+                                                                    class="w-full p-2.5 bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-center text-xs font-medium">
+                                                                    <i class="bi bi-lock mr-1"></i> Periode audit sudah selesai. Pengajuan jadwal hanya dapat dilihat.
+                                                                </div>
+                                                            @elseif (!$isPengaju && !$sudahSetuju)
                                                                 <button type="submit" form="form-konfirmasi-jadwal-{{ $item->penugasan_id }}"
                                                                     formaction="{{ route('auditor.penugasan.setuju') }}"
                                                                     class="flex-1 rounded-lg text-white bg-green-600 hover:bg-green-700 font-bold text-sm px-4 py-2.5 transition flex justify-center items-center">

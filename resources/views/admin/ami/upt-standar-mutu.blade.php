@@ -21,6 +21,11 @@
                             class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline">
                             Import Excel
                         </button>
+                        <!-- <a href="{{ route('admin.upt_standar_mutu.template') }}"
+                            class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded focus:outline-none focus:shadow-outline">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            <span class="text-sm">Unduh Template</span>
+                        </a> -->
                         <button data-modal-target="modal-copy-periode" data-modal-toggle="modal-copy-periode"
                             class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 transition duration-200 ease-in-out text-white py-1 px-4 rounded"
                             type="button">
@@ -611,6 +616,19 @@
                     enctype="multipart/form-data"
                     class="p-6 space-y-5">
                     @csrf
+
+                    <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p>
+                                Gunakan template agar struktur sheet, nama standar, sub standar, dan item terbaca saat import.
+                            </p>
+                            <a href="{{ route('admin.upt_standar_mutu.template') }}"
+                                class="inline-flex items-center justify-center rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                <i class="bi bi-download mr-2"></i>
+                                Unduh Template
+                            </a>
+                        </div>
+                    </div>
 
                     {{-- Periode --}}
                     <div>

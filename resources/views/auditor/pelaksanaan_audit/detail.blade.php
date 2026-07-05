@@ -339,7 +339,7 @@
                                                                                         <label
                                                                                             class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all hover:bg-gray-50 {{ $isAnswered && $dataJawaban->jawaban == '1' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
                                                                                             <input
-                                                                                                @if ($ketua != 1) disabled @endif
+                                                                                                @if ($ketua != 1 || $rkaFinal) disabled @endif
                                                                                                 type="radio"
                                                                                                 name="jawaban"
                                                                                                 id="radio-ya-{{ $item->upt_item_sub_standar_id }}"
@@ -363,7 +363,7 @@
                                                                                         <label
                                                                                             class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all hover:bg-gray-50 {{ $isAnswered && $dataJawaban->jawaban == '0' ? 'border-red-500 bg-red-50 ring-1 ring-red-500' : 'border-gray-200' }}">
                                                                                             <input
-                                                                                                @if ($ketua != 1) disabled @endif
+                                                                                                @if ($ketua != 1 || $rkaFinal) disabled @endif
                                                                                                 type="radio"
                                                                                                 name="jawaban"
                                                                                                 id="radio-tidak-{{ $item->upt_item_sub_standar_id }}"
@@ -400,7 +400,7 @@
                                                                                                 value="KTS"
                                                                                                 class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500"
                                                                                                 {{ isset($dataJawaban) && $dataJawaban->kategori_temuan == 'KTS' ? 'checked' : '' }}
-                                                                                                @if ($ketua != 1) disabled @endif>
+                                                                                                @if ($ketua != 1 || $rkaFinal) disabled @endif>
                                                                                             <span
                                                                                                 class="ml-2 text-sm font-semibold text-gray-700">KTS
                                                                                                 (Ketidaksesuaian)
@@ -414,7 +414,7 @@
                                                                                                 value="OB"
                                                                                                 class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500"
                                                                                                 {{ isset($dataJawaban) && $dataJawaban->kategori_temuan == 'OB' ? 'checked' : '' }}
-                                                                                                @if ($ketua != 1) disabled @endif>
+                                                                                                @if ($ketua != 1 || $rkaFinal) disabled @endif>
                                                                                             <span
                                                                                                 class="ml-2 text-sm font-semibold text-gray-700">OB
                                                                                                 (Observasi)</span>
@@ -464,14 +464,19 @@
                                                                                         Catatan Audit &
                                                                                         Rekomendasi
                                                                                     </label>
-                                                                                    <textarea name="catatan" rows="4" @if ($ketua != 1) readonly @endif
+                                                                                    <textarea name="catatan" rows="4" @if ($ketua != 1 || $rkaFinal) readonly @endif
                                                                                         class="w-full text-sm border-gray-300 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400"
                                                                                         placeholder="Berikan deskripsi temuan atau alasan penilaian di sini...">{{ $isAnswered ? $dataJawaban->catatan : '' }}</textarea>
                                                                                 </div>
                                                                             </div>
 
                                                                             {{-- Footer/Tombol --}}
-                                                                            @if ($ketua == '1')
+                                                                            @if ($rkaFinal)
+                                                                                <div
+                                                                                    class="p-4 text-sm text-center text-green-700 bg-green-50 rounded-lg">
+                                                                                    Penilaian sudah dikunci karena RKA telah difinalisasi.
+                                                                                </div>
+                                                                            @elseif ($ketua == '1')
                                                                                 <div
                                                                                     class="pt-4 flex items-center justify-between border-t border-gray-100">
                                                                                     <p

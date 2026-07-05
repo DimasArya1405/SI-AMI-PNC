@@ -48,7 +48,7 @@ class AuditeeController extends Controller
         $namaAnggotaAuditor = $penugasanTerbaru?->auditor2?->nama_lengkap ?? '-';
 
         $tanggalAudit = $penugasanTerbaru?->tanggal_audit
-            ? Carbon::parse($penugasanTerbaru->tanggal_audit)->translatedFormat('d F Y')
+            ? Carbon::parse($penugasanTerbaru->tanggal_audit)->locale('id')->translatedFormat('d F Y')
             : '-';
 
         $jamAudit = $penugasanTerbaru?->jam ?? '-';

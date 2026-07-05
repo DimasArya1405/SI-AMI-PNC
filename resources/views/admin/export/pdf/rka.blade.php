@@ -49,7 +49,7 @@
         </tr>
         <tr>
             <td style="width: 30%; margin-right:2px;">Tgl Penilaian</td>
-            <td style="margin-left:5px;">: {{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('d F Y') : '-' }} - {{ $penugasan->jam }}</td>
+            <td style="margin-left:5px;">: {{ $penugasan->tanggal_audit ? \Carbon\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y') : '-' }} - {{ $penugasan->jam }}</td>
         </tr>
         <tr>
             <td style="width: 30%; margin-right:2px;">Auditi</td>
@@ -132,7 +132,7 @@
     </table>
 
     <div class="signature-container">
-        Cilacap, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }} <br>
+        Cilacap, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} <br>
         Kepala PPMRP, <br><br><br><br>
         <strong>Artdhita Fajar Pratiwi, S.T., M.Eng.</strong><br>
         NIP. 198506242019032013

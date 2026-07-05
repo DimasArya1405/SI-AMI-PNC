@@ -9,12 +9,12 @@ use App\Models\Auditee;
 use App\Models\Auditor;
 use App\Models\Penugasan;
 use App\Models\Periode;
-use App\Models\Prodi;
 use App\Models\UPT;
 use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Milon\Barcode\Facades\DNS2DFacade;
 
@@ -127,19 +127,59 @@ class PenugasanController extends Controller
     }
     public function tambah(Request $request)
     {
-        if ($request->auditor_1 == $request->auditor_2) {
-            return redirect()->back()->with('error', 'Auditor 1 dan Auditor 2 Tidak Boleh Sama!');
+        $validator = Validator::make($request->all(), [
+            'periode_id' => ['required'],
+            'upt_id' => ['required'],
+            'auditor_1' => ['required'],
+            'auditor_2' => ['required'],
+            'tanggal' => ['required', 'date'],
+            'jam' => ['required'],
+        ], [
+            'auditor_1.required' => 'Ketua auditor wajib dipilih.',
+            'auditor_2.required' => 'Anggota auditor wajib dipilih.',
+            'tanggal.required' => 'Tanggal audit wajib diisi.',
+            'tanggal.date' => 'Format tanggal audit tidak valid.',
+            'jam.required' => 'Jam audit wajib diisi.',
+            'periode_id.required' => 'Periode penugasan tidak ditemukan.',
+            'upt_id.required' => 'UPT penugasan tidak ditemukan.',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->penugasanFailedResponse($request, $validator->errors()->first());
         }
+
+        if ($request->auditor_1 == $request->auditor_2) {
+            return $this->penugasanFailedResponse($request, 'Auditor 1 dan Auditor 2 Tidak Boleh Sama!');
+        }
+
         $upt = UPT::find($request->upt_id);
-        $auditor_1 = Auditor::find($request->auditor_1);
-        $auditor_2 = Auditor::find($request->auditor_2);
-        $prodi_1 = Prodi::where('prodi_id', $auditor_1->prodi_id)->first();
-        $prodi_2 = Prodi::where('prodi_id', $auditor_2->prodi_id)->first();
+        $auditor_1 = Auditor::with('prodi')->find($request->auditor_1);
+        $auditor_2 = Auditor::with('prodi')->find($request->auditor_2);
+
+        if (!$upt) {
+            return $this->penugasanFailedResponse($request, 'Data UPT tidak ditemukan!');
+        }
+
+        if (!$auditor_1 || !$auditor_2) {
+            return $this->penugasanFailedResponse($request, 'Data auditor tidak ditemukan!');
+        }
+
+        $penugasanSudahAda = Penugasan::where('upt_id', $request->upt_id)
+            ->where('periode_id', $request->periode_id)
+            ->exists();
+
+        if ($penugasanSudahAda) {
+            return $this->penugasanFailedResponse($request, 'UPT ini sudah memiliki data penugasan pada periode tersebut.');
+        }
+
         if ($upt->kategori_upt == 'Prodi') {
-            if (Str::upper($prodi_1->nama_prodi) == Str::upper($upt->nama_upt)) {
-                return redirect()->back()->with('error', 'Auditor 1 dan UPT Tidak Boleh Sama!');
-            } elseif (Str::upper($prodi_2->nama_prodi) == Str::upper($upt->nama_upt)) {
-                return redirect()->back()->with('error', 'Auditor 2 dan UPT Tidak Boleh Sama!');
+            $namaProdiAuditor1 = $auditor_1->prodi?->nama_prodi ?? '';
+            $namaProdiAuditor2 = $auditor_2->prodi?->nama_prodi ?? '';
+
+            if (Str::upper($namaProdiAuditor1) == Str::upper($upt->nama_upt)) {
+                return $this->penugasanFailedResponse($request, 'Ketua Auditor tidak boleh berasal dari Prodi yang diaudit!');
+            } elseif (Str::upper($namaProdiAuditor2) == Str::upper($upt->nama_upt)) {
+                return $this->penugasanFailedResponse($request, 'Anggota Auditor tidak boleh berasal dari Prodi yang diaudit!');
             }
         }
 
@@ -155,7 +195,26 @@ class PenugasanController extends Controller
 
         $this->kirimNotifikasiPenugasanDibuat($penugasan);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Penugasan Berhasil Ditambahkan!',
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Penugasan Berhasil Ditambahkan!');
+    }
+
+    private function penugasanFailedResponse(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 422);
+        }
+
+        return redirect()->back()->withInput()->with('error', $message);
     }
     public function aktifkan($id)
     {
@@ -177,10 +236,12 @@ class PenugasanController extends Controller
         // 4. Update status menjadi aktif
         $penugasan->update(['status_penugasan' => 'aktif']);
 
-        Penugasan::where('periode_id', $id)
+        $penugasanAktif = Penugasan::where('periode_id', $id)
             ->with(['upt', 'auditor1.user', 'auditor2.user'])
-            ->get()
-            ->each(fn($item) => $this->kirimNotifikasiAmiDibuka($item));
+            ->get();
+
+        $penugasanAktif->each(fn($item) => $this->kirimNotifikasiAmiDibuka($item));
+        $this->kirimNotifikasiKepalaP4mpPenugasanAktif($penugasanAktif, $id);
 
         return redirect()->back()->with('success', 'Semua penugasan berhasil diaktifkan. Auditor sekarang dapat memulai proses audit.');
     }
@@ -291,5 +352,32 @@ class PenugasanController extends Controller
             ->pluck('user')
             ->filter()
             ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+    }
+
+    private function kirimNotifikasiKepalaP4mpPenugasanAktif($penugasanAktif, string $periodeId): void
+    {
+        $penugasanSample = $penugasanAktif->first();
+
+        if (!$penugasanSample) {
+            return;
+        }
+
+        $periode = Periode::find($periodeId);
+        $tahun = $periode?->tahun ?? '-';
+        $jumlahPenugasan = $penugasanAktif->count();
+        $judul = 'Penugasan AMI Diaktifkan';
+        $pesan = "Penugasan AMI periode {$tahun} telah diaktifkan oleh admin. Total {$jumlahPenugasan} penugasan siap direview dan ditandatangani Kepala P4MP.";
+        $url = route('kepala_p4mp.penugasan.index', ['periode_id' => $periodeId]);
+
+        User::where('role', 'kepala_p4mp')
+            ->where('status_aktif', true)
+            ->get()
+            ->each(fn($user) => $user->notify(new PenugasanAuditNotification(
+                $penugasanSample,
+                $judul,
+                $pesan,
+                $url,
+                'penugasan_aktif'
+            )));
     }
 }

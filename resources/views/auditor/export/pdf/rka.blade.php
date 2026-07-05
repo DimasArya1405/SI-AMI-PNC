@@ -223,7 +223,7 @@
     $namaKepalaP4mp = $kepalaP4mp?->name ?? 'Kepala P4MP';
     $kategori = ($upt?->kategori_upt ?? null) === 'Prodi' ? 'Program Studi' : 'Unit';
     $tanggalAudit = $penugasan->tanggal_audit
-        ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->translatedFormat('j F Y')
+        ? \Illuminate\Support\Carbon::parse($penugasan->tanggal_audit)->locale('id')->translatedFormat('j F Y')
         : '-';
 
     if (isset($rka)) {

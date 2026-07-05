@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auditor;
 
+use App\Http\Controllers\Concerns\PeriodeFilterSupport;
 use App\Http\Controllers\Controller;
 use App\Models\Auditee;
 use App\Models\Auditor;
@@ -21,28 +22,36 @@ use Illuminate\Support\Facades\Storage;
 
 class PelaksanaanAuditController extends Controller
 {
-    public function index()
+    use PeriodeFilterSupport;
+
+    public function index(Request $request)
     {
         $user = Auth::user();
         $auditor = Auditor::where('user_id', $user->id)->firstOrFail();
-        $periode = Periode::where('status', '1')->first();
-        $penugasan = Penugasan::where('periode_id', $periode?->id)
-            ->where('status_penugasan', 'aktif')
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $selectedPeriodeId = $periodeFilter['selectedPeriodeId'];
+
+        $penugasan = Penugasan::whereIn('status_penugasan', ['aktif', 'selesai'])
+            ->when($selectedPeriodeId, fn ($query) => $query->where('periode_id', $selectedPeriodeId))
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
                     ->orWhere('auditor_id_2', $auditor->auditor_id);
             })
-            ->with('upt')
+            ->with(['upt', 'periode'])
+            ->latest()
             ->get();
 
-        return view('auditor.pelaksanaan_audit.index', compact('penugasan'));
+        return view('auditor.pelaksanaan_audit.index', array_merge(compact('penugasan'), $periodeFilter));
     }
-    public function detail($id)
+
+    public function detail(Request $request, $id)
     {
         $user = Auth::user();
 
         $auditor = Auditor::where('user_id', $user->id)->firstOrFail();
-        $periode = Periode::where('status', '1')->firstOrFail();
+        $periodeFilter = $this->getPeriodeFilterContext($request);
+        $periode = $periodeFilter['selectedPeriode'] ?? Periode::where('status', '1')->firstOrFail();
+
         $penugasan = Penugasan::where('periode_id', $periode?->id)
             ->where('upt_id', $id) // Cari berdasarkan ID UPT yang dipassing
             ->where(function ($query) use ($auditor) {
@@ -85,9 +94,11 @@ class PelaksanaanAuditController extends Controller
             ->get()
             ->groupBy('upt_sub_standar_id');
 
-        $penugasan = Penugasan::where('upt_id', $auditee->upt_id)
+        $penugasan = Penugasan::with('rka')
+            ->where('upt_id', $auditee->upt_id)
             ->where('periode_id', $periode_id)
             ->firstOrFail();
+        $rkaFinal = $penugasan->rka?->status === 'final';
 
         $buktiDukung = JawabanAMI::where('penugasan_id', $penugasan->penugasan_id)
             ->where('status_validasi', 'diterima')
@@ -112,6 +123,7 @@ class PelaksanaanAuditController extends Controller
             'auditee',
             'ketua',
             'jawabanAudit',
+            'rkaFinal',
             // 'adaPeriode'
         ));
     }
@@ -130,11 +142,30 @@ class PelaksanaanAuditController extends Controller
 
         abort_unless($uptStandarMutu, 404, 'Pemetaan item standar tidak ditemukan.');
 
-        Penugasan::where('upt_id', $uptStandarMutu->upt_id)
+        $penugasan = Penugasan::with(['rka', 'periode'])
+            ->where('upt_id', $uptStandarMutu->upt_id)
             ->where('periode_id', $uptStandarMutu->periode_id)
-            ->where('status_penugasan', 'aktif')
+            ->whereIn('status_penugasan', ['aktif', 'selesai'])
             ->where('auditor_id_1', $auditor->auditor_id)
             ->firstOrFail();
+
+        if ((string) $penugasan->periode?->status !== '1') {
+            return redirect()->back()->with([
+                'error' => 'Penilaian tidak dapat diubah karena periode audit tidak aktif.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+        }
+
+        if ($penugasan->rka?->status === 'final') {
+            return redirect()->back()->with([
+                'error' => 'Penilaian tidak dapat diubah karena RKA sudah difinalisasi.',
+                'active_tab' => $request->active_tab,
+                'open_accordion' => $request->open_accordion,
+                'target_scroll' => $request->target_scroll,
+            ]);
+        }
 
         $nilaiJawaban = $validated['jawaban'] === 'Ya';
 

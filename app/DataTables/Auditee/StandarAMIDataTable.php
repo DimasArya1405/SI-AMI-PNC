@@ -4,6 +4,7 @@ namespace App\DataTables\Auditee;
 
 use App\Models\Auditee;
 use App\Models\Penugasan;
+use App\Models\Periode;
 use App\Models\StandarAMI;
 use App\Models\UptStandarMutu;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
@@ -49,6 +50,7 @@ class StandarAMIDataTable extends DataTable
 
         $auditee = Auditee::where('user_id', $user->id)->first();
         $uptId = $auditee?->upt_id;
+        $periodeTampilId = $this->getPeriodeTampilId($uptId);
 
         return $model->newQuery()
             ->join('upt', 'penugasan.upt_id', '=', 'upt.upt_id')
@@ -59,7 +61,12 @@ class StandarAMIDataTable extends DataTable
             })
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
             ->where('penugasan.upt_id', $uptId)
-            ->where('penugasan.status_penugasan', 'aktif')
+            ->when(
+                $periodeTampilId,
+                fn ($query) => $query->where('penugasan.periode_id', $periodeTampilId),
+                fn ($query) => $query->whereRaw('1 = 0')
+            )
+            ->whereIn('penugasan.status_penugasan', ['aktif', 'selesai'])
             ->select(
                 'penugasan.upt_id as upt_id',
                 'upt.nama_upt',
@@ -74,6 +81,47 @@ class StandarAMIDataTable extends DataTable
                 'penugasan.periode_id',
                 'periode.tahun'
             );
+    }
+
+    private function getPeriodeTampilId(?string $uptId): ?string
+    {
+        if (!$uptId) {
+            return null;
+        }
+
+        $periodeAktif = Periode::where('status', '1')
+            ->orderByDesc('tahun')
+            ->first();
+
+        $baseQuery = Penugasan::query()
+            ->where('upt_id', $uptId)
+            ->whereIn('status_penugasan', ['aktif', 'selesai'])
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('upt_standar_mutu')
+                    ->whereColumn('upt_standar_mutu.upt_id', 'penugasan.upt_id')
+                    ->whereColumn('upt_standar_mutu.periode_id', 'penugasan.periode_id');
+            });
+
+        if ($periodeAktif) {
+            $periodeAktifDenganPenugasan = (clone $baseQuery)
+                ->where('periode_id', $periodeAktif->id)
+                ->value('periode_id');
+
+            if ($periodeAktifDenganPenugasan) {
+                return $periodeAktifDenganPenugasan;
+            }
+        }
+
+        return $baseQuery
+            ->when($periodeAktif, fn ($query) => $query->where('periode_id', '!=', $periodeAktif->id))
+            ->orderByDesc(
+                Periode::select('tahun')
+                    ->whereColumn('periode.id', 'penugasan.periode_id')
+                    ->limit(1)
+            )
+            ->orderByDesc('penugasan.created_at')
+            ->value('periode_id');
     }
 
     /**

@@ -38,7 +38,7 @@ class StandarAMIController extends Controller
 
         $upt = UPT::findOrFail($upt_id);
         $periode = Periode::findOrFail($periode_id);
-        $status_periode = $periode->status == 0;
+        $status_periode = (string) $periode->status !== '1';
 
         $pemetaanStandar = UptStandarMutu::with('standar_mutu')
             ->join('standar_mutu', 'upt_standar_mutu.standar_mutu_id', '=', 'standar_mutu.standar_mutu_id')
@@ -109,7 +109,7 @@ class StandarAMIController extends Controller
 
         $periode = Periode::findOrFail($penugasan->periode_id);
 
-        if ($periode->status == 0) {
+        if ((string) $periode->status !== '1') {
             return back()->with('error', 'Periode sudah tidak aktif. Pilihan item dosen tidak dapat diubah.');
         }
 
@@ -163,13 +163,15 @@ class StandarAMIController extends Controller
         ], [
             'file_bukti.required' => 'File bukti wajib diupload.',
             'file_bukti.array' => 'File bukti tidak valid.',
+            'file_bukti.*.uploaded' => 'Ukuran salah satu file terlalu besar atau gagal diupload. Maksimal 5 MB per file.',
+            'file_bukti.*.file' => 'File bukti tidak valid.',
             'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
 
         $periode = Periode::findOrFail($validated['periode_id']);
 
-        if ($periode->status == 0) {
+        if ((string) $periode->status !== '1') {
             return back()->with('error', 'Periode sudah tidak aktif. Upload dokumen tidak diperbolehkan.');
         }
 
@@ -245,7 +247,7 @@ class StandarAMIController extends Controller
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka'])
+        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka', 'penugasan.periode'])
             ->where('jawaban_id', $id)
             ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
                 $query->where('auditee_id', $auditee->auditee_id);
@@ -254,9 +256,6 @@ class StandarAMIController extends Controller
 
         $itemId = $dokumen->upt_item_sub_standar_id;
 
-        $periodeId = $dokumen->item?->uptSubStandar?->uptStandarMutu?->periode_id;
-        $periode = Periode::find($periodeId);
-
         if ($this->isRkaFinal($dokumen->penugasan)) {
             return redirect()
                 ->to(url()->previous() . '#item-' . $itemId)
@@ -264,7 +263,7 @@ class StandarAMIController extends Controller
                 ->with('active_tab', $request->active_tab);
         }
 
-        if ($periode && $periode->status == 0) {
+        if ((string) ($dokumen->penugasan?->periode?->status) !== '1') {
             return redirect()
                 ->to(url()->previous() . '#item-' . $itemId)
                 ->with('error', 'Periode sudah tidak aktif. File tidak dapat dihapus.')
@@ -299,7 +298,7 @@ class StandarAMIController extends Controller
 
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
 
-        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka'])
+        $dokumen = JawabanAMI::with(['item.uptSubStandar.uptStandarMutu', 'penugasan.rka', 'penugasan.periode'])
             ->where('jawaban_id', $id)
             ->where('sumber', 'dosen')
             ->whereHas('penugasan.upt.auditee', function ($query) use ($auditee) {
@@ -311,6 +310,13 @@ class StandarAMIController extends Controller
             return redirect()
                 ->to(url()->previous() . '#item-' . $dokumen->upt_item_sub_standar_id)
                 ->with('error', 'RKA sudah difinalisasi. Validasi bukti dosen tidak dapat diubah lagi.')
+                ->with('active_tab', $request->active_tab);
+        }
+
+        if ((string) ($dokumen->penugasan?->periode?->status) !== '1') {
+            return redirect()
+                ->to(url()->previous() . '#item-' . $dokumen->upt_item_sub_standar_id)
+                ->with('error', 'Periode sudah tidak aktif. Validasi bukti dosen tidak dapat diubah.')
                 ->with('active_tab', $request->active_tab);
         }
 

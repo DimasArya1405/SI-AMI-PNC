@@ -15,6 +15,11 @@
                                 Tindakan koreksi belum tersedia untuk dikerjakan karena RKA masih menunggu tanda tangan Kepala P4MP.
                             </p>
                         @endunless
+                        @unless ($periodeAktif)
+                            <p class="mt-3 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                                Periode ini tidak aktif. Tindakan koreksi hanya dapat dilihat dan tidak dapat diubah.
+                            </p>
+                        @endunless
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row">
                         <a href="{{ route('auditee.tindakan_koreksi.export', $penugasan->penugasan_id) }}" target="_blank"
@@ -38,7 +43,7 @@
                 $bisaTandaTanganTk = $tkUntukTtd->isNotEmpty() && !$sudahPernahDitandatangani;
             @endphp
 
-            @if ($rkaDitandatangani && $tkUntukTtd->isNotEmpty())
+            @if ($periodeAktif && $rkaDitandatangani && $tkUntukTtd->isNotEmpty())
                 <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5">
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
@@ -100,6 +105,7 @@
                         default => 'bg-gray-100 text-gray-700',
                     };
                     $nextAction = match (true) {
+                        !$periodeAktif => 'Periode ini tidak aktif. Data hanya dapat dilihat.',
                         !$rkaDitandatangani => 'Menunggu RKA ditandatangani Kepala P4MP.',
                         !$tk => 'Menunggu auditor membuat usulan tindakan koreksi.',
                         $p4mpStatus === 'perlu_perbaikan' => 'Unggah bukti perbaikan baru sesuai catatan P4MP.',
@@ -196,14 +202,20 @@
 
                     @if ($tk)
                         <div class="border-t border-gray-100 p-4 sm:p-5">
+                            <details class="mb-4 rounded border border-gray-200 bg-gray-50 p-4">
+                                <summary class="cursor-pointer text-sm font-semibold text-gray-900">Lihat detail analisis auditor</summary>
+                                <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Analisa Ketidaksesuaian</p>
+                                <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->analisis_ketidaksesuaian ?: '-' }}</p>
+                            </details>
+
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                <section class="rounded border border-gray-200 bg-gray-50 p-4">
+                                <section class="min-w-0 rounded border border-gray-200 bg-gray-50 p-4">
                                     <h3 class="text-sm font-semibold text-gray-900">Usulan dari Auditor</h3>
                                     <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Tindakan Koreksi</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->rencana_koreksi ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk->rencana_koreksi ?: '-' }}</p>
                                 </section>
 
-                                <section class="rounded border border-blue-100 bg-blue-50 p-4">
+                                <section class="min-w-0 rounded border border-blue-100 bg-blue-50 p-4">
                                     <h3 class="text-sm font-semibold text-blue-900">Pelaksanaan oleh Auditee</h3>
                                     <p class="mt-3 text-xs font-semibold uppercase text-blue-700">Bukti saat ini</p>
                                     @if ($dokumenAuditee->isNotEmpty())
@@ -213,39 +225,67 @@
                                                     <div class="min-w-0">
                                                         <p class="break-all text-sm font-semibold text-gray-800">{{ $dokumenAuditeeItem->nama_file }}</p>
                                                         @if ($dokumenAuditeeItem->keterangan)
-                                                            <p class="mt-1 whitespace-pre-line text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
+                                                            <p class="mt-1 whitespace-pre-wrap break-words text-xs text-gray-600">{{ $dokumenAuditeeItem->keterangan }}</p>
                                                         @endif
                                                     </div>
-                                                    <button type="button"
-                                                        data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
-                                                        data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
-                                                        data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
-                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">
-                                                        <i class="bi bi-eye"></i>
-                                                        Lihat
-                                                    </button>
+                                                    <div class="flex shrink-0 flex-wrap items-center gap-2">
+                                                        <button type="button"
+                                                            data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                            data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
+                                                            data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
+                                                            class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">
+                                                            <i class="bi bi-eye"></i>
+                                                            Lihat
+                                                        </button>
+                                                        @if ($periodeAktif && $rkaDitandatangani && !$tkLocked)
+                                                            <button type="button"
+                                                                data-delete-doc-open
+                                                                data-delete-action="{{ route('auditee.tindakan_koreksi.hapus_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                                data-delete-file="{{ $dokumenAuditeeItem->nama_file }}"
+                                                                class="inline-flex items-center justify-center gap-2 rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700">
+                                                                <i class="bi bi-trash"></i>
+                                                                Hapus
+                                                            </button>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
                                     @elseif ($tk->bukti_file_path)
                                         <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
-                                        <button type="button"
-                                            data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $tk->tindakan_koreksi_id) }}"
-                                            data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
-                                            data-file-name="{{ $tk->bukti_nama_file }}"
-                                            class="mt-3 inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                                            <i class="bi bi-eye"></i>
-                                            Lihat Bukti
-                                        </button>
+                                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                                            <button type="button"
+                                                data-preview-url="{{ route('auditee.tindakan_koreksi.preview_bukti', $tk->tindakan_koreksi_id) }}"
+                                                data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
+                                                data-file-name="{{ $tk->bukti_nama_file }}"
+                                                class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                                <i class="bi bi-eye"></i>
+                                                Lihat Bukti
+                                            </button>
+                                            @if ($periodeAktif && $rkaDitandatangani && !$tkLocked)
+                                                <button type="button"
+                                                    data-delete-doc-open
+                                                    data-delete-action="{{ route('auditee.tindakan_koreksi.hapus_bukti', $tk->tindakan_koreksi_id) }}"
+                                                    data-delete-file="{{ $tk->bukti_nama_file }}"
+                                                    class="inline-flex items-center justify-center gap-2 rounded bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700">
+                                                    <i class="bi bi-trash"></i>
+                                                    Hapus Bukti
+                                                </button>
+                                            @endif
+                                        </div>
                                     @else
                                         <p class="mt-1 text-sm text-gray-700">Belum ada bukti.</p>
                                     @endif
                                     <p class="mt-4 text-xs font-semibold uppercase text-blue-700">Uraian saat ini</p>
-                                    <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->pelaksanaan_deskripsi ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">{{ $tk->pelaksanaan_deskripsi ?: '-' }}</p>
                                 </section>
                             </div>
 
-                            @if (!$rkaDitandatangani)
+                            @if (!$periodeAktif)
+                                <div class="mt-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                                    Periode ini tidak aktif. Upload bukti pelaksanaan dan perubahan dokumen dosen sudah dikunci.
+                                </div>
+                            @elseif (!$rkaDitandatangani)
                                 <div class="mt-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
                                     Upload bukti pelaksanaan dan pengaturan dokumen dosen akan dibuka setelah RKA ditandatangani Kepala P4MP dan auditor menyusun tindakan koreksi.
                                 </div>
@@ -258,18 +298,32 @@
                                     data-scroll-target="tk-{{ $jawaban->id }}"
                                     enctype="multipart/form-data" class="mt-4 grid grid-cols-1 gap-3 rounded border border-green-100 bg-green-50 p-4 lg:grid-cols-2">
                                     @csrf
+                                    <input type="hidden" name="submitted_tk_id" value="{{ $tk->tindakan_koreksi_id }}">
                                     <div class="lg:col-span-2">
                                         <h3 class="text-sm font-semibold text-green-900">Kirim Pelaksanaan dan Bukti</h3>
                                     </div>
                                     <div class="lg:col-span-2">
                                         <label class="text-sm font-medium text-gray-700">Uraian Pelaksanaan</label>
-                                        <textarea name="pelaksanaan_deskripsi" rows="3" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('pelaksanaan_deskripsi', $tk->pelaksanaan_deskripsi) }}</textarea>
+                                        <textarea name="pelaksanaan_deskripsi" rows="3" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('submitted_tk_id') === $tk->tindakan_koreksi_id ? old('pelaksanaan_deskripsi', $tk->pelaksanaan_deskripsi) : $tk->pelaksanaan_deskripsi }}</textarea>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-700">File Bukti</label>
-                                        <input type="file" name="bukti_koreksi[]" multiple required
+                                        <div data-file-upload-field>
+                                        <input type="file" name="bukti_koreksi[]" multiple required data-max-file-size="5242880"
                                             class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-green-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-200">
+                                        <p data-file-size-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
+                                        </div>
                                         <p class="mt-2 text-xs text-gray-500">PDF, Word, Excel, JPG, JPEG, atau PNG. Maksimal 5 MB per file.</p>
+                                        @php
+                                            $buktiErrors = collect($errors->get('bukti_koreksi'))
+                                                ->merge($errors->get('bukti_koreksi.*'))
+                                                ->filter();
+                                        @endphp
+                                        @if ($buktiErrors->isNotEmpty())
+                                            <div class="mt-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                                {{ $buktiErrors->first() }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="flex items-end">
                                         <button type="submit" class="inline-flex justify-center rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
@@ -290,7 +344,12 @@
                                             Aktifkan jika tindakan koreksi ini membutuhkan dokumen dari dosen. Dosen hanya melihat tindakan yang diaktifkan di sini.
                                         </p>
                                     </div>
-                                    @if (!$rkaDitandatangani)
+                                    @if (!$periodeAktif)
+                                        <div class="flex shrink-0 items-center gap-2 rounded bg-white p-3 text-xs font-medium text-yellow-700">
+                                            <i class="bi bi-lock"></i>
+                                            Periode tidak aktif
+                                        </div>
+                                    @elseif (!$rkaDitandatangani)
                                         <div class="flex shrink-0 items-center gap-2 rounded bg-white p-3 text-xs font-medium text-yellow-700">
                                             <i class="bi bi-lock"></i>
                                             Menunggu TTD RKA
@@ -362,7 +421,7 @@
                                                         </div>
                                                     </div>
 
-                                                    @if (!$tkLocked && $rkaDitandatangani)
+                                                    @if ($periodeAktif && !$tkLocked && $rkaDitandatangani)
                                                         <form action="{{ route('auditee.tindakan_koreksi.dokumen_dosen.validasi', $dokumen->dokumen_tk_dosen_id) }}" method="POST"
                                                             data-scroll-target="tk-{{ $jawaban->id }}"
                                                             class="mt-3 border-t border-gray-100 pt-3">
@@ -392,11 +451,6 @@
                                 </div>
                             </section>
 
-                            <details class="mt-4 rounded border border-gray-200 bg-gray-50 p-4">
-                                <summary class="cursor-pointer text-sm font-semibold text-gray-900">Lihat detail analisis auditor</summary>
-                                <p class="mt-3 text-xs font-semibold uppercase text-gray-500">Analisa Ketidaksesuaian</p>
-                                <p class="mt-1 whitespace-pre-line text-sm text-gray-700">{{ $tk->analisis_ketidaksesuaian ?: '-' }}</p>
-                            </details>
                         </div>
                     @else
                         <div class="border-t border-gray-100 p-4 sm:p-5">
@@ -417,4 +471,125 @@
 
     @include('layouts.partials.smart-file-preview')
     @include('layouts.partials.back-to-top')
+
+    <div id="modal-hapus-dokumen-tk" tabindex="-1" aria-hidden="true"
+        class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 p-4">
+        <div class="relative w-full max-w-md max-h-full">
+            <div class="relative rounded-base border border-default bg-white p-4 shadow-sm md:p-6">
+                <button type="button" data-delete-doc-close
+                    class="absolute top-3 end-2.5 inline-flex h-9 w-9 items-center justify-center rounded-base bg-transparent text-body hover:bg-neutral-tertiary hover:text-heading">
+                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                        height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18 17.94 6M18 18 6.06 6" />
+                    </svg>
+                        <span class="sr-only">Tutup modal</span>
+                </button>
+                <div class="p-4 text-center md:p-5">
+                    <svg class="mx-auto mb-4 h-12 w-12 text-fg-disabled" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                        viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <h3 class="mb-3 text-body">Apakah anda yakin akan menghapus dokumen ini?</h3>
+                    <p id="nama-dokumen-hapus-tk" class="mb-6 break-all text-sm font-semibold text-gray-700">-</p>
+                    <form id="form-hapus-dokumen-tk" method="POST">
+                    @csrf
+                    @method('delete')
+                    <div class="flex items-center justify-center space-x-4">
+                        <button type="submit"
+                            class="rounded-base border border-transparent bg-blue-500 px-4 py-2.5 text-sm font-medium leading-5 text-white shadow-xs transition duration-300 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-danger-medium">
+                            Iya, saya yakin
+                        </button>
+                        <button type="button" data-delete-doc-close
+                            class="rounded-base border border-default-medium bg-white px-4 py-2.5 text-sm font-medium leading-5 text-body shadow-xs transition duration-300 ease-in-out hover:bg-gray-200 hover:text-heading focus:outline-none focus:ring-4 focus:ring-neutral-tertiary">
+                            Tidak, Batal
+                        </button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('js')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const formatMb = (bytes) => (bytes / 1024 / 1024).toFixed(2).replace('.', ',');
+                const deleteModal = document.getElementById('modal-hapus-dokumen-tk');
+                const deleteForm = document.getElementById('form-hapus-dokumen-tk');
+                const deleteFileName = document.getElementById('nama-dokumen-hapus-tk');
+
+                const closeDeleteModal = () => {
+                    deleteModal?.classList.add('hidden');
+                    deleteModal?.classList.remove('flex');
+                };
+
+                document.querySelectorAll('[data-delete-doc-open]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (!deleteModal || !deleteForm || !deleteFileName) {
+                            return;
+                        }
+
+                        deleteForm.action = button.dataset.deleteAction;
+                        deleteFileName.textContent = button.dataset.deleteFile || '-';
+                        deleteModal.classList.remove('hidden');
+                        deleteModal.classList.add('flex');
+                    });
+                });
+
+                document.querySelectorAll('[data-delete-doc-close]').forEach((button) => {
+                    button.addEventListener('click', closeDeleteModal);
+                });
+
+                deleteModal?.addEventListener('click', (event) => {
+                    if (event.target === deleteModal) {
+                        closeDeleteModal();
+                    }
+                });
+
+                document.querySelectorAll('[data-max-file-size]').forEach((input) => {
+                    const field = input.closest('[data-file-upload-field]');
+                    const errorElement = field?.querySelector('[data-file-size-error]');
+                    const maxSize = Number(input.dataset.maxFileSize || 5242880);
+
+                    const showError = (message) => {
+                        if (errorElement) {
+                            errorElement.textContent = message;
+                            errorElement.classList.remove('hidden');
+                        }
+                        input.setCustomValidity(message);
+                    };
+
+                    const clearError = () => {
+                        if (errorElement) {
+                            errorElement.textContent = '';
+                            errorElement.classList.add('hidden');
+                        }
+                        input.setCustomValidity('');
+                    };
+
+                    const validateFiles = () => {
+                        const oversizedFile = Array.from(input.files || []).find((file) => file.size > maxSize);
+
+                        if (oversizedFile) {
+                            showError(`File "${oversizedFile.name}" berukuran ${formatMb(oversizedFile.size)} MB. Maksimal 5 MB per file.`);
+                            return false;
+                        }
+
+                        clearError();
+                        return true;
+                    };
+
+                    input.addEventListener('change', validateFiles);
+                    input.form?.addEventListener('submit', (event) => {
+                        if (!validateFiles()) {
+                            event.preventDefault();
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

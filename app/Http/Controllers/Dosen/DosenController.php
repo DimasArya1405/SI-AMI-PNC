@@ -120,6 +120,8 @@ class DosenController extends Controller
             'target_scroll' => 'nullable|string',
         ], [
             'file_bukti.required' => 'File bukti wajib diupload.',
+            'file_bukti.*.uploaded' => 'Ukuran salah satu file terlalu besar atau gagal diupload. Maksimal 5 MB per file.',
+            'file_bukti.*.file' => 'File bukti tidak valid.',
             'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
@@ -201,6 +203,17 @@ class DosenController extends Controller
         }
 
         $itemId = $dokumen->upt_item_sub_standar_id;
+
+        if (!$this->isPeriodeAktif($dokumen->penugasan)) {
+            return redirect()
+                ->to(url()->previous() . '#item-' . $itemId)
+                ->with([
+                    'error' => 'Periode sudah tidak aktif. Dokumen AMI tidak dapat dihapus lagi.',
+                    'active_tab' => $request->active_tab,
+                    'open_accordion' => $request->open_accordion,
+                    'target_scroll' => $request->target_scroll,
+                ]);
+        }
 
         if ($this->isRkaFinal($dokumen->penugasan)) {
             return redirect()
@@ -302,6 +315,8 @@ class DosenController extends Controller
             'keterangan' => 'nullable|string|max:1000',
         ], [
             'file_bukti.required' => 'File bukti wajib diupload.',
+            'file_bukti.*.uploaded' => 'Ukuran salah satu file terlalu besar atau gagal diupload. Maksimal 5 MB per file.',
+            'file_bukti.*.file' => 'File bukti tidak valid.',
             'file_bukti.*.mimes' => 'Tipe file tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.',
             'file_bukti.*.max' => 'Ukuran salah satu file terlalu besar. Maksimal 5 MB per file.',
         ]);
@@ -312,12 +327,16 @@ class DosenController extends Controller
             return back()->with('error', 'Belum ada penugasan AMI aktif untuk prodi Anda.');
         }
 
-        $tindakanKoreksi = TindakanKoreksi::with('kebutuhanDokumenDosen')
+        $tindakanKoreksi = TindakanKoreksi::with(['kebutuhanDokumenDosen', 'penugasan.periode'])
             ->where('tindakan_koreksi_id', $tindakanKoreksiId)
             ->where('penugasan_id', $context['penugasan']->penugasan_id)
             ->firstOrFail();
 
         abort_unless($tindakanKoreksi->kebutuhanDokumenDosen, 403, 'Tindakan koreksi ini belum dibuka oleh auditee untuk upload dokumen dosen.');
+
+        if (!$this->isPeriodeAktif($tindakanKoreksi->penugasan)) {
+            return back()->with('error', 'Periode sudah tidak aktif. Upload dokumen tindakan koreksi tidak dapat dilakukan lagi.');
+        }
 
         if ($this->isTindakanKoreksiVerified($tindakanKoreksi)) {
             return back()->with('error', 'Tindakan koreksi sudah diverifikasi P4MP. Upload dokumen tidak dapat dilakukan lagi.');
@@ -357,6 +376,10 @@ class DosenController extends Controller
 
         if ($dokumen->status_validasi === 'diterima') {
             return back()->with('error', 'Dokumen yang sudah diterima auditee tidak dapat dihapus.');
+        }
+
+        if (!$this->isPeriodeAktif($dokumen->tindakanKoreksi?->penugasan)) {
+            return back()->with('error', 'Periode sudah tidak aktif. Dokumen tindakan koreksi tidak dapat dihapus lagi.');
         }
 
         if ($this->isTindakanKoreksiVerified($dokumen->tindakanKoreksi)) {
@@ -424,7 +447,7 @@ class DosenController extends Controller
     {
         $dosen = Dosen::where('user_id', Auth::id())->firstOrFail();
 
-        return JawabanAMI::with('penugasan.rka')
+        return JawabanAMI::with(['penugasan.rka', 'penugasan.periode'])
             ->where('jawaban_id', $id)
             ->where('dosen_id', $dosen->dosen_id)
             ->firstOrFail();
@@ -434,7 +457,7 @@ class DosenController extends Controller
     {
         $dosen = Dosen::where('user_id', Auth::id())->firstOrFail();
 
-        return TindakanKoreksiDokumenDosen::with('tindakanKoreksi')
+        return TindakanKoreksiDokumenDosen::with('tindakanKoreksi.penugasan.periode')
             ->where('dokumen_tk_dosen_id', $id)
             ->where('dosen_id', $dosen->dosen_id)
             ->firstOrFail();
@@ -455,5 +478,18 @@ class DosenController extends Controller
     {
         return $tindakanKoreksi
             && ($tindakanKoreksi->p4mp_status === 'terverifikasi' || filled($tindakanKoreksi->p4mp_verified_at));
+    }
+
+    private function isPeriodeAktif(?Penugasan $penugasan): bool
+    {
+        if (!$penugasan) {
+            return false;
+        }
+
+        $periode = $penugasan->relationLoaded('periode')
+            ? $penugasan->periode
+            : $penugasan->periode()->first();
+
+        return (string) ($periode?->status) === '1';
     }
 }

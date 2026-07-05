@@ -43,7 +43,7 @@ class PenugasanAuditNotification extends Notification
             'upt_id' => $this->penugasan->upt_id,
             'nama_upt' => $this->penugasan->upt?->nama_upt,
             'tanggal_audit' => $this->penugasan->tanggal_audit
-                ? Carbon::parse($this->penugasan->tanggal_audit)->translatedFormat('d F Y')
+                ? Carbon::parse($this->penugasan->tanggal_audit)->locale('id')->translatedFormat('d F Y')
                 : null,
             'jam' => $this->penugasan->jam,
         ];

@@ -236,9 +236,9 @@
                                                                 <p class="text-sm text-gray-900 leading-6">
                                                                     {{ $item->nama_item }}
                                                                 </p>
-                                                                <p class="text-xs text-gray-400 mt-1">
+                                                                <!-- <p class="text-xs text-gray-400 mt-1">
                                                                     Level {{ $level }}
-                                                                </p>
+                                                                </p> -->
                                                             </div>
                                                         </div>
                                                     </div>

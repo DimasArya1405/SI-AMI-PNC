@@ -20,6 +20,11 @@
                                 Tindakan koreksi baru dapat disusun setelah RKA ditandatangani oleh Kepala P4MP.
                             </p>
                         @endunless
+                        @unless ($periodeAktif)
+                            <p class="mt-3 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                                Periode ini tidak aktif. Tindakan koreksi hanya dapat dilihat dan tidak dapat diubah.
+                            </p>
+                        @endunless
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row">
                         <a href="{{ route('auditor.tindakan_koreksi.export', $penugasan->penugasan_id) }}" target="_blank"
@@ -64,6 +69,8 @@
                     $itemPath = collect($jawaban->item_path ?? []);
                     $temuanItemId = $jawaban->upt_item_sub_standar_id;
                     $p4mpStatus = $tk?->p4mp_status;
+                    $tkLocked = $tk && ($p4mpStatus === 'terverifikasi' || filled($tk->p4mp_verified_at));
+                    $formReadonly = $tkLocked || !$periodeAktif;
                     $currentStep = !$tk ? 2 : ($status === 'selesai' ? 5 : ($adaBuktiPelaksanaan ? 4 : 4));
                     $statusClass = match ($status) {
                         'diajukan' => 'bg-blue-100 text-blue-700',
@@ -79,12 +86,14 @@
                         default => 'bg-gray-100 text-gray-700',
                     };
                     $nextAction = match (true) {
+                        !$periodeAktif => 'Periode ini tidak aktif. Data hanya dapat dilihat.',
                         !$rkaDitandatangani => 'Menunggu RKA ditandatangani Kepala P4MP.',
                         !$tk && $isKetuaAuditor => 'Isi analisis dan usulan tindakan koreksi.',
                         !$tk => 'Menunggu ketua auditor menyusun tindakan koreksi.',
                         !$adaBuktiPelaksanaan => 'Menunggu auditee mengunggah bukti pelaksanaan atau menyetujui dokumen dosen.',
                         $status !== 'selesai' && $isKetuaAuditor => 'Isi hasil penilaian ulang auditor.',
                         $status !== 'selesai' => 'Menunggu ketua auditor menilai ulang bukti.',
+                        $tkLocked => 'Tindakan koreksi sudah terverifikasi P4MP dan tidak dapat diubah lagi.',
                         !$p4mpStatus || $p4mpStatus === 'menunggu_verifikasi' => 'Menunggu verifikasi P4MP.',
                         $p4mpStatus === 'perlu_perbaikan' => 'P4MP meminta perbaikan. Tunggu auditee mengunggah bukti baru.',
                         default => 'Tindakan koreksi sudah terverifikasi.',
@@ -171,28 +180,46 @@
 
                     </div>
 
+                    @if ($tkLocked && $isKetuaAuditor)
+                        <div class="border-t border-gray-100 p-4 sm:p-5">
+                            <div class="rounded border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+                                Tindakan koreksi sudah difinalisasi oleh Kepala P4MP. Analisis, usulan, dan penilaian auditor sudah dikunci.
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($isKetuaAuditor && $rkaDitandatangani)
+                        @php
+                            $rumuskanOldActive = old('submitted_action') === 'rumuskan' && old('submitted_jawaban_id') === $jawaban->id;
+                            $verifikasiOldActive = $tk && old('submitted_action') === 'verifikasi' && old('submitted_tk_id') === $tk->tindakan_koreksi_id;
+                        @endphp
                         <div class="border-t border-gray-100 p-4 sm:p-5">
                             <form action="{{ route('auditor.tindakan_koreksi.rumuskan', [$penugasan->penugasan_id, $jawaban->id]) }}" method="POST"
                                 data-scroll-target="tk-{{ $jawaban->id }}"
                                 class="grid grid-cols-1 gap-4 rounded border border-blue-100 bg-blue-50 p-4 lg:grid-cols-2">
                                 @csrf
+                                <input type="hidden" name="submitted_action" value="rumuskan">
+                                <input type="hidden" name="submitted_jawaban_id" value="{{ $jawaban->id }}">
                                 <div class="lg:col-span-2">
                                     <h3 class="text-sm font-semibold text-blue-900">{{ $tk ? 'Perbarui Analisis dan Usulan' : 'Buat Analisis dan Usulan' }}</h3>
                                 </div>
                                 <div class="lg:col-span-2">
                                     <label class="text-sm font-medium text-gray-700">Analisa Ketidaksesuaian</label>
-                                    <textarea name="analisis_ketidaksesuaian" rows="3" required class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('analisis_ketidaksesuaian', $tk?->analisis_ketidaksesuaian) }}</textarea>
+                                    <textarea name="analisis_ketidaksesuaian" rows="3" required @readonly($formReadonly)
+                                        class="mt-1 block w-full rounded border-gray-300 text-sm {{ $formReadonly ? 'bg-gray-100 text-gray-700' : '' }}">{{ $rumuskanOldActive ? old('analisis_ketidaksesuaian', $tk?->analisis_ketidaksesuaian) : $tk?->analisis_ketidaksesuaian }}</textarea>
                                 </div>
                                 <div class="lg:col-span-2">
                                     <label class="text-sm font-medium text-gray-700">Usulan Tindakan Koreksi</label>
-                                    <textarea name="rencana_koreksi" rows="3" required class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('rencana_koreksi', $tk?->rencana_koreksi) }}</textarea>
+                                    <textarea name="rencana_koreksi" rows="3" required @readonly($formReadonly)
+                                        class="mt-1 block w-full rounded border-gray-300 text-sm {{ $formReadonly ? 'bg-gray-100 text-gray-700' : '' }}">{{ $rumuskanOldActive ? old('rencana_koreksi', $tk?->rencana_koreksi) : $tk?->rencana_koreksi }}</textarea>
                                 </div>
-                                <div class="lg:col-span-2">
-                                    <button type="submit" class="inline-flex justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                                        Simpan Analisis dan Usulan
-                                    </button>
-                                </div>
+                                @unless ($formReadonly)
+                                    <div class="lg:col-span-2">
+                                        <button type="submit" class="inline-flex justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                            Simpan Analisis dan Usulan
+                                        </button>
+                                    </div>
+                                @endunless
                             </form>
 
                             @if ($tk)
@@ -201,6 +228,8 @@
                                     class="mt-4 rounded border border-gray-200 bg-gray-50 p-4">
                                     @csrf
                                     @method('patch')
+                                    <input type="hidden" name="submitted_action" value="verifikasi">
+                                    <input type="hidden" name="submitted_tk_id" value="{{ $tk->tindakan_koreksi_id }}">
                                     <h3 class="text-sm font-semibold text-gray-900">Penilaian Ulang Bukti Auditee</h3>
 
                                     <div class="mt-3 rounded border border-gray-200 bg-white p-3">
@@ -276,21 +305,25 @@
                                     @endif
 
                                     <label class="mt-3 block text-sm font-medium text-gray-700">Hasil Penilaian Ulang</label>
-                                    <textarea name="hasil_penilaian_auditor" rows="3" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('hasil_penilaian_auditor', $tk->hasil_penilaian_auditor) }}</textarea>
+                                    <textarea name="hasil_penilaian_auditor" rows="3" @readonly($formReadonly)
+                                        class="mt-1 block w-full rounded border-gray-300 text-sm {{ $formReadonly ? 'bg-gray-100 text-gray-700' : '' }}">{{ $verifikasiOldActive ? old('hasil_penilaian_auditor', $tk->hasil_penilaian_auditor) : $tk->hasil_penilaian_auditor }}</textarea>
 
                                     <label class="mt-3 block text-sm font-medium text-gray-700">Catatan Auditor</label>
-                                    <textarea name="catatan_auditor" rows="3" class="mt-1 block w-full rounded border-gray-300 text-sm">{{ old('catatan_auditor', $tk->catatan_auditor) }}</textarea>
+                                    <textarea name="catatan_auditor" rows="3" @readonly($formReadonly)
+                                        class="mt-1 block w-full rounded border-gray-300 text-sm {{ $formReadonly ? 'bg-gray-100 text-gray-700' : '' }}">{{ $verifikasiOldActive ? old('catatan_auditor', $tk->catatan_auditor) : $tk->catatan_auditor }}</textarea>
 
                                     <input type="hidden" name="status" value="selesai">
 
-                                    <div class="mt-4">
-                                        <button type="submit"
-                                            class="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
-                                            Simpan Penilaian Auditor
-                                        </button>
-                                    </div>
+                                    @unless ($formReadonly)
+                                        <div class="mt-4">
+                                            <button type="submit"
+                                                class="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                                                Simpan Penilaian Auditor
+                                            </button>
+                                        </div>
+                                    @endunless
                                     @if (!$adaBuktiPelaksanaan)
-                                        <p class="mt-2 text-xs text-gray-500">Penilaian bisa disimpan setelah auditee mengunggah bukti.</p>
+                                        <p class="mt-2 text-xs text-gray-500">Penilaian tetap bisa disimpan meskipun auditee belum mengunggah bukti.</p>
                                     @endif
                                 </form>
                             @endif
