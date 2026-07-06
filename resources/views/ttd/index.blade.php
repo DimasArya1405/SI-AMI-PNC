@@ -117,9 +117,9 @@
 
         <div style="font-size: 18px; margin-top: 20px;">
             Cilacap,
-            {{ $tgl ? \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('d F Y') : '-' }}
+            {{ $tanggalTandaTangan }}
             pukul
-            {{ $tgl ? \Illuminate\Support\Carbon::parse($tgl)->locale('id')->translatedFormat('H:i') : '-' }}
+            {{ $jamTandaTangan }}{{ $zonaWaktuTandaTangan ? ' ' . $zonaWaktuTandaTangan : '' }}
         </div>
 
         <div class="penandatangan">

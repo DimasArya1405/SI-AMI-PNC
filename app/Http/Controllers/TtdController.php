@@ -24,12 +24,18 @@ class TtdController extends Controller
 
         $signature = $this->getSignatureData($prefix, $penugasan);
         $tgl = $signature['tgl'];
+        $tanggal = $tgl
+            ? Carbon::parse($tgl)->timezone(config('app.timezone', 'Asia/Jakarta'))
+            : null;
         $tanggalTandaTangan = $tgl
-            ? Carbon::parse($tgl)->locale('id')->translatedFormat('l, d F Y')
+            ? $tanggal->locale('id')->translatedFormat('d F Y')
             : '-';
         $jamTandaTangan = $tgl
-            ? Carbon::parse($tgl)->locale('id')->translatedFormat('H:i')
+            ? $tanggal->locale('id')->translatedFormat('H:i')
             : '-';
+        $zonaWaktuTandaTangan = $tanggal
+            ? $this->getZonaWaktuIndonesia($tanggal)
+            : '';
         $downloadUrl = route('ttdcode.download', ['ttdcode' => $request->query('ttdcode')]);
         $nilaiHash = sha1($decodedCode);
 
@@ -37,6 +43,7 @@ class TtdController extends Controller
             'penugasan',
             'tanggalTandaTangan',
             'jamTandaTangan',
+            'zonaWaktuTandaTangan',
             'downloadUrl',
             'nilaiHash'
         )));
@@ -360,5 +367,14 @@ class TtdController extends Controller
         $kategori = $penugasan->upt?->kategori_upt === 'Prodi' ? 'Prodi' : 'Unit/Bagian';
 
         return $kategori . ' ' . ($penugasan->upt?->nama_upt ?? '-');
+    }
+
+    private function getZonaWaktuIndonesia(Carbon $tanggal): string
+    {
+        return match ($tanggal->getOffset() / 3600) {
+            8.0 => 'WITA',
+            9.0 => 'WIT',
+            default => 'WIB',
+        };
     }
 }
