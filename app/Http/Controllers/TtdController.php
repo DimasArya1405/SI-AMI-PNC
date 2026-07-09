@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TtdController extends Controller
 {
+    // Menampilkan halaman verifikasi ketika QR code tanda tangan discan.
     public function ttdShow(Request $request)
     {
         [$prefix, $uuid, $decodedCode] = $this->decodeTtdCode($request);
@@ -49,6 +50,7 @@ class TtdController extends Controller
         )));
     }
 
+    // Mengunduh atau menampilkan file digital yang terkait dengan QR code.
     public function download(Request $request): Response
     {
         [$prefix, $uuid] = $this->decodeTtdCode($request);
@@ -69,6 +71,7 @@ class TtdController extends Controller
         abort(404);
     }
 
+    // Membaca kode QR dan memisahkan jenis dokumen dari ID penugasan.
     private function decodeTtdCode(Request $request): array
     {
         $ttdcode = (string) $request->query('ttdcode', '');
@@ -83,6 +86,7 @@ class TtdController extends Controller
         return [$prefix, $uuid, $decodedCode];
     }
 
+    // Mengambil penugasan lengkap beserta relasi yang dibutuhkan halaman verifikasi.
     private function getPenugasan(string $uuid): Penugasan
     {
         return Penugasan::with([
@@ -99,6 +103,7 @@ class TtdController extends Controller
             ->firstOrFail();
     }
 
+    // Menentukan nama, jabatan, tanggal, dan jenis dokumen berdasarkan prefix QR.
     private function getSignatureData(string $prefix, Penugasan $penugasan): array
     {
         $tindakanKoreksi = $penugasan->tindakanKoreksi?->first();
@@ -173,6 +178,7 @@ class TtdController extends Controller
         ];
     }
 
+    // Membuat ulang PDF RKA saat tombol Lihat File Digital diklik.
     private function streamRka(Penugasan $penugasan): Response
     {
         $rka = RingkasanKondisiAudit::with([
@@ -205,6 +211,7 @@ class TtdController extends Controller
             ->stream($namaFile);
     }
 
+    // Membuat ulang PDF tindakan koreksi saat tombol Lihat File Digital diklik.
     private function streamTindakanKoreksi(Penugasan $penugasan): Response
     {
         $penugasan->load(['periode', 'upt', 'auditor1', 'auditor2', 'verifikasiTindakanKoreksi.finalizedBy', 'tindakanKoreksi']);
@@ -234,6 +241,7 @@ class TtdController extends Controller
             ->stream($namaFile);
     }
 
+    // Membuat ulang PDF jadwal penugasan AMI saat tombol Lihat File Digital diklik.
     private function streamPenugasan(Penugasan $penugasan): Response
     {
         $periode = $penugasan->periode;
@@ -270,6 +278,7 @@ class TtdController extends Controller
             ->stream('Jadwal-AMI-PNC-' . $tahun . '.pdf');
     }
 
+    // Mengambil daftar temuan yang akan ditampilkan pada PDF tindakan koreksi.
     private function getTemuan(Penugasan $penugasan): Collection
     {
         return JawabanAudit::with([
@@ -306,6 +315,7 @@ class TtdController extends Controller
             ->values();
     }
 
+    // Mengambil parent item agar temuan sub item tetap punya konteks pertanyaan.
     private function getItemPath(?UptItemSubStandarMutu $item): Collection
     {
         if (!$item) {
@@ -325,6 +335,7 @@ class TtdController extends Controller
         return $path->values();
     }
 
+    // Mengambil item standar yang berlaku pada UPT dan periode penugasan.
     private function getItemIds(Penugasan $penugasan): Collection
     {
         return UptItemSubStandarMutu::whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($penugasan) {
@@ -333,6 +344,7 @@ class TtdController extends Controller
         })->pluck('upt_item_sub_standar_id');
     }
 
+    // Mengelompokkan jadwal penugasan berdasarkan kategori Prodi atau Unit/Bagian.
     private function kelompokkanPenugasanPerUpt(Collection $penugasan, string $kategori): Collection
     {
         return $penugasan
@@ -346,6 +358,7 @@ class TtdController extends Controller
             ->values();
     }
 
+    // Membuat QR code yang berisi prefix dokumen dan ID penugasan.
     private function generateQrCode(string $prefix, string $registrasi): string
     {
         $encodedCode = base64_encode($prefix . $registrasi);
@@ -354,6 +367,7 @@ class TtdController extends Controller
         return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
+    // Mengambil Kepala P4MP aktif sebagai penandatangan dokumen.
     private function getKepalaP4mp(): ?User
     {
         return User::where('role', 'kepala_p4mp')
@@ -362,6 +376,7 @@ class TtdController extends Controller
             ?: User::where('role', 'kepala_p4mp')->first();
     }
 
+    // Membuat teks lingkup dokumen berdasarkan jenis UPT.
     private function getLingkupPenugasan(Penugasan $penugasan): string
     {
         $kategori = $penugasan->upt?->kategori_upt === 'Prodi' ? 'Prodi' : 'Unit/Bagian';
@@ -369,6 +384,7 @@ class TtdController extends Controller
         return $kategori . ' ' . ($penugasan->upt?->nama_upt ?? '-');
     }
 
+    // Menentukan label zona waktu Indonesia dari offset tanggal.
     private function getZonaWaktuIndonesia(Carbon $tanggal): string
     {
         return match ($tanggal->getOffset() / 3600) {
