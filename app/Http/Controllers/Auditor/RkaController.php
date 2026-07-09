@@ -27,6 +27,7 @@ class RkaController extends Controller
 {
     use PeriodeFilterSupport;
 
+    // Menampilkan daftar penugasan auditor yang bisa dibuat atau dilihat RKA-nya.
     public function index(Request $request): View
     {
         $auditor = $this->getAuditor();
@@ -56,6 +57,7 @@ class RkaController extends Controller
         return view('auditor.rka.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
+    // Menampilkan detail penyusunan RKA berdasarkan penugasan audit.
     public function show(string $penugasanId): View
     {
         $auditor = $this->getAuditor();
@@ -94,6 +96,7 @@ class RkaController extends Controller
         return view('auditor.rka.show', compact('penugasan', 'rka', 'ringkasan', 'temuanPerStandar', 'isKetuaAuditor', 'periodeAktif'));
     }
 
+    // Menyimpan draft RKA atau memfinalisasi RKA setelah rapat tim auditor.
     public function update(Request $request, string $rkaId): RedirectResponse
     {
         $rka = RingkasanKondisiAudit::with(['penugasan', 'temuan'])
@@ -141,14 +144,15 @@ class RkaController extends Controller
             ? 'RKA berhasil difinalisasi dan notifikasi dikirim ke auditee, admin, dan Kepala P4MP.'
             : 'Draft RKA berhasil disimpan.');
     }
-        public function generateQrCode($prefix, $registrasi)
+    // Membuat QR code tanda tangan digital untuk export PDF RKA.
+    public function generateQrCode($prefix, $registrasi)
     {
         $encodedCode = base64_encode($prefix . $registrasi);
-        // dd($encodedCode);
         $qrLink = route('ttdcode.show', ['ttdcode' => $encodedCode]);
         return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
+    // Membuat file PDF RKA sesuai format dokumen AMI.
     public function export(string $rkaId): Response
     {
         $rka = RingkasanKondisiAudit::with([
@@ -174,11 +178,13 @@ class RkaController extends Controller
             ->stream($namaFile);
     }
 
+    // Mengambil data auditor berdasarkan user yang sedang login.
     private function getAuditor(): Auditor
     {
         return Auditor::where('user_id', Auth::id())->firstOrFail();
     }
 
+    // Memastikan penugasan memang milik auditor yang sedang login.
     private function getPenugasanAuditor(string $penugasanId): Penugasan
     {
         $auditor = $this->getAuditor();
@@ -192,6 +198,7 @@ class RkaController extends Controller
             ->firstOrFail();
     }
 
+    // Memastikan hanya ketua auditor yang bisa mengubah atau finalisasi RKA.
     private function getPenugasanKetuaAuditor(string $penugasanId): Penugasan
     {
         $auditor = $this->getAuditor();
@@ -213,6 +220,7 @@ class RkaController extends Controller
         return $penugasan;
     }
 
+    // Mengecek apakah periode penugasan masih aktif agar data lama tidak ikut berubah.
     private function isPeriodeAktif(Penugasan $penugasan): bool
     {
         $periode = $penugasan->relationLoaded('periode')
@@ -222,6 +230,7 @@ class RkaController extends Controller
         return (string) ($periode?->status) === '1';
     }
 
+    // Membuat draft RKA pertama kali jika penugasan belum memiliki RKA.
     private function getOrCreateDraftRka(Penugasan $penugasan): RingkasanKondisiAudit
     {
         return RingkasanKondisiAudit::firstOrCreate(
@@ -234,6 +243,7 @@ class RkaController extends Controller
         );
     }
 
+    // Menyalin temuan audit ke draft RKA selama RKA belum final.
     private function sinkronkanTemuanDraft(RingkasanKondisiAudit $rka, Penugasan $penugasan): void
     {
         if ($rka->status === 'final') {
@@ -261,6 +271,7 @@ class RkaController extends Controller
         }
     }
 
+    // Mengambil item yang dinilai tidak sesuai oleh auditor sebagai calon temuan RKA.
     private function getTemuanAudit(Penugasan $penugasan): Collection
     {
         return JawabanAudit::with('itemSubStandar.uptSubStandar.uptStandarMutu.standar_mutu')
@@ -276,6 +287,7 @@ class RkaController extends Controller
             ->values();
     }
 
+    // Mengelompokkan temuan RKA berdasarkan standar agar tampilan lebih mudah dibaca.
     private function getTemuanPerStandar(RingkasanKondisiAudit $rka): Collection
     {
         return $rka->temuan
@@ -309,6 +321,7 @@ class RkaController extends Controller
             ->values();
     }
 
+    // Mengambil urutan parent item agar sub item tetap terlihat bersama induknya.
     private function getItemPath(?UptItemSubStandarMutu $item): Collection
     {
         if (!$item) {
@@ -328,6 +341,7 @@ class RkaController extends Controller
         return $path->values();
     }
 
+    // Menghitung progres item yang sudah dinilai auditor.
     private function getAuditProgress(Penugasan $penugasan): array
     {
         $itemIds = $this->getItemIds($penugasan);
@@ -345,6 +359,7 @@ class RkaController extends Controller
         ];
     }
 
+    // Mengambil daftar item standar yang berlaku untuk UPT dan periode penugasan.
     private function getItemIds(Penugasan $penugasan): Collection
     {
         return UptItemSubStandarMutu::whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($penugasan) {
@@ -353,6 +368,7 @@ class RkaController extends Controller
         })->pluck('upt_item_sub_standar_id');
     }
 
+    // Membuat angka ringkasan seperti total item, sesuai, temuan, KTS, dan OB.
     private function getRingkasan(Collection $itemIds, RingkasanKondisiAudit $rka): array
     {
         $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $itemIds)
@@ -368,6 +384,7 @@ class RkaController extends Controller
         ];
     }
 
+    // Mengirim notifikasi saat RKA difinalisasi oleh ketua auditor.
     private function kirimNotifikasiRkaFinal(RingkasanKondisiAudit $rka): void
     {
         $penugasan = $rka->penugasan;

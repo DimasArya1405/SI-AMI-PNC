@@ -20,10 +20,13 @@ use Milon\Barcode\Facades\DNS2DFacade;
 
 class PenugasanController extends Controller
 {
+    // Menampilkan daftar periode sebagai pintu masuk pengelolaan penugasan.
     public function index(PeriodeDataTable $dataTable)
     {
         return $dataTable->render('admin.ami.penugasan');
     }
+
+    // Menampilkan detail penugasan per periode, termasuk rekap beban auditor.
     public function detail($id, Request $request)
     {
         $periode_id = $id;
@@ -33,7 +36,6 @@ class PenugasanController extends Controller
 
         $uptProdi = UPT::where('kategori_upt', 'Prodi')
             ->with(['penugasan' => function ($query) use ($id) {
-                // Load kedua auditor sekaligus
                 $query->where('periode_id', $id)->with(['auditor1', 'auditor2', 'pengajuan_jadwal_audit']);
             }])
             ->get();
@@ -45,7 +47,6 @@ class PenugasanController extends Controller
             ->get();
         $penugasan = Penugasan::where('periode_id', $id)->get();
         $auditor = Auditor::where('status_aktif', '1')->get();
-        // Ambil semua UPT dan hitung jumlah penugasan mereka khusus untuk periode ini
         $upts = Upt::withCount(['penugasan' => function ($query) use ($periode_id) {
             $query->where('periode_id', $periode_id);
         }])->get();
@@ -67,7 +68,6 @@ class PenugasanController extends Controller
                 $jumlahKetua = $penugasanKetua->count();
                 $jumlahAnggota = $penugasanAnggota->count();
 
-                // gabungkan semua UPT
                 $daftarUpt = $penugasanKetua
                     ->merge($penugasanAnggota)
                     ->pluck('upt.nama_upt')
@@ -83,6 +83,7 @@ class PenugasanController extends Controller
             });
         return view('admin.ami.penugasan_detail', compact('penugasan', 'rekapAuditor', 'uptProdi', 'penugasan_sekarang', 'uptBagian', 'periode_id', 'auditor', 'upts', 'periode', 'periodeAktifDetail', 'total_upt'));
     }
+    // Mengubah auditor dan jadwal audit pada penugasan yang sudah dibuat.
     public function edit(Request $request)
     {
         $periode = Periode::find($request->periode_id);
@@ -91,7 +92,7 @@ class PenugasanController extends Controller
             return redirect()->back()->with('error', 'Penugasan hanya dapat diubah pada periode yang sedang aktif.');
         }
 
-        // 1. Validasi awal: Auditor tidak boleh orang yang sama
+        // Auditor ketua dan anggota tidak boleh orang yang sama.
         if ($request->auditor_1 == $request->auditor_2) {
             return redirect()->back()->with('error', 'Auditor 1 dan Auditor 2 Tidak Boleh Sama!');
         }
@@ -100,10 +101,8 @@ class PenugasanController extends Controller
         $auditor_1 = Auditor::find($request->auditor_1);
         $auditor_2 = Auditor::find($request->auditor_2);
 
-        // 2. Validasi Independensi (Jika UPT adalah Prodi)
+        // Auditor tidak boleh berasal dari prodi yang sedang diaudit.
         if ($upt->kategori_upt == 'Prodi') {
-            // Ambil data prodi auditor (asumsi relasi 'prodi' sudah ada di model Auditor)
-            // Jika tidak ada relasi, gunakan cara manual: Prodi::find($auditor_1->prodi_id)
             $nama_prodi_auditor_1 = $auditor_1->prodi->nama_prodi ?? '';
             $nama_prodi_auditor_2 = $auditor_2->prodi->nama_prodi ?? '';
 
@@ -116,7 +115,6 @@ class PenugasanController extends Controller
             }
         }
 
-        // 3. Update Data Penugasan (Cukup satu kali find/update)
         $penugasan = Penugasan::where('upt_id', $request->upt_id)
             ->where('periode_id', $request->periode_id)
             ->first();
@@ -128,13 +126,12 @@ class PenugasanController extends Controller
         $penugasan->auditor_id_1 = $request->auditor_1; // Ketua
         $penugasan->auditor_id_2 = $request->auditor_2; // Anggota
         $penugasan->tanggal_audit = date('Y-m-d', strtotime($request->tanggal));
-        $penugasan->jam = $request->jam; // Pastikan kolom 'jam' ada di DB
-
-        // Jika ada kolom lain seperti status, pastikan tetap terjaga
+        $penugasan->jam = $request->jam;
         $penugasan->save();
 
         return redirect()->back()->with('success', 'Penugasan berhasil diubah');
     }
+    // Membuat penugasan baru untuk satu UPT pada periode aktif.
     public function tambah(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -221,6 +218,7 @@ class PenugasanController extends Controller
         return redirect()->back()->with('success', 'Penugasan Berhasil Ditambahkan!');
     }
 
+    // Mengembalikan pesan gagal ke modal AJAX atau redirect biasa sesuai jenis request.
     private function penugasanFailedResponse(Request $request, string $message)
     {
         if ($request->expectsJson()) {
@@ -232,6 +230,7 @@ class PenugasanController extends Controller
 
         return redirect()->back()->withInput()->with('error', $message);
     }
+    // Mengaktifkan seluruh penugasan dalam satu periode agar AMI bisa mulai diakses.
     public function aktifkan($id)
     {
         $periode = Periode::find($id);
@@ -240,22 +239,16 @@ class PenugasanController extends Controller
             return redirect()->back()->with('error', 'Penugasan hanya dapat diaktifkan pada periode yang sedang aktif.');
         }
 
-        // 1. Ambil semua data penugasan pada periode tersebut
         $penugasan = Penugasan::where('periode_id', $id);
 
-        // 2. Hitung jumlah UPT yang seharusnya memiliki penugasan
-        // Jika semua UPT (Prodi & Bagian) wajib diaudit, gunakan UPT::count()
         $jumlahUpt = UPT::count();
 
-        // Sekarang syaratnya adalah 1 UPT = 1 baris penugasan
         $syaratJumlahPenugasan = $jumlahUpt;
 
-        // 3. Validasi: Apakah jumlah baris penugasan sudah sama dengan jumlah UPT?
         if ($penugasan->count() < $syaratJumlahPenugasan) {
             return redirect()->back()->with('error', 'Gagal aktifkan! Masih ada UPT yang belum memiliki data penugasan.');
         }
 
-        // 4. Update status menjadi aktif
         $penugasan->update(['status_penugasan' => 'aktif']);
 
         $penugasanAktif = Penugasan::where('periode_id', $id)
@@ -267,9 +260,9 @@ class PenugasanController extends Controller
 
         return redirect()->back()->with('success', 'Semua penugasan berhasil diaktifkan. Auditor sekarang dapat memulai proses audit.');
     }
+    // Membuat PDF jadwal penugasan AMI untuk satu periode.
     public function exportPdf($id)
     {
-        // 1. Ambil data berdasarkan ID periode yang dikirim
         $penugasan = Penugasan::with(['upt', 'auditor1', 'auditor2'])
             ->where('periode_id', $id)
             ->orderBy('tanggal_audit')
@@ -304,7 +297,6 @@ class PenugasanController extends Controller
             ? $this->generateQrCode('penugasan_kepala||', $penugasan->first()->penugasan_id)
             : null;
 
-        // 2. Load View PDF (Gunakan file blade khusus PDF yang sudah kita buat sebelumnya)
         $pdf = Pdf::loadView('admin.export.pdf.penugasan', compact(
             'uptProdi',
             'uptBagian',
@@ -317,10 +309,10 @@ class PenugasanController extends Controller
         ))
             ->setPaper('a4', 'portrait');
 
-        // 3. Download atau Stream
         return $pdf->stream('Jadwal-AMI-PNC.pdf');
     }
 
+    // Membuat QR code tanda tangan Kepala P4MP untuk dokumen penugasan.
     private function generateQrCode(string $prefix, string $registrasi): string
     {
         $encodedCode = base64_encode($prefix . $registrasi);
@@ -329,6 +321,7 @@ class PenugasanController extends Controller
         return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
+    // Mengirim notifikasi awal ketika admin membuat penugasan.
     private function kirimNotifikasiPenugasanDibuat(Penugasan $penugasan): void
     {
         $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
@@ -340,6 +333,7 @@ class PenugasanController extends Controller
         $this->notifikasiAuditee($penugasan, 'Penugasan AMI Dibuat', $pesan, route('auditee.penugasan'));
     }
 
+    // Mengirim notifikasi bahwa AMI sudah aktif dan bisa diakses.
     private function kirimNotifikasiAmiDibuka(Penugasan $penugasan): void
     {
         $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
@@ -355,6 +349,7 @@ class PenugasanController extends Controller
         ]));
     }
 
+    // Mengirim notifikasi ke ketua dan anggota auditor pada penugasan.
     private function notifikasiAuditor(Penugasan $penugasan, string $judul, string $pesan, string $url): void
     {
         collect([
@@ -366,6 +361,7 @@ class PenugasanController extends Controller
             ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
     }
 
+    // Mengirim notifikasi ke auditee sesuai UPT yang diaudit.
     private function notifikasiAuditee(Penugasan $penugasan, string $judul, string $pesan, string $url): void
     {
         Auditee::with('user')
@@ -376,6 +372,7 @@ class PenugasanController extends Controller
             ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
     }
 
+    // Mengirim notifikasi ke Kepala P4MP setelah semua penugasan periode diaktifkan.
     private function kirimNotifikasiKepalaP4mpPenugasanAktif($penugasanAktif, string $periodeId): void
     {
         $penugasanSample = $penugasanAktif->first();

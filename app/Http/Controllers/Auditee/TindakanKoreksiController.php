@@ -28,6 +28,7 @@ class TindakanKoreksiController extends Controller
 {
     use PeriodeFilterSupport;
 
+    // Menampilkan daftar tindakan koreksi untuk unit auditee yang sedang login.
     public function index(Request $request): View
     {
         $auditee = $this->getAuditee();
@@ -54,6 +55,7 @@ class TindakanKoreksiController extends Controller
         return view('auditee.tindakan-koreksi.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
+    // Menampilkan detail tindakan koreksi beserta bukti dan dokumen dosen.
     public function show(string $penugasanId): View
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
@@ -64,6 +66,7 @@ class TindakanKoreksiController extends Controller
         return view('auditee.tindakan-koreksi.show', compact('penugasan', 'temuan', 'rkaDitandatangani', 'periodeAktif'));
     }
 
+    // Auditee mengunggah bukti pelaksanaan tindakan koreksi untuk diverifikasi auditor.
     public function uploadBukti(Request $request, string $tindakanKoreksiId): RedirectResponse
     {
         $validated = $request->validate([
@@ -143,6 +146,7 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Bukti tindakan koreksi berhasil diunggah dan siap diverifikasi auditor.');
     }
 
+    // Auditee menentukan apakah tindakan koreksi membutuhkan dokumen tambahan dari dosen.
     public function aturKebutuhanDokumenDosen(Request $request, string $tindakanKoreksiId): RedirectResponse
     {
         $validated = $request->validate([
@@ -186,6 +190,7 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Tindakan koreksi tidak lagi ditampilkan ke dosen.');
     }
 
+    // Menghapus bukti yang salah unggah selama tindakan koreksi belum diverifikasi P4MP.
     public function hapusBukti(string $dokumenId): RedirectResponse
     {
         $dokumen = TindakanKoreksiDokumenAuditee::with('tindakanKoreksi.penugasan')
@@ -247,6 +252,7 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Bukti tindakan koreksi berhasil dihapus.');
     }
 
+    // Auditee menerima atau menolak dokumen dosen sebelum digunakan sebagai bukti.
     public function validasiDokumenDosen(Request $request, string $dokumenId): RedirectResponse
     {
         $validated = $request->validate([
@@ -282,6 +288,7 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Status dokumen dosen berhasil diperbarui.');
     }
 
+    // Auditee memberi tanda tangan digital pada tindakan koreksi satu kali saja.
     public function tandaTangan(string $penugasanId): RedirectResponse
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
@@ -320,6 +327,7 @@ class TindakanKoreksiController extends Controller
         return back()->with('success', 'Tindakan koreksi berhasil ditandatangani oleh auditee.');
     }
 
+    // Mengunduh bukti tindakan koreksi milik auditee.
     public function downloadBukti(string $tindakanKoreksiId)
     {
         $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
@@ -327,6 +335,7 @@ class TindakanKoreksiController extends Controller
         return Storage::disk('local')->download($dokumen['file_path'], $dokumen['nama_file']);
     }
 
+    // Menampilkan bukti tindakan koreksi auditee langsung di browser.
     public function previewBukti(string $tindakanKoreksiId)
     {
         $dokumen = $this->findDokumenAuditeeAtauLegacy($tindakanKoreksiId);
@@ -337,6 +346,7 @@ class TindakanKoreksiController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    // Menampilkan dokumen dosen yang masuk ke auditee.
     public function previewDokumenDosen(string $dokumenId)
     {
         $dokumen = $this->findDokumenDosen($dokumenId);
@@ -350,6 +360,7 @@ class TindakanKoreksiController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    // Mengunduh dokumen pendukung yang dikirim oleh dosen.
     public function downloadDokumenDosen(string $dokumenId)
     {
         $dokumen = $this->findDokumenDosen($dokumenId);
@@ -359,6 +370,7 @@ class TindakanKoreksiController extends Controller
         return Storage::disk('local')->download($dokumen->file_path, $dokumen->nama_file);
     }
 
+    // Membuat PDF tindakan koreksi dari sisi auditee.
     public function export(string $penugasanId): Response
     {
         $penugasan = $this->getPenugasanAuditee($penugasanId);
@@ -377,6 +389,7 @@ class TindakanKoreksiController extends Controller
             ->stream($namaFile);
     }
 
+    // Membuat QR code tanda tangan digital untuk dokumen tindakan koreksi.
     private function generateQrCode(string $prefix, string $registrasi): string
     {
         $encodedCode = base64_encode($prefix . $registrasi);
@@ -385,6 +398,7 @@ class TindakanKoreksiController extends Controller
         return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
+    // Mengambil data auditee berdasarkan user yang sedang login.
     private function getAuditee(): Auditee
     {
         return Auditee::with('upt')
@@ -392,6 +406,7 @@ class TindakanKoreksiController extends Controller
             ->firstOrFail();
     }
 
+    // Memastikan penugasan yang dibuka memang milik UPT auditee tersebut.
     private function getPenugasanAuditee(string $penugasanId): Penugasan
     {
         $auditee = $this->getAuditee();
@@ -402,6 +417,7 @@ class TindakanKoreksiController extends Controller
             ->firstOrFail();
     }
 
+    // Mengambil temuan audit yang akan ditindaklanjuti oleh auditee.
     private function getTemuan(Penugasan $penugasan)
     {
         $itemIds = $this->getItemIds($penugasan);
@@ -439,6 +455,7 @@ class TindakanKoreksiController extends Controller
             ->values();
     }
 
+    // Mengecek apakah RKA sudah final dan disetujui Kepala P4MP.
     private function rkaSudahDitandatangani(Penugasan $penugasan): bool
     {
         $rka = $penugasan->relationLoaded('rka')
@@ -450,6 +467,7 @@ class TindakanKoreksiController extends Controller
             && (string) $rka->acc_p4mp === '1';
     }
 
+    // Mengambil susunan parent item agar sub item tetap mudah dipahami.
     private function getItemPath(?UptItemSubStandarMutu $item): Collection
     {
         if (!$item) {
@@ -469,6 +487,7 @@ class TindakanKoreksiController extends Controller
         return $path->values();
     }
 
+    // Mengambil semua item standar untuk UPT dan periode penugasan.
     private function getItemIds(Penugasan $penugasan)
     {
         return UptItemSubStandarMutu::whereHas('uptSubStandar.uptStandarMutu', function ($query) use ($penugasan) {
@@ -477,6 +496,7 @@ class TindakanKoreksiController extends Controller
         })->pluck('upt_item_sub_standar_id');
     }
 
+    // Mencari dokumen dosen dan memastikan auditee berhak mengaksesnya.
     private function findDokumenDosen(string $dokumenId): TindakanKoreksiDokumenDosen
     {
         $dokumen = TindakanKoreksiDokumenDosen::with('tindakanKoreksi')
@@ -488,6 +508,7 @@ class TindakanKoreksiController extends Controller
         return $dokumen;
     }
 
+    // Mengambil dokumen auditee dari tabel baru atau kolom lama agar data lama tetap aman.
     private function findDokumenAuditeeAtauLegacy(string $id): array
     {
         $dokumen = TindakanKoreksiDokumenAuditee::with('tindakanKoreksi')
@@ -519,12 +540,14 @@ class TindakanKoreksiController extends Controller
         ];
     }
 
+    // Mengecek apakah tindakan koreksi sudah diverifikasi P4MP.
     private function isTindakanKoreksiVerified(?TindakanKoreksi $tindakanKoreksi): bool
     {
         return $tindakanKoreksi
             && ($tindakanKoreksi->p4mp_status === 'terverifikasi' || filled($tindakanKoreksi->p4mp_verified_at));
     }
 
+    // Mengecek periode aktif agar auditee tidak mengubah data tahun lama.
     private function isPeriodeAktif(Penugasan $penugasan): bool
     {
         $periode = $penugasan->relationLoaded('periode')
@@ -534,6 +557,7 @@ class TindakanKoreksiController extends Controller
         return (string) ($periode?->status) === '1';
     }
 
+    // Mengecek apakah tindakan koreksi sudah memiliki bukti pelaksanaan.
     private function hasBuktiPelaksanaan(TindakanKoreksi $tindakanKoreksi): bool
     {
         $adaDokumenDosenDiterima = $tindakanKoreksi->relationLoaded('dokumenDosen')

@@ -24,6 +24,7 @@ class PelaksanaanAuditController extends Controller
 {
     use PeriodeFilterSupport;
 
+    // Menampilkan daftar penugasan aktif/selesai yang menjadi tanggung jawab auditor.
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -44,6 +45,7 @@ class PelaksanaanAuditController extends Controller
         return view('auditor.pelaksanaan_audit.index', array_merge(compact('penugasan'), $periodeFilter));
     }
 
+    // Menampilkan formulir pelaksanaan audit beserta bukti auditee dan hasil penilaian.
     public function detail(Request $request, $id)
     {
         $user = Auth::user();
@@ -53,7 +55,7 @@ class PelaksanaanAuditController extends Controller
         $periode = $periodeFilter['selectedPeriode'] ?? Periode::where('status', '1')->firstOrFail();
 
         $penugasan = Penugasan::where('periode_id', $periode?->id)
-            ->where('upt_id', $id) // Cari berdasarkan ID UPT yang dipassing
+            ->where('upt_id', $id)
             ->where(function ($query) use ($auditor) {
                 $query->where('auditor_id_1', $auditor->auditor_id)
                     ->orWhere('auditor_id_2', $auditor->auditor_id);
@@ -61,7 +63,7 @@ class PelaksanaanAuditController extends Controller
             ->firstOrFail();
         $auditee = Auditee::where('upt_id', $id)->firstOrFail();
 
-        // CEK AKETUA AUDITOR ATAU BUKAN
+        // Hanya ketua auditor yang boleh menyimpan penilaian audit.
         if ($penugasan->auditor_id_1 == $auditor->auditor_id) {
             $ketua = 1;
         } else {
@@ -107,7 +109,6 @@ class PelaksanaanAuditController extends Controller
             ->groupBy('upt_item_sub_standar_id');
 
         $allItemIds = $uptItemSubStandar->flatten()->pluck('upt_item_sub_standar_id');
-        // Ambil data jawaban berdasarkan ID item tersebut
         $jawabanAudit = JawabanAudit::whereIn('upt_item_sub_standar_id', $allItemIds)
             ->get()
             ->keyBy('upt_item_sub_standar_id');
@@ -127,6 +128,7 @@ class PelaksanaanAuditController extends Controller
             // 'adaPeriode'
         ));
     }
+    // Menyimpan jawaban Ya/Tidak, kategori temuan, dan catatan auditor per item AMI.
     public function penilaian(Request $request, $id)
     {
         $validated = $request->validate([
@@ -187,12 +189,14 @@ class PelaksanaanAuditController extends Controller
             'target_scroll' => $request->target_scroll,
         ]);
     }
+    // Mengarahkan auditor ke menu RKA karena export RKA dikelola dari fitur RKA.
     public function exportRka($id)
     {
         return redirect()
             ->route('auditor.rka.index')
             ->with('info', 'RKA sekarang disusun dan difinalisasi melalui menu RKA.');
     }
+    // Menampilkan file bukti langsung di browser tanpa mengunduhnya.
     public function previewBukti($id)
     {
         $dokumen = $this->findDokumenUntukAuditor($id);
@@ -212,6 +216,7 @@ class PelaksanaanAuditController extends Controller
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
+    // Mengunduh file bukti jika auditor membutuhkan salinan dokumen.
     public function downloadBukti($id)
     {
         $dokumen = $this->findDokumenUntukAuditor($id);
@@ -225,6 +230,7 @@ class PelaksanaanAuditController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $dokumen->nama_file . '"');
     }
 
+    // Memastikan dokumen bukti hanya bisa diakses oleh auditor yang ditugaskan.
     private function findDokumenUntukAuditor(string $id): JawabanAMI
     {
         $auditor = Auditor::where('user_id', Auth::id())->firstOrFail();
@@ -240,6 +246,7 @@ class PelaksanaanAuditController extends Controller
             ->firstOrFail();
     }
 
+    // Mengirim notifikasi ke ketua auditor ketika seluruh item AMI sudah dinilai.
     private function kirimNotifikasiRkaJikaTersedia(string $itemId): void
     {
         $item = UptItemSubStandarMutu::with('uptSubStandar.uptStandarMutu')

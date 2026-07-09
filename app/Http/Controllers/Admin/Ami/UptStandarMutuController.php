@@ -27,6 +27,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class UptStandarMutuController extends Controller
 {
+    // Menampilkan daftar pemetaan standar mutu per UPT dan periode.
     public function index(UptStandarMutuDataTable $dataTable)
     {
         $standarMutu = StandarMutu::all();
@@ -57,6 +58,7 @@ class UptStandarMutuController extends Controller
         return $dataTable->render('admin.ami.upt-standar-mutu', compact('standarMutu', 'uptUnitBagian', 'periodeList', 'uptList', 'uptByPeriode'));
     }
 
+    // Menambahkan standar mutu ke prodi/unit yang dipilih dan menyalin turunannya dari master data.
     public function tambah(Request $request)
     {
         $request->validate([
@@ -91,6 +93,7 @@ class UptStandarMutuController extends Controller
             ->with('success', 'Pemetaan standar mutu berhasil ditambahkan');
     }
 
+    // Mengubah standar mutu yang digunakan oleh satu UPT pada periode tertentu.
     public function edit(Request $request)
     {
         $request->validate([
@@ -126,6 +129,7 @@ class UptStandarMutuController extends Controller
             ->with('success', 'Pemetaan standar berhasil diubah');
     }
 
+    // Menghapus pemetaan standar mutu satu UPT pada periode tertentu.
     public function hapus(Request $request)
     {
         $request->validate([
@@ -144,6 +148,7 @@ class UptStandarMutuController extends Controller
             ->with('success', 'Pemetaan standar berhasil dihapus');
     }
 
+    // Menampilkan detail sub standar dan item AMI dari pemetaan UPT.
     public function detail($upt_id, $periode_id)
     {
         $upt = UPT::findOrFail($upt_id);
@@ -181,6 +186,7 @@ class UptStandarMutuController extends Controller
         ));
     }
 
+    // Menyalin struktur standar, sub standar, dan item dari periode lama ke periode baru.
     public function copyPeriode(Request $request)
     {
         $request->validate([
@@ -235,6 +241,7 @@ class UptStandarMutuController extends Controller
         return redirect()->back()->with('success', 'Pemetaan berhasil disalin untuk UPT yang dipilih');
     }
 
+    // Menentukan target UPT berdasarkan pilihan semua prodi atau unit/bagian tertentu.
     private function getTargetUptIds(Request $request): array
     {
         if ($request->target_type === 'all_prodi') {
@@ -246,6 +253,7 @@ class UptStandarMutuController extends Controller
         return $request->upt_ids ?? [];
     }
 
+    // Menghapus standar dari pemetaan UPT; relasi turunannya mengikuti aturan database/model.
     private function hapusStandarDanTurunannya(string $uptId, string $standarMutuId, string $periodeId): void
     {
         UptStandarMutu::where('upt_id', $uptId)
@@ -254,6 +262,7 @@ class UptStandarMutuController extends Controller
             ->delete();
     }
 
+    // Menyalin item bertingkat dan menjaga hubungan parent-child antar item.
     private function copyItemUptPeriode(string $uptSubStandarSumberId, string $uptSubStandarTujuanId): void
     {
         $itemSumber = UptItemSubStandarMutu::where('upt_sub_standar_id', $uptSubStandarSumberId)
@@ -287,6 +296,7 @@ class UptStandarMutuController extends Controller
         }
     }
 
+    // Menyalin item dari master sub standar ke pemetaan UPT tanpa membuat duplikat.
     private function sinkronisasiItemUpt(string $uptSubStandarId, string $subStandarMasterId): void
     {
         $itemMasterList = ItemSubStandarMutu::where('sub_standar_id', $subStandarMasterId)
@@ -328,6 +338,7 @@ class UptStandarMutuController extends Controller
         }
     }
 
+    // Membuat pemetaan standar lengkap dengan sub standar dan item dari master data.
     private function sinkronisasiStandarDanTurunannya(string $uptId, string $standarMutuId, string $periodeId): void
     {
         $uptStandar = UptStandarMutu::firstOrCreate(
@@ -365,6 +376,7 @@ class UptStandarMutuController extends Controller
         }
     }
 
+    // Mengimpor struktur standar AMI dari Excel ke pemetaan UPT pada periode tertentu.
     public function import(Request $request)
     {
         $request->validate([
@@ -537,6 +549,7 @@ class UptStandarMutuController extends Controller
         }
     }
 
+    // Membuat template Excel agar format import sesuai dengan pembaca import sistem.
     public function downloadTemplate()
     {
         $spreadsheet = new Spreadsheet();
@@ -572,6 +585,7 @@ class UptStandarMutuController extends Controller
         ]);
     }
 
+    // Mengekspor formulir AMI untuk satu UPT dan periode.
     public function export($upt_id, $periode_id)
     {
         $upt = Upt::findOrFail($upt_id);
@@ -585,6 +599,7 @@ class UptStandarMutuController extends Controller
         );
     }
 
+    // Mengambil daftar UPT yang sudah memiliki pemetaan pada periode tertentu.
     public function getUptByPeriode($periode_id)
     {
         $uptList = UptStandarMutu::with('upt')
@@ -602,6 +617,7 @@ class UptStandarMutuController extends Controller
         return response()->json($uptList);
     }
 
+    // Mengisi sheet petunjuk agar admin tahu format sub standar dan level item.
     private function isiSheetPetunjukTemplate($sheet): void
     {
         $sheet->setCellValue('A1', 'PETUNJUK TEMPLATE IMPORT PEMETAAN STANDAR MUTU');
@@ -652,6 +668,7 @@ class UptStandarMutuController extends Controller
         $sheet->getColumnDimension('F')->setWidth(20);
     }
 
+    // Mengisi sheet standar dengan header yang bisa dibaca kembali oleh fitur import.
     private function isiSheetTemplateStandar($sheet, string $namaStandar): void
     {
         $sheet->setCellValue('A1', 'FORMULIR AUDIT MUTU INTERNAL');
@@ -711,6 +728,7 @@ class UptStandarMutuController extends Controller
         $sheet->getRowDimension(9)->setRowHeight(24);
     }
 
+    // Membersihkan nama sheet agar valid untuk format Excel.
     private function sanitizeSheetTitle(string $title): string
     {
         $title = strtoupper(str_replace(['\\', '/', '?', '*', '[', ']', ':'], '', $title));
@@ -719,6 +737,7 @@ class UptStandarMutuController extends Controller
         return substr($title, 0, 31);
     }
 
+    // Mencari baris awal import agar mendukung template baru dan file Excel lama.
     private function getStartRowImport($sheet): int
     {
         for ($row = 1; $row <= $sheet->getHighestRow(); $row++) {
@@ -751,6 +770,7 @@ class UptStandarMutuController extends Controller
         return 1;
     }
 
+    // Mengenali baris sub standar dari Excel berdasarkan isi kolom A dan B.
     private function isImportSubStandarRow(string $colA, string $colB): bool
     {
         if ($colA === '' || $colB !== '' || is_numeric($colA)) {

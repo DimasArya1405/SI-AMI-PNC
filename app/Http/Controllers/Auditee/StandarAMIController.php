@@ -21,11 +21,13 @@ use Illuminate\Support\Str;
 
 class StandarAMIController extends Controller
 {
+    // Menampilkan daftar standar AMI yang dapat diakses oleh auditee.
     public function index(StandarAMIDataTable $dataTable)
     {
         return $dataTable->render('auditee.standar-ami');
     }
 
+    // Menampilkan detail item AMI, bukti dukung, dan pilihan item untuk dosen.
     public function detail($upt_id, $periode_id)
     {
         $user = Auth::user();
@@ -91,6 +93,7 @@ class StandarAMIController extends Controller
         ));
     }
 
+    // Menyimpan item AMI yang boleh diakses dosen untuk mengunggah bukti pendukung.
     public function updateItemDosen(Request $request, $penugasan_id)
     {
         $validated = $request->validate([
@@ -151,6 +154,7 @@ class StandarAMIController extends Controller
         return back()->with('success', 'Pilihan item untuk dosen berhasil disimpan.');
     }
 
+    // Mengunggah satu atau beberapa file bukti dukung AMI dari auditee.
     public function uploadBukti(Request $request)
     {
         $validated = $request->validate([
@@ -243,6 +247,7 @@ class StandarAMIController extends Controller
             ]);
     }
 
+    // Menghapus bukti AMI yang salah unggah selama periode masih aktif dan RKA belum final.
     public function hapusBukti(Request $request, $id)
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
@@ -286,6 +291,7 @@ class StandarAMIController extends Controller
             ]);
     }
 
+    // Auditee memvalidasi bukti yang dikirim dosen sebelum digunakan dalam audit.
     public function validasiBukti(Request $request, $id)
     {
         $validated = $request->validate([
@@ -341,6 +347,7 @@ class StandarAMIController extends Controller
             ]);
     }
 
+    // Mengunduh bukti AMI milik auditee atau bukti dosen yang terkait dengan unitnya.
     public function downloadBukti($id)
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
@@ -360,6 +367,7 @@ class StandarAMIController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $dokumen->nama_file . '"');
     }
 
+    // Menampilkan bukti AMI langsung di browser agar tidak selalu perlu diunduh.
     public function previewBukti($id)
     {
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
@@ -386,6 +394,7 @@ class StandarAMIController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    // Mengecek status RKA untuk mengunci upload/validasi bukti setelah RKA final.
     private function isRkaFinal(?Penugasan $penugasan): bool
     {
         if (!$penugasan) {
