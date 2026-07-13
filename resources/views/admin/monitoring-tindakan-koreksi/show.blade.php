@@ -4,7 +4,9 @@
         $indexRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.index' : 'admin.monitoring_tk.index';
         $exportRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.export' : 'admin.monitoring_tk.export';
         $previewRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.preview_bukti' : 'admin.monitoring_tk.preview_bukti';
+        $downloadRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.download_bukti' : 'admin.monitoring_tk.download_bukti';
         $previewDokumenDosenRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.dokumen_dosen.preview' : 'admin.monitoring_tk.dokumen_dosen.preview';
+        $downloadDokumenDosenRouteName = $isKepalaP4mp ? 'kepala_p4mp.tindakan_koreksi.dokumen_dosen.download' : 'admin.monitoring_tk.dokumen_dosen.download';
     @endphp
 
     @include($isKepalaP4mp ? 'kepala-p4mp.sidebar' : 'admin.sidebar')
@@ -178,6 +180,7 @@
                                                 </div>
                                                 <button type="button"
                                                     data-preview-url="{{ route($previewRouteName, $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                    data-download-url="{{ route($downloadRouteName, $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
                                                     data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
                                                     data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
                                                     class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
@@ -192,6 +195,7 @@
                                 <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
                                 <button type="button"
                                     data-preview-url="{{ route($previewRouteName, $tk->tindakan_koreksi_id) }}"
+                                    data-download-url="{{ route($downloadRouteName, $tk->tindakan_koreksi_id) }}"
                                     data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
                                     data-file-name="{{ $tk->bukti_nama_file }}"
                                     class="mt-3 inline-flex items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
@@ -220,6 +224,7 @@
                                                     </div>
                                                     <button type="button"
                                                         data-preview-url="{{ route($previewDokumenDosenRouteName, $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                        data-download-url="{{ route($downloadDokumenDosenRouteName, $dokumenDosen->dokumen_tk_dosen_id) }}"
                                                         data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
                                                         data-file-name="{{ $dokumenDosen->nama_file }}"
                                                         class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">

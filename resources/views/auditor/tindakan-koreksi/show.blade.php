@@ -246,6 +246,7 @@
                                                         </div>
                                                         <button type="button"
                                                             data-preview-url="{{ route('auditor.tindakan_koreksi.preview_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                            data-download-url="{{ route('auditor.tindakan_koreksi.download_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
                                                             data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
                                                             data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
                                                             class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
@@ -259,6 +260,7 @@
                                             <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
                                             <button type="button"
                                                 data-preview-url="{{ route('auditor.tindakan_koreksi.preview_bukti', $tk->tindakan_koreksi_id) }}"
+                                                data-download-url="{{ route('auditor.tindakan_koreksi.download_bukti', $tk->tindakan_koreksi_id) }}"
                                                 data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
                                                 data-file-name="{{ $tk->bukti_nama_file }}"
                                                 class="mt-3 inline-flex items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800">
@@ -291,6 +293,7 @@
                                                             </div>
                                                             <button type="button"
                                                                 data-preview-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.preview', $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                                data-download-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.download', $dokumenDosen->dokumen_tk_dosen_id) }}"
                                                                 data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
                                                                 data-file-name="{{ $dokumenDosen->nama_file }}"
                                                                 class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
@@ -364,6 +367,7 @@
                                                         </div>
                                                         <button type="button"
                                                             data-preview-url="{{ route('auditor.tindakan_koreksi.preview_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
+                                                            data-download-url="{{ route('auditor.tindakan_koreksi.download_bukti', $dokumenAuditeeItem->dokumen_tk_auditee_id) }}"
                                                             data-extension="{{ strtolower(pathinfo($dokumenAuditeeItem->nama_file, PATHINFO_EXTENSION)) }}"
                                                             data-file-name="{{ $dokumenAuditeeItem->nama_file }}"
                                                             class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
@@ -377,6 +381,7 @@
                                             <p class="mt-1 text-sm text-gray-700">{{ $tk->bukti_nama_file }}</p>
                                             <button type="button"
                                                 data-preview-url="{{ route('auditor.tindakan_koreksi.preview_bukti', $tk->tindakan_koreksi_id) }}"
+                                                data-download-url="{{ route('auditor.tindakan_koreksi.download_bukti', $tk->tindakan_koreksi_id) }}"
                                                 data-extension="{{ strtolower(pathinfo($tk->bukti_nama_file, PATHINFO_EXTENSION)) }}"
                                                 data-file-name="{{ $tk->bukti_nama_file }}"
                                                 class="mt-3 inline-flex items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800">
@@ -405,6 +410,7 @@
                                                                 </div>
                                                                 <button type="button"
                                                                     data-preview-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.preview', $dokumenDosen->dokumen_tk_dosen_id) }}"
+                                                                    data-download-url="{{ route('auditor.tindakan_koreksi.dokumen_dosen.download', $dokumenDosen->dokumen_tk_dosen_id) }}"
                                                                     data-extension="{{ strtolower(pathinfo($dokumenDosen->nama_file, PATHINFO_EXTENSION)) }}"
                                                                     data-file-name="{{ $dokumenDosen->nama_file }}"
                                                                     class="inline-flex shrink-0 items-center justify-center gap-2 rounded bg-gray-700 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">

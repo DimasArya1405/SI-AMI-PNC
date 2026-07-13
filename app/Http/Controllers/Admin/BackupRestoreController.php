@@ -63,7 +63,7 @@ class BackupRestoreController extends Controller
         $extension = strtolower($request->file('backup_file')->getClientOriginalExtension());
 
         if (!in_array($extension, ['sql', 'txt'], true)) {
-            return back()->with('error', 'File restore harus berformat .sql.');
+            return back()->with('error', 'Tipe file tidak didukung. Gunakan file SQL atau TXT.');
         }
 
         try {

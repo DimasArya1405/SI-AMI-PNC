@@ -16,6 +16,11 @@
         <div id="previewError" class="hidden h-[calc(100%-52px)] flex-col items-center justify-center px-4 text-center">
             <p class="mb-2 font-semibold text-red-500">Preview tidak tersedia</p>
             <p id="previewErrorText" class="text-sm text-gray-500">File ini tidak bisa ditampilkan langsung.</p>
+            <a id="previewDownloadLink" href="#"
+                class="mt-4 inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                <i class="bi bi-download"></i>
+                Unduh File
+            </a>
         </div>
 
         <iframe id="previewFrame" class="hidden h-[calc(100%-52px)] w-full"></iframe>
@@ -29,12 +34,19 @@
 <script>
     window.previewTimeout = window.previewTimeout || null;
 
-    window.openSmartPreview = function(previewUrl, extension, fileName) {
+    window.openSmartPreview = function(previewUrl, downloadUrl, extension, fileName) {
+        if (typeof fileName === 'undefined') {
+            fileName = extension;
+            extension = downloadUrl;
+            downloadUrl = previewUrl;
+        }
+
         const modal = document.getElementById('previewModal');
         const title = document.getElementById('previewTitle');
         const loading = document.getElementById('previewLoading');
         const error = document.getElementById('previewError');
         const errorText = document.getElementById('previewErrorText');
+        const downloadLink = document.getElementById('previewDownloadLink');
         const frame = document.getElementById('previewFrame');
         const imageWrapper = document.getElementById('previewImageWrapper');
         const image = document.getElementById('previewImage');
@@ -55,6 +67,7 @@
         imageWrapper.classList.add('hidden');
         imageWrapper.classList.remove('flex');
         errorText.textContent = 'File ini tidak bisa ditampilkan langsung.';
+        downloadLink.href = downloadUrl || previewUrl;
 
         frame.src = 'about:blank';
         image.src = '';
@@ -134,6 +147,7 @@
 
         window.openSmartPreview(
             button.dataset.previewUrl,
+            button.dataset.downloadUrl || button.dataset.previewUrl,
             button.dataset.extension || '',
             button.dataset.fileName || 'Preview File'
         );
