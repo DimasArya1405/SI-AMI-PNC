@@ -102,6 +102,7 @@
                                                         </span>
                                                         <button type="button"
                                                             data-preview-url="{{ route('dosen.tindakan_koreksi_dokumen.preview', $dokumen->dokumen_tk_dosen_id) }}"
+                                                            data-download-url="{{ route('dosen.tindakan_koreksi_dokumen.download', $dokumen->dokumen_tk_dosen_id) }}"
                                                             data-extension="{{ strtolower(pathinfo($dokumen->nama_file, PATHINFO_EXTENSION)) }}"
                                                             data-file-name="{{ $dokumen->nama_file }}"
                                                             class="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
@@ -141,6 +142,8 @@
                                             <label class="text-sm font-medium text-gray-700">File Dokumen</label>
                                             <div data-file-upload-field>
                                             <input type="file" name="file_bukti[]" multiple required data-max-file-size="5242880"
+                                                data-allowed-extensions="pdf,doc,docx,xls,xlsx,jpg,jpeg,png"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                                                 class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-green-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-200">
                                             <p data-file-size-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
                                             </div>
@@ -259,6 +262,10 @@
                     const field = input.closest('[data-file-upload-field]');
                     const errorElement = field?.querySelector('[data-file-size-error]');
                     const maxSize = Number(input.dataset.maxFileSize || 5242880);
+                    const allowedExtensions = (input.dataset.allowedExtensions || '')
+                        .split(',')
+                        .map((extension) => extension.trim().toLowerCase())
+                        .filter(Boolean);
 
                     const showError = (message) => {
                         if (errorElement) {
@@ -277,7 +284,17 @@
                     };
 
                     const validateFiles = () => {
+                        const unsupportedFile = Array.from(input.files || []).find((file) => {
+                            const extension = file.name.split('.').pop().toLowerCase();
+
+                            return allowedExtensions.length > 0 && !allowedExtensions.includes(extension);
+                        });
                         const oversizedFile = Array.from(input.files || []).find((file) => file.size > maxSize);
+
+                        if (unsupportedFile) {
+                            showError(`File "${unsupportedFile.name}" tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.`);
+                            return false;
+                        }
 
                         if (oversizedFile) {
                             showError(`File "${oversizedFile.name}" berukuran ${formatMb(oversizedFile.size)} MB. Maksimal 5 MB per file.`);

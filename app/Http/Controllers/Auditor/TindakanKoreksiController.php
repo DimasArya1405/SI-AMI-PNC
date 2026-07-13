@@ -164,6 +164,21 @@ class TindakanKoreksiController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    // Mengunduh dokumen dosen yang sudah diterima oleh auditee.
+    public function downloadDokumenDosen(string $dokumenId)
+    {
+        $dokumen = TindakanKoreksiDokumenDosen::with('tindakanKoreksi')
+            ->where('dokumen_tk_dosen_id', $dokumenId)
+            ->where('status_validasi', 'diterima')
+            ->firstOrFail();
+
+        $this->getPenugasanAuditor($dokumen->tindakanKoreksi->penugasan_id);
+
+        abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+        return Storage::disk('local')->download($dokumen->file_path, $dokumen->nama_file);
+    }
+
     // Membuat QR code tanda tangan digital untuk export PDF tindakan koreksi.
     public function generateQrCode($prefix, $registrasi)
     {

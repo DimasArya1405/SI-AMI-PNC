@@ -799,8 +799,10 @@
                         <input type="file"
                             name="file_excel"
                             accept=".xlsx,.xls"
+                            data-allowed-extensions="xlsx,xls"
                             class="w-full border border-gray-300 rounded-lg p-2"
                             required>
+                        <p data-file-type-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
                     </div>
 
                     <div class="flex justify-between gap-3 pt-4 border-t">
@@ -1287,6 +1289,50 @@
 
         $(document).on('click', '[data-modal-target="modal-tambah"]', function() {
             $('#modal-tambah').removeClass('hidden').addClass('flex');
+        });
+
+        const importForm = document.querySelector('#modal-import form');
+        const excelInput = importForm?.querySelector('input[name="file_excel"]');
+        const excelError = importForm?.querySelector('[data-file-type-error]');
+
+        function validateExcelImportFile() {
+            if (!excelInput || !excelInput.files.length) {
+                return true;
+            }
+
+            const allowedExtensions = (excelInput.dataset.allowedExtensions || 'xlsx,xls')
+                .split(',')
+                .map((extension) => extension.trim().toLowerCase());
+            const file = excelInput.files[0];
+            const extension = file.name.split('.').pop().toLowerCase();
+
+            if (!allowedExtensions.includes(extension)) {
+                const message = `File "${file.name}" tidak didukung. Gunakan file Excel (.xlsx atau .xls).`;
+
+                if (excelError) {
+                    excelError.textContent = message;
+                    excelError.classList.remove('hidden');
+                }
+
+                excelInput.setCustomValidity(message);
+                excelInput.reportValidity();
+                return false;
+            }
+
+            if (excelError) {
+                excelError.textContent = '';
+                excelError.classList.add('hidden');
+            }
+
+            excelInput.setCustomValidity('');
+            return true;
+        }
+
+        excelInput?.addEventListener('change', validateExcelImportFile);
+        importForm?.addEventListener('submit', function(event) {
+            if (!validateExcelImportFile()) {
+                event.preventDefault();
+            }
         });
     </script>
     @endpush

@@ -358,6 +358,8 @@
                                                                 name="file_bukti[]"
                                                                 multiple
                                                                 data-max-file-size="5242880"
+                                                                data-allowed-extensions="pdf,doc,docx,xls,xlsx,jpg,jpeg,png"
+                                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                                                                 class="block w-full text-sm border rounded-lg cursor-pointer bg-white"
                                                                 required>
                                                             <p data-file-size-error class="mt-2 hidden text-sm font-medium text-red-600"></p>
@@ -603,7 +605,29 @@
             }
 
             const maxSize = Number(input.dataset.maxFileSize || 5242880);
+            const allowedExtensions = (input.dataset.allowedExtensions || '')
+                .split(',')
+                .map((extension) => extension.trim().toLowerCase())
+                .filter(Boolean);
+            const unsupportedFile = Array.from(input.files || []).find((file) => {
+                const extension = file.name.split('.').pop().toLowerCase();
+
+                return allowedExtensions.length > 0 && !allowedExtensions.includes(extension);
+            });
             const oversizedFile = Array.from(input.files || []).find((file) => file.size > maxSize);
+
+            if (unsupportedFile) {
+                const message = `File "${unsupportedFile.name}" tidak didukung. Gunakan PDF, Word, Excel, JPG, JPEG, atau PNG.`;
+
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.remove('hidden');
+                }
+
+                input.setCustomValidity(message);
+                input.reportValidity();
+                return false;
+            }
 
             if (oversizedFile) {
                 const message = `File "${oversizedFile.name}" berukuran ${formatFileSizeMb(oversizedFile.size)} MB. Maksimal 5 MB per file.`;

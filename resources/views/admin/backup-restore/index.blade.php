@@ -97,7 +97,9 @@
                                 File Backup SQL
                             </label>
                             <input type="file" name="backup_file" id="backup_file" accept=".sql,.txt" required
+                                data-allowed-extensions="sql,txt"
                                 class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
+                            <p id="backup-file-error" class="mt-2 hidden text-sm font-medium text-red-600"></p>
                         </div>
                         <button type="button" id="btn-open-restore-modal"
                             class="siami-restore-button inline-flex w-full items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition sm:w-auto">
@@ -215,12 +217,45 @@
             const restoreModal = $('#modal-restore-database');
             const restoreForm = $('#form-restore-database');
             const restoreFileInput = $('#backup_file');
+            const restoreFileError = $('#backup-file-error');
+
+            function validateRestoreFile() {
+                const file = restoreFileInput[0].files[0];
+
+                if (!file) {
+                    return true;
+                }
+
+                const allowedExtensions = (restoreFileInput.data('allowed-extensions') || 'sql,txt')
+                    .split(',')
+                    .map((extension) => extension.trim().toLowerCase());
+                const extension = file.name.split('.').pop().toLowerCase();
+
+                if (!allowedExtensions.includes(extension)) {
+                    const message = `File "${file.name}" tidak didukung. Gunakan file SQL atau TXT.`;
+
+                    restoreFileError.text(message).removeClass('hidden');
+                    restoreFileInput[0].setCustomValidity(message);
+                    restoreFileInput[0].reportValidity();
+                    return false;
+                }
+
+                restoreFileError.text('').addClass('hidden');
+                restoreFileInput[0].setCustomValidity('');
+                return true;
+            }
+
+            restoreFileInput.on('change', validateRestoreFile);
 
             $('#btn-open-restore-modal').on('click', function() {
                 const file = restoreFileInput[0].files[0];
 
                 if (!file) {
                     restoreFileInput[0].reportValidity();
+                    return;
+                }
+
+                if (!validateRestoreFile()) {
                     return;
                 }
 

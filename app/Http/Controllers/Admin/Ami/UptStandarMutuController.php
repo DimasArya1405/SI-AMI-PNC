@@ -386,7 +386,11 @@ class UptStandarMutuController extends Controller
             'target_type' => 'required|in:all_prodi,unit_bagian',
             'upt_ids' => 'exclude_unless:target_type,unit_bagian|array',
             'upt_ids.*' => 'nullable|exists:upt,upt_id',
-            'file_excel' => 'required|mimes:xlsx,xls',
+            'file_excel' => 'required|file|mimes:xlsx,xls',
+        ], [
+            'file_excel.required' => 'File Excel wajib dipilih.',
+            'file_excel.file' => 'File Excel tidak valid.',
+            'file_excel.mimes' => 'Tipe file tidak didukung. Gunakan file Excel (.xlsx atau .xls).',
         ]);
 
         DB::beginTransaction();

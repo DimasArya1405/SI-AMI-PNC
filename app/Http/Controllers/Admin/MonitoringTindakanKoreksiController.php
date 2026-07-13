@@ -222,6 +222,17 @@ class MonitoringTindakanKoreksiController extends Controller
             ->header('Content-Disposition', 'inline; filename="' . $namaFile . '"');
     }
 
+    public function downloadDokumenDosen(string $dokumenId)
+    {
+        $dokumen = TindakanKoreksiDokumenDosen::where('dokumen_tk_dosen_id', $dokumenId)
+            ->where('status_validasi', 'diterima')
+            ->firstOrFail();
+
+        abort_unless($dokumen->file_path && Storage::disk('local')->exists($dokumen->file_path), 404);
+
+        return Storage::disk('local')->download($dokumen->file_path, $dokumen->nama_file);
+    }
+
     public function export(string $penugasanId): Response
     {
         $penugasan = Penugasan::with(['periode', 'upt', 'auditor1', 'auditor2', 'verifikasiTindakanKoreksi.finalizedBy'])
