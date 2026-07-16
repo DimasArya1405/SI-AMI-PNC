@@ -146,6 +146,16 @@ class PenugasanController extends Controller
             return redirect()->back()->with('error', 'Data penugasan tidak ditemukan!');
         }
 
+        $pesanBentrokAuditor = $this->getPesanBentrokAuditorTanggal(
+            $request->tanggal,
+            [$request->auditor_1, $request->auditor_2],
+            $penugasan->penugasan_id
+        );
+
+        if ($pesanBentrokAuditor) {
+            return redirect()->back()->withInput()->with('error', $pesanBentrokAuditor);
+        }
+
         $penugasan->auditor_id_1 = $request->auditor_1; // Ketua
         $penugasan->auditor_id_2 = $request->auditor_2; // Anggota
         $penugasan->tanggal_audit = date('Y-m-d', strtotime($request->tanggal));
@@ -223,6 +233,15 @@ class PenugasanController extends Controller
             }
         }
 
+        $pesanBentrokAuditor = $this->getPesanBentrokAuditorTanggal($request->tanggal, [
+            $request->auditor_1,
+            $request->auditor_2,
+        ]);
+
+        if ($pesanBentrokAuditor) {
+            return $this->penugasanFailedResponse($request, $pesanBentrokAuditor);
+        }
+
         $penugasan = new Penugasan();
         $penugasan->periode_id = $request->periode_id;
         $penugasan->upt_id = $request->upt_id;
@@ -274,6 +293,36 @@ class PenugasanController extends Controller
         if ($jam < '08:00' || $jam > '16:00') {
             $fail('Jam audit hanya boleh antara 08.00 sampai 16.00.');
         }
+    }
+
+    // Memastikan satu auditor tidak memiliki dua penugasan pada tanggal yang sama.
+    private function getPesanBentrokAuditorTanggal(string $tanggal, array $auditorIds, ?string $abaikanPenugasanId = null): ?string
+    {
+        $tanggalAudit = Carbon::parse($tanggal)->toDateString();
+
+        foreach (array_unique($auditorIds) as $auditorId) {
+            $penugasanBentrok = Penugasan::with(['upt'])
+                ->whereDate('tanggal_audit', $tanggalAudit)
+                ->when($abaikanPenugasanId, function ($query) use ($abaikanPenugasanId) {
+                    $query->where('penugasan_id', '!=', $abaikanPenugasanId);
+                })
+                ->where(function ($query) use ($auditorId) {
+                    $query->where('auditor_id_1', $auditorId)
+                        ->orWhere('auditor_id_2', $auditorId);
+                })
+                ->first();
+
+            if ($penugasanBentrok) {
+                $auditor = Auditor::find($auditorId);
+                $namaAuditor = $auditor?->nama_lengkap ?? 'Auditor';
+                $namaUpt = $penugasanBentrok->upt?->nama_upt ?? 'UPT lain';
+                $tanggalIndonesia = Carbon::parse($tanggalAudit)->locale('id')->translatedFormat('d F Y');
+
+                return "{$namaAuditor} sudah memiliki penugasan pada {$tanggalIndonesia} untuk {$namaUpt}.";
+            }
+        }
+
+        return null;
     }
 
     // Mengembalikan pesan gagal ke modal AJAX atau redirect biasa sesuai jenis request.
