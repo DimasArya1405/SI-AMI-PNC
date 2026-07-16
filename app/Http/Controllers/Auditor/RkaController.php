@@ -423,13 +423,8 @@ class RkaController extends Controller
                     default => route('auditee.rka.show', $penugasan->penugasan_id),
                 };
 
-                $user->notify(new PenugasanAuditNotification(
-                    $penugasan,
-                    'RKA Final Tersedia',
-                    $pesan,
-                    $url,
-                    'rka-final'
-                ));
+                app(\App\Services\NotifikasiService::class)
+                    ->kirimPenugasan($user, $penugasan, 'RKA Final Tersedia', $pesan, $url, 'rka-final');
             });
     }
 }

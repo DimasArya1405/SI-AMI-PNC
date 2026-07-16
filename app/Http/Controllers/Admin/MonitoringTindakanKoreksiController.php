@@ -12,7 +12,6 @@ use App\Models\TindakanKoreksiDokumenAuditee;
 use App\Models\TindakanKoreksiDokumenDosen;
 use App\Models\UptItemSubStandarMutu;
 use App\Models\VerifikasiTindakanKoreksi;
-use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -387,15 +386,17 @@ class MonitoringTindakanKoreksiController extends Controller
             ->merge($auditorUsers)
             ->filter()
             ->unique('id')
-            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification(
-                $penugasan,
-                'Verifikasi TK P4MP',
-                $pesan,
-                $user->role === 'auditee'
-                    ? route('auditee.tindakan_koreksi.show', $penugasan->penugasan_id)
-                    : route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id),
-                'tk-p4mp-' . $tindakanKoreksi->p4mp_status
-            )));
+            ->each(fn ($user) => app(\App\Services\NotifikasiService::class)
+                ->kirimPenugasan(
+                    $user,
+                    $penugasan,
+                    'Verifikasi TK P4MP',
+                    $pesan,
+                    $user->role === 'auditee'
+                        ? route('auditee.tindakan_koreksi.show', $penugasan->penugasan_id)
+                        : route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id),
+                    'tk-p4mp-' . $tindakanKoreksi->p4mp_status
+                ));
     }
 
     private function kirimNotifikasiFinalisasiP4mp(Penugasan $penugasan): void
@@ -417,14 +418,16 @@ class MonitoringTindakanKoreksiController extends Controller
             ->merge($auditorUsers)
             ->filter()
             ->unique('id')
-            ->each(fn ($user) => $user->notify(new PenugasanAuditNotification(
-                $penugasan,
-                'TK Diverifikasi P4MP',
-                $pesan,
-                $user->role === 'auditee'
-                    ? route('auditee.tindakan_koreksi.show', $penugasan->penugasan_id)
-                    : route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id),
-                'tk-p4mp-final'
-            )));
+            ->each(fn ($user) => app(\App\Services\NotifikasiService::class)
+                ->kirimPenugasan(
+                    $user,
+                    $penugasan,
+                    'TK Diverifikasi P4MP',
+                    $pesan,
+                    $user->role === 'auditee'
+                        ? route('auditee.tindakan_koreksi.show', $penugasan->penugasan_id)
+                        : route('auditor.tindakan_koreksi.show', $penugasan->penugasan_id),
+                    'tk-p4mp-final'
+                ));
     }
 }

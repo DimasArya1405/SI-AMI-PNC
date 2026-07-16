@@ -301,13 +301,8 @@ class PelaksanaanAuditController extends Controller
                         && ($notifikasi->data['penugasan_id'] ?? null) === $penugasan->penugasan_id);
 
                 if (!$sudahDikirim) {
-                    $user->notify(new PenugasanAuditNotification(
-                        $penugasan,
-                        'Draft RKA Siap Disusun',
-                        $pesan,
-                        $url,
-                        'rka-draft-siap'
-                    ));
+                    app(\App\Services\NotifikasiService::class)
+                        ->kirimPenugasan($user, $penugasan, 'Draft RKA Siap Disusun', $pesan, $url, 'rka-draft-siap');
                 }
             });
     }

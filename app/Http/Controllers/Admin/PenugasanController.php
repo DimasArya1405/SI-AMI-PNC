@@ -11,7 +11,6 @@ use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\UPT;
 use App\Models\User;
-use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -461,20 +460,10 @@ class PenugasanController extends Controller
             ));
     }
 
-    // Mengirim notifikasi. Jika email gagal, notifikasi aplikasi tetap dikirim.
+    // Mengirim notifikasi aplikasi dan email.
     private function kirimNotifikasiUser(User $user, Penugasan $penugasan, string $judul, string $pesan, string $url, ?string $jenis = null, bool $kirimEmail = false): void
     {
-        if (!$kirimEmail) {
-            $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis));
-            return;
-        }
-
-        $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis));
-
-        try {
-            $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis, true, false));
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
+        app(\App\Services\NotifikasiService::class)
+            ->kirimPenugasan($user, $penugasan, $judul, $pesan, $url, $jenis);
     }
 }

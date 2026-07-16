@@ -6,6 +6,7 @@ use App\DataTables\Admin\PeriodeDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Penugasan;
 use App\Models\Periode;
+use App\Services\PeriodeAktifService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +14,7 @@ class PeriodeController extends Controller
 {
     public function index(PeriodeDataTable $dataTable)
     {
-        $this->pastikanHanyaSatuAktif();
+        app(PeriodeAktifService::class)->sinkronkanTahunBerjalan();
 
         $periode = Periode::all();
         return $dataTable->render('admin.periode', compact('periode'));
@@ -40,17 +41,15 @@ class PeriodeController extends Controller
         }
 
         DB::transaction(function () use ($validated) {
-            $this->selesaikanPenugasanPeriodeAktif();
-
-            Periode::query()->update(['status' => '0']);
+            $belumAdaPeriodeAktif = ! Periode::where('status', '1')->exists();
 
             $periode = new Periode();
             $periode->tahun = $validated['tahun'];
-            $periode->status = '1';
+            $periode->status = $belumAdaPeriodeAktif ? '1' : '0';
             $periode->save();
         });
 
-        return redirect()->back()->with('success', 'Periode berhasil ditambahkan dan diaktifkan.');
+        return redirect()->back()->with('success', 'Periode berhasil ditambahkan.');
     }
 
     public function edit(Request $request)
@@ -77,8 +76,11 @@ class PeriodeController extends Controller
         }
 
         $periode = Periode::findOrFail($validated['periode_id']);
+
         $periode->tahun = $validated['tahun'];
         $periode->save();
+
+        app(PeriodeAktifService::class)->sinkronkanTahunBerjalan();
 
         return redirect()->back()->with('success', 'Periode berhasil diperbarui.');
     }
@@ -143,18 +145,4 @@ class PeriodeController extends Controller
             ->update(['status_penugasan' => 'aktif']);
     }
 
-    private function pastikanHanyaSatuAktif(): void
-    {
-        $periodeAktif = Periode::where('status', '1')
-            ->orderByDesc('updated_at')
-            ->get();
-
-        if ($periodeAktif->count() <= 1) {
-            return;
-        }
-
-        Periode::where('status', '1')
-            ->where('id', '!=', $periodeAktif->first()->id)
-            ->update(['status' => '0']);
-    }
 }

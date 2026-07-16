@@ -11,7 +11,6 @@ use App\Models\Penugasan;
 use App\Models\Periode;
 use App\Models\UPT;
 use App\Models\User;
-use App\Notifications\PenugasanAuditNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -212,7 +211,8 @@ class PenugasanController extends Controller
 
         User::where('role', 'admin')
             ->get()
-            ->each(fn ($admin) => $admin->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+            ->each(fn ($admin) => app(\App\Services\NotifikasiService::class)
+                ->kirimPenugasan($admin, $penugasan, $judul, $pesan, $url));
     }
 
     private function kirimNotifikasiPihakTerkaitPengajuanDibuat(Penugasan $penugasan, string $namaPengaju, string $userPengajuId): void
@@ -242,7 +242,8 @@ class PenugasanController extends Controller
                     ? route('auditee.penugasan')
                     : route('auditor.penugasan');
 
-                $user->notify(new PenugasanAuditNotification($penugasan, 'Pengajuan Jadwal Audit', $pesan, $url));
+                app(\App\Services\NotifikasiService::class)
+                    ->kirimPenugasan($user, $penugasan, 'Pengajuan Jadwal Audit', $pesan, $url);
             });
     }
 }

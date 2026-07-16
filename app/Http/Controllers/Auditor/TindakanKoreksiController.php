@@ -491,13 +491,15 @@ class TindakanKoreksiController extends Controller
             ->pluck('user')
             ->filter()
             ->unique('id')
-            ->each(fn($user) => $user->notify(new PenugasanAuditNotification(
-                $penugasan,
-                'Tindakan Koreksi Dirumuskan',
-                $pesan,
-                $url,
-                'tk-dirumuskan-' . $penugasan->penugasan_id
-            )));
+            ->each(fn($user) => app(\App\Services\NotifikasiService::class)
+                ->kirimPenugasan(
+                    $user,
+                    $penugasan,
+                    'Tindakan Koreksi Dirumuskan',
+                    $pesan,
+                    $url,
+                    'tk-dirumuskan-' . $penugasan->penugasan_id
+                ));
     }
 
     // Mengirim notifikasi ke Kepala P4MP saat tindakan koreksi siap diverifikasi.
@@ -521,13 +523,8 @@ class TindakanKoreksiController extends Controller
                     return;
                 }
 
-                $user->notify(new PenugasanAuditNotification(
-                    $penugasan,
-                    'Verifikasi TK Menunggu P4MP',
-                    $pesan,
-                    $url,
-                    'tk-menunggu-p4mp'
-                ));
+                app(\App\Services\NotifikasiService::class)
+                    ->kirimPenugasan($user, $penugasan, 'Verifikasi TK Menunggu P4MP', $pesan, $url, 'tk-menunggu-p4mp');
             });
     }
 }
