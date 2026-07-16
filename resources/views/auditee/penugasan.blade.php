@@ -488,6 +488,8 @@
             if (input.dataset.assignmentTime !== undefined && input.value) {
                 if (!/^\d{2}:\d{2}$/.test(input.value)) {
                     input.setCustomValidity('Format jam audit harus HH:MM, contoh 08:00.');
+                } else if (Number(input.value.substring(0, 2)) > 23 || Number(input.value.substring(3, 5)) > 59) {
+                    input.setCustomValidity('Jam audit tidak valid.');
                 } else if (input.value < '08:00' || input.value > '16:00') {
                     input.setCustomValidity('Jam audit hanya boleh antara 08.00 sampai 16.00.');
                 }
@@ -500,7 +502,12 @@
             let value = input.value.trim();
 
             if (/^\d{4}$/.test(value)) {
-                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+                let menit = value.substring(2, 4);
+                if (Number(menit) > 59) {
+                    menit = '59';
+                }
+
+                value = value.substring(0, 2) + ':' + menit;
             }
 
             input.value = value;
@@ -528,7 +535,12 @@
         });
 
         $(document).on('input', '[data-assignment-time]', function() {
-            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+            let value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+            if (value.length === 4 && Number(value.substring(2, 4)) > 59) {
+                value = value.substring(0, 2) + '59';
+            }
+
+            this.value = value;
         });
 
         $(document).on('focus', '[data-assignment-time]', function() {
