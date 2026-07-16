@@ -43,7 +43,7 @@
             @endphp
 
             @if ($temuan->isNotEmpty() && $isKepalaP4mp)
-                <form action="{{ route('kepala_p4mp.tindakan_koreksi.finalisasi', $penugasan->penugasan_id) }}" method="POST"
+                <form id="form-finalisasi-verifikasi-p4mp" action="{{ route('kepala_p4mp.tindakan_koreksi.finalisasi', $penugasan->penugasan_id) }}" method="POST"
                     data-scroll-target="verifikasi-p4mp"
                     class="flex flex-col gap-4">
                     @csrf
@@ -348,7 +348,7 @@
                             @unless ($semuaSiapFinalisasi)
                                 <p class="text-sm text-yellow-700 sm:mr-auto">Finalisasi aktif setelah semua temuan selesai dinilai auditor.</p>
                             @endunless
-                            <button type="submit"
+                            <button type="button" id="btn-open-modal-finalisasi-tk-p4mp"
                                 @disabled(!$semuaSiapFinalisasi)
                                 class="inline-flex justify-center rounded px-4 py-2 text-sm font-medium text-white {{ $semuaSiapFinalisasi ? 'bg-indigo-600 hover:bg-indigo-700' : 'cursor-not-allowed bg-gray-400' }}">
                                 {{ $sudahFinalisasi ? 'Finalisasi Ulang Verifikasi' : 'Finalisasi Verifikasi P4MP' }}
@@ -386,13 +386,59 @@
 
     @include('layouts.partials.smart-file-preview')
 
+    @if ($temuan->isNotEmpty() && $isKepalaP4mp)
+        <div id="modal-finalisasi-tk-p4mp" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 px-4">
+            <div class="w-full max-w-md rounded-lg bg-white shadow-lg">
+                <div class="border-b px-5 py-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Konfirmasi Finalisasi Verifikasi</h3>
+                </div>
+                <div class="px-5 py-4">
+                    <p class="text-sm text-gray-600">
+                        Tindakan koreksi akan ditandai terverifikasi oleh Kepala P4MP.
+                        Notifikasi akan dikirim ke auditor dan auditee terkait.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-2 border-t px-5 py-4">
+                    <button type="button" id="btn-cancel-modal-finalisasi-tk-p4mp"
+                        class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" form="form-finalisasi-verifikasi-p4mp"
+                        class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                        Ya, Finalisasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($isKepalaP4mp)
         @push('js')
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
+                    const modalFinalisasiTkP4mp = document.getElementById('modal-finalisasi-tk-p4mp');
+                    const openModalFinalisasiTkP4mp = document.getElementById('btn-open-modal-finalisasi-tk-p4mp');
+                    const cancelModalFinalisasiTkP4mp = document.getElementById('btn-cancel-modal-finalisasi-tk-p4mp');
                     const umum = document.getElementById('catatan-umum-verifikasi');
                     const tombolSync = document.getElementById('sync-catatan-verifikasi');
                     const itemNotes = Array.from(document.querySelectorAll('[data-verifikasi-item-note]'));
+
+                    openModalFinalisasiTkP4mp?.addEventListener('click', function () {
+                        modalFinalisasiTkP4mp?.classList.remove('hidden');
+                        modalFinalisasiTkP4mp?.classList.add('flex');
+                    });
+
+                    cancelModalFinalisasiTkP4mp?.addEventListener('click', function () {
+                        modalFinalisasiTkP4mp?.classList.add('hidden');
+                        modalFinalisasiTkP4mp?.classList.remove('flex');
+                    });
+
+                    modalFinalisasiTkP4mp?.addEventListener('click', function (event) {
+                        if (event.target === modalFinalisasiTkP4mp) {
+                            modalFinalisasiTkP4mp.classList.add('hidden');
+                            modalFinalisasiTkP4mp.classList.remove('flex');
+                        }
+                    });
 
                     if (!umum || itemNotes.length === 0) {
                         return;

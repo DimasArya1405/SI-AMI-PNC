@@ -62,7 +62,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('auditor.rka.update', $rka->rka_id) }}" method="POST" class="flex flex-col gap-4">
+            <form id="form-rka-auditor" action="{{ route('auditor.rka.update', $rka->rka_id) }}" method="POST" class="flex flex-col gap-4">
                 @csrf
                 @method('patch')
                 <input type="hidden" name="tanggal_rapat" value="{{ old('tanggal_rapat', optional($rka->tanggal_rapat)->format('Y-m-d')) }}">
@@ -190,7 +190,7 @@
                             class="inline-flex justify-center rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">
                             Simpan Draft
                         </button>
-                        <button type="submit" name="aksi" value="finalisasi"
+                        <button type="button" id="btn-open-modal-finalisasi-rka"
                             class="inline-flex justify-center rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
                             Finalisasi RKA
                         </button>
@@ -202,5 +202,45 @@
             </form>
         </div>
     </div>
+
+    <div id="modal-finalisasi-rka" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 px-4">
+        <div class="w-full max-w-md rounded-lg bg-white shadow-lg">
+            <div class="border-b px-5 py-4">
+                <h3 class="text-lg font-semibold text-gray-900">Konfirmasi Finalisasi RKA</h3>
+            </div>
+            <div class="px-5 py-4">
+                <p class="text-sm text-gray-600">
+                    RKA akan difinalisasi dan dikirim ke admin, auditee, serta Kepala P4MP.
+                    Setelah final, data RKA tidak dapat diubah kembali.
+                </p>
+            </div>
+            <div class="flex justify-end gap-2 border-t px-5 py-4">
+                <button type="button" id="btn-cancel-modal-finalisasi-rka"
+                    class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                </button>
+                <button type="submit" form="form-rka-auditor" name="aksi" value="finalisasi"
+                    class="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                    Ya, Finalisasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modalFinalisasiRka = document.getElementById('modal-finalisasi-rka');
+        const openModalFinalisasiRka = document.getElementById('btn-open-modal-finalisasi-rka');
+        const cancelModalFinalisasiRka = document.getElementById('btn-cancel-modal-finalisasi-rka');
+
+        openModalFinalisasiRka?.addEventListener('click', () => {
+            modalFinalisasiRka?.classList.remove('hidden');
+            modalFinalisasiRka?.classList.add('flex');
+        });
+
+        cancelModalFinalisasiRka?.addEventListener('click', () => {
+            modalFinalisasiRka?.classList.add('hidden');
+            modalFinalisasiRka?.classList.remove('flex');
+        });
+    </script>
     @include('layouts.partials.back-to-top')
 </x-app-layout>
