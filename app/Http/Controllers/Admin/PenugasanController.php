@@ -288,6 +288,13 @@ class PenugasanController extends Controller
             return;
         }
 
+        [$jamAngka, $menitAngka] = array_map('intval', explode(':', $jam));
+
+        if ($jamAngka > 23 || $menitAngka > 59) {
+            $fail('Jam audit tidak valid.');
+            return;
+        }
+
         if ($jam < '08:00' || $jam > '16:00') {
             $fail('Jam audit hanya boleh antara 08.00 sampai 16.00.');
         }
