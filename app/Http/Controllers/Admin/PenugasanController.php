@@ -252,8 +252,6 @@ class PenugasanController extends Controller
         $penugasan->status_penugasan = 'pending';
         $penugasan->save();
 
-        $this->kirimNotifikasiPenugasanDibuat($penugasan);
-
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -428,18 +426,6 @@ class PenugasanController extends Controller
         return 'data:image/png;base64,' . DNS2DFacade::getBarcodePNG($qrLink, 'QRCODE', 5, 5);
     }
 
-    // Mengirim notifikasi awal ketika admin membuat penugasan.
-    private function kirimNotifikasiPenugasanDibuat(Penugasan $penugasan): void
-    {
-        $penugasan->load(['upt', 'auditor1.user', 'auditor2.user']);
-
-        $namaUpt = $penugasan->upt?->nama_upt ?? 'UPT';
-        $pesan = "Penugasan audit untuk {$namaUpt} telah dibuat. Silakan cek jadwal dan konfirmasi penugasan.";
-
-        $this->notifikasiAuditor($penugasan, 'Penugasan AMI Dibuat', $pesan, route('auditor.penugasan'));
-        $this->notifikasiAuditee($penugasan, 'Penugasan AMI Dibuat', $pesan, route('auditee.penugasan'));
-    }
-
     // Mengirim notifikasi bahwa AMI sudah aktif dan bisa diakses.
     private function kirimNotifikasiAmiDibuka(Penugasan $penugasan): void
     {
@@ -513,6 +499,6 @@ class PenugasanController extends Controller
     private function kirimNotifikasiUser(User $user, Penugasan $penugasan, string $judul, string $pesan, string $url, ?string $jenis = null, bool $kirimEmail = false): void
     {
         app(\App\Services\NotifikasiService::class)
-            ->kirimPenugasan($user, $penugasan, $judul, $pesan, $url, $jenis);
+            ->kirimPenugasan($user, $penugasan, $judul, $pesan, $url, $jenis, $kirimEmail);
     }
 }
