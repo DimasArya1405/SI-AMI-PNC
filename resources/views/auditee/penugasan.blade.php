@@ -502,12 +502,17 @@
             let value = input.value.trim();
 
             if (/^\d{4}$/.test(value)) {
+                let jam = value.substring(0, 2);
                 let menit = value.substring(2, 4);
+                if (Number(jam) > 23) {
+                    jam = '23';
+                }
+
                 if (Number(menit) > 59) {
                     menit = '59';
                 }
 
-                value = value.substring(0, 2) + ':' + menit;
+                value = jam + ':' + menit;
             }
 
             input.value = value;
@@ -536,6 +541,10 @@
 
         $(document).on('input', '[data-assignment-time]', function() {
             let value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+            if (value.length >= 2 && Number(value.substring(0, 2)) > 23) {
+                value = '23' + value.substring(2);
+            }
+
             if (value.length === 4 && Number(value.substring(2, 4)) > 59) {
                 value = value.substring(0, 2) + '59';
             }
