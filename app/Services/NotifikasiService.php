@@ -15,10 +15,15 @@ class NotifikasiService
         string $judul,
         string $pesan,
         string $url,
-        ?string $jenis = null
+        ?string $jenis = null,
+        bool $kirimEmail = true
     ): void {
         // Simpan notifikasi ke database agar tetap muncul di dropdown notifikasi.
         $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis));
+
+        if (!$kirimEmail) {
+            return;
+        }
 
         // Kirim email secara terpisah. Jika gagal, cukup dicatat di log.
         try {

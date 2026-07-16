@@ -513,6 +513,6 @@ class PenugasanController extends Controller
     private function kirimNotifikasiUser(User $user, Penugasan $penugasan, string $judul, string $pesan, string $url, ?string $jenis = null, bool $kirimEmail = false): void
     {
         app(\App\Services\NotifikasiService::class)
-            ->kirimPenugasan($user, $penugasan, $judul, $pesan, $url, $jenis);
+            ->kirimPenugasan($user, $penugasan, $judul, $pesan, $url, $jenis, $kirimEmail);
     }
 }
