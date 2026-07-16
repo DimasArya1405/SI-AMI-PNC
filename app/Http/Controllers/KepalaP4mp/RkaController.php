@@ -76,13 +76,8 @@ class RkaController extends Controller
                     return;
                 }
 
-                $user->notify(new PenugasanAuditNotification(
-                    $penugasan,
-                    'RKA Ditandatangani Kepala P4MP',
-                    $pesan,
-                    $url,
-                    $jenis
-                ));
+                app(\App\Services\NotifikasiService::class)
+                    ->kirimPenugasan($user, $penugasan, 'RKA Ditandatangani Kepala P4MP', $pesan, $url, $jenis);
             });
     }
 }
