@@ -20,10 +20,10 @@
                             </a>
                         @endif
                         @if ($selectedPeriode && $penugasanSudahDiaktifkan && !$sudahDitandatangani)
-                            <form action="{{ route('kepala_p4mp.penugasan.tanda_tangan', $selectedPeriode->id) }}" method="POST">
+                            <form id="form-ttd-penugasan-p4mp" action="{{ route('kepala_p4mp.penugasan.tanda_tangan', $selectedPeriode->id) }}" method="POST">
                                 @csrf
                                 @method('patch')
-                                <button type="submit"
+                                <button type="button" id="btn-open-modal-ttd-penugasan"
                                     class="inline-flex w-full items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto">
                                     <i class="bi bi-pen"></i>
                                     Tanda Tangani
@@ -148,4 +148,43 @@
             </div>
         </div>
     </div>
+
+    <div id="modal-ttd-penugasan-p4mp" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 px-4">
+        <div class="w-full max-w-md rounded-lg bg-white shadow-lg">
+            <div class="border-b px-5 py-4">
+                <h3 class="text-lg font-semibold text-gray-900">Konfirmasi Tanda Tangan</h3>
+            </div>
+            <div class="px-5 py-4">
+                <p class="text-sm text-gray-600">
+                    Jadwal penugasan AMI periode ini akan ditandatangani oleh Kepala P4MP dan barcode akan tampil pada PDF.
+                </p>
+            </div>
+            <div class="flex justify-end gap-2 border-t px-5 py-4">
+                <button type="button" id="btn-cancel-modal-ttd-penugasan"
+                    class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                </button>
+                <button type="submit" form="form-ttd-penugasan-p4mp"
+                    class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    Ya, Tanda Tangani
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modalTtdPenugasan = document.getElementById('modal-ttd-penugasan-p4mp');
+        const openModalTtdPenugasan = document.getElementById('btn-open-modal-ttd-penugasan');
+        const cancelModalTtdPenugasan = document.getElementById('btn-cancel-modal-ttd-penugasan');
+
+        openModalTtdPenugasan?.addEventListener('click', () => {
+            modalTtdPenugasan?.classList.remove('hidden');
+            modalTtdPenugasan?.classList.add('flex');
+        });
+
+        cancelModalTtdPenugasan?.addEventListener('click', () => {
+            modalTtdPenugasan?.classList.add('hidden');
+            modalTtdPenugasan?.classList.remove('flex');
+        });
+    </script>
 </x-app-layout>

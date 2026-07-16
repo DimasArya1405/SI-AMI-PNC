@@ -86,10 +86,19 @@ class PenugasanController extends Controller
     public function ajukan(Request $request)
     {
         $request->validate([
-            'penugasan_id' => 'required',
-            'tanggal' => 'required|date',
-            'jam' => 'required',
-            'alasan' => 'required|string',
+            'penugasan_id' => ['required'],
+            'tanggal' => ['required', 'date', function ($attribute, $value, $fail) {
+                $this->validasiTanggalAudit($value, $fail);
+            }],
+            'jam' => ['required', function ($attribute, $value, $fail) {
+                $this->validasiJamAudit($value, $fail);
+            }],
+            'alasan' => ['required', 'string'],
+        ], [
+            'tanggal.required' => 'Tanggal audit wajib diisi.',
+            'tanggal.date' => 'Format tanggal audit tidak valid.',
+            'jam.required' => 'Jam audit wajib diisi.',
+            'alasan.required' => 'Alasan perubahan jadwal wajib diisi.',
         ]);
 
         $auditee = Auditee::where('user_id', Auth::id())->firstOrFail();
@@ -127,6 +136,37 @@ class PenugasanController extends Controller
         $this->kirimNotifikasiPihakTerkaitPengajuanDibuat($penugasan, $auditee->nama_lengkap, Auth::id());
 
         return back()->with('success', 'Pengajuan perubahan jadwal berhasil dikirim.');
+    }
+
+    private function validasiTanggalAudit($value, $fail): void
+    {
+        try {
+            $tanggal = Carbon::parse($value)->startOfDay();
+        } catch (\Exception $exception) {
+            return;
+        }
+
+        if ($tanggal->lt(Carbon::today())) {
+            $fail('Tanggal audit tidak boleh sebelum hari ini.');
+        }
+
+        if ($tanggal->isWeekend()) {
+            $fail('Tanggal audit tidak boleh hari Sabtu atau Minggu.');
+        }
+    }
+
+    private function validasiJamAudit($value, $fail): void
+    {
+        $jam = substr((string) $value, 0, 5);
+
+        if (!preg_match('/^\d{2}:\d{2}$/', $jam)) {
+            $fail('Format jam audit tidak valid.');
+            return;
+        }
+
+        if ($jam < '08:00' || $jam > '16:00') {
+            $fail('Jam audit hanya boleh antara 08.00 sampai 16.00.');
+        }
     }
 
     public function setuju(Request $request)

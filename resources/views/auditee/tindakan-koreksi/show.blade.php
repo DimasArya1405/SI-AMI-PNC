@@ -61,10 +61,10 @@
                         </div>
 
                         @if ($bisaTandaTanganTk)
-                            <form action="{{ route('auditee.tindakan_koreksi.tanda_tangan', $penugasan->penugasan_id) }}" method="POST">
+                            <form id="form-ttd-tk-auditee" action="{{ route('auditee.tindakan_koreksi.tanda_tangan', $penugasan->penugasan_id) }}" method="POST">
                                 @csrf
                                 @method('patch')
-                                <button type="submit"
+                                <button type="button" id="btn-open-modal-ttd-auditee"
                                     class="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                                     <i class="bi bi-pen"></i>
                                     Tanda Tangani
@@ -477,6 +477,30 @@
     @include('layouts.partials.smart-file-preview')
     @include('layouts.partials.back-to-top')
 
+    <div id="modal-ttd-tk-auditee" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 px-4">
+        <div class="w-full max-w-md rounded-lg bg-white shadow-lg">
+            <div class="border-b px-5 py-4">
+                <h3 class="text-lg font-semibold text-gray-900">Konfirmasi Tanda Tangan</h3>
+            </div>
+            <div class="px-5 py-4">
+                <p class="text-sm text-gray-600">
+                    Tindakan koreksi akan ditandatangani oleh auditee dan barcode akan tampil pada export PDF.
+                    Tanda tangan hanya dapat dilakukan satu kali.
+                </p>
+            </div>
+            <div class="flex justify-end gap-2 border-t px-5 py-4">
+                <button type="button" data-close-modal-ttd-auditee
+                    class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                </button>
+                <button type="submit" form="form-ttd-tk-auditee"
+                    class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    Ya, Tanda Tangani
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-hapus-dokumen-tk" tabindex="-1" aria-hidden="true"
         class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 p-4">
         <div class="relative w-full max-w-md max-h-full">
@@ -522,14 +546,36 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const formatMb = (bytes) => (bytes / 1024 / 1024).toFixed(2).replace('.', ',');
+                const ttdAuditeeModal = document.getElementById('modal-ttd-tk-auditee');
+                const openTtdAuditeeModal = document.getElementById('btn-open-modal-ttd-auditee');
                 const deleteModal = document.getElementById('modal-hapus-dokumen-tk');
                 const deleteForm = document.getElementById('form-hapus-dokumen-tk');
                 const deleteFileName = document.getElementById('nama-dokumen-hapus-tk');
+
+                const closeTtdAuditeeModal = () => {
+                    ttdAuditeeModal?.classList.add('hidden');
+                    ttdAuditeeModal?.classList.remove('flex');
+                };
 
                 const closeDeleteModal = () => {
                     deleteModal?.classList.add('hidden');
                     deleteModal?.classList.remove('flex');
                 };
+
+                openTtdAuditeeModal?.addEventListener('click', () => {
+                    ttdAuditeeModal?.classList.remove('hidden');
+                    ttdAuditeeModal?.classList.add('flex');
+                });
+
+                document.querySelectorAll('[data-close-modal-ttd-auditee]').forEach((button) => {
+                    button.addEventListener('click', closeTtdAuditeeModal);
+                });
+
+                ttdAuditeeModal?.addEventListener('click', (event) => {
+                    if (event.target === ttdAuditeeModal) {
+                        closeTtdAuditeeModal();
+                    }
+                });
 
                 document.querySelectorAll('[data-delete-doc-open]').forEach((button) => {
                     button.addEventListener('click', () => {

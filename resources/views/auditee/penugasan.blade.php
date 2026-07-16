@@ -287,7 +287,8 @@
                             <label class="block mb-2.5 text-sm font-medium text-heading">
                                 Tanggal
                             </label>
-                            <input type="date" name="tanggal" id="tanggal"
+                            <input type="date" name="tanggal" id="tanggal" min="{{ now()->toDateString() }}"
+                                data-assignment-date
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs"
                                 required>
                         </div>
@@ -296,7 +297,8 @@
                             <label class="block mb-2.5 text-sm font-medium text-heading">
                                 Jam
                             </label>
-                            <input type="time" name="jam" id="jam"
+                            <input type="text" name="jam" id="jam" maxlength="4" placeholder="0800"
+                                data-assignment-time title="Masukkan 4 digit jam, contoh 0800 sampai 1600"
                                 class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs"
                                 required>
                         </div>
@@ -466,10 +468,91 @@
 
     @push('js')
     <script>
+        const assignmentMinDate = '{{ now()->toDateString() }}';
+
+        function validateAssignmentInput(input) {
+            input.setCustomValidity('');
+
+            if (input.dataset.assignmentDate !== undefined && input.value) {
+                const selectedDate = new Date(input.value + 'T00:00:00');
+                const today = new Date(assignmentMinDate + 'T00:00:00');
+                const day = selectedDate.getDay();
+
+                if (selectedDate < today) {
+                    input.setCustomValidity('Tanggal audit tidak boleh sebelum hari ini.');
+                } else if (day === 0 || day === 6) {
+                    input.setCustomValidity('Tanggal audit tidak boleh hari Sabtu atau Minggu.');
+                }
+            }
+
+            if (input.dataset.assignmentTime !== undefined && input.value) {
+                if (!/^\d{2}:\d{2}$/.test(input.value)) {
+                    input.setCustomValidity('Format jam audit harus HH:MM, contoh 08:00.');
+                } else if (input.value < '08:00' || input.value > '16:00') {
+                    input.setCustomValidity('Jam audit hanya boleh antara 08.00 sampai 16.00.');
+                }
+            }
+
+            return input.checkValidity();
+        }
+
+        function normalizeAssignmentTime(input) {
+            let value = input.value.trim();
+
+            if (/^\d{4}$/.test(value)) {
+                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+            }
+
+            input.value = value;
+        }
+
+        function validateAssignmentForm(form) {
+            const inputs = form.querySelectorAll('[data-assignment-date], [data-assignment-time]');
+            for (const input of inputs) {
+                if (input.dataset.assignmentTime !== undefined) {
+                    normalizeAssignmentTime(input);
+                }
+
+                if (!validateAssignmentInput(input)) {
+                    input.reportValidity();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        $(document).on('change', '[data-assignment-date]', function() {
+            validateAssignmentInput(this);
+            this.reportValidity();
+        });
+
+        $(document).on('input', '[data-assignment-time]', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+        });
+
+        $(document).on('focus', '[data-assignment-time]', function() {
+            this.value = this.value.replace(':', '').substring(0, 4);
+        });
+
+        $(document).on('blur', '[data-assignment-time]', function() {
+            normalizeAssignmentTime(this);
+            validateAssignmentInput(this);
+            this.reportValidity();
+        });
+
+        document.addEventListener('submit', function(event) {
+            if (event.target.querySelector('[data-assignment-date], [data-assignment-time]')) {
+                if (!validateAssignmentForm(event.target)) {
+                    event.preventDefault();
+                }
+            }
+        });
+
         $(document).on('click', '.ajukan-jadwal', function() {
             $('#penugasan_id').val($(this).data('idpenugasan'));
             $('#tanggal').val($(this).data('tanggal'));
-            $('#jam').val($(this).data('jam'));
+            $('#jam').val(String($(this).data('jam')).substring(0, 5));
         });
 
         function setBadge(prefix, status) {

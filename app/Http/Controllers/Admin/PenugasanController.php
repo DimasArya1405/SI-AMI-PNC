@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Notifications\PenugasanAuditNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Milon\Barcode\Facades\DNS2DFacade;
@@ -86,6 +87,29 @@ class PenugasanController extends Controller
     // Mengubah auditor dan jadwal audit pada penugasan yang sudah dibuat.
     public function edit(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'periode_id' => ['required'],
+            'upt_id' => ['required'],
+            'auditor_1' => ['required'],
+            'auditor_2' => ['required'],
+            'tanggal' => ['required', 'date', function ($attribute, $value, $fail) {
+                $this->validasiTanggalAudit($value, $fail);
+            }],
+            'jam' => ['required', function ($attribute, $value, $fail) {
+                $this->validasiJamAudit($value, $fail);
+            }],
+        ], [
+            'auditor_1.required' => 'Ketua auditor wajib dipilih.',
+            'auditor_2.required' => 'Anggota auditor wajib dipilih.',
+            'tanggal.required' => 'Tanggal audit wajib diisi.',
+            'tanggal.date' => 'Format tanggal audit tidak valid.',
+            'jam.required' => 'Jam audit wajib diisi.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->with('error', $validator->errors()->first());
+        }
+
         $periode = Periode::find($request->periode_id);
 
         if (!$periode || $periode->status !== '1') {
@@ -139,8 +163,12 @@ class PenugasanController extends Controller
             'upt_id' => ['required'],
             'auditor_1' => ['required'],
             'auditor_2' => ['required'],
-            'tanggal' => ['required', 'date'],
-            'jam' => ['required'],
+            'tanggal' => ['required', 'date', function ($attribute, $value, $fail) {
+                $this->validasiTanggalAudit($value, $fail);
+            }],
+            'jam' => ['required', function ($attribute, $value, $fail) {
+                $this->validasiJamAudit($value, $fail);
+            }],
         ], [
             'auditor_1.required' => 'Ketua auditor wajib dipilih.',
             'auditor_2.required' => 'Anggota auditor wajib dipilih.',
@@ -216,6 +244,37 @@ class PenugasanController extends Controller
         }
 
         return redirect()->back()->with('success', 'Penugasan Berhasil Ditambahkan!');
+    }
+
+    private function validasiTanggalAudit($value, $fail): void
+    {
+        try {
+            $tanggal = Carbon::parse($value)->startOfDay();
+        } catch (\Exception $exception) {
+            return;
+        }
+
+        if ($tanggal->lt(Carbon::today())) {
+            $fail('Tanggal audit tidak boleh sebelum hari ini.');
+        }
+
+        if ($tanggal->isWeekend()) {
+            $fail('Tanggal audit tidak boleh hari Sabtu atau Minggu.');
+        }
+    }
+
+    private function validasiJamAudit($value, $fail): void
+    {
+        $jam = substr((string) $value, 0, 5);
+
+        if (!preg_match('/^\d{2}:\d{2}$/', $jam)) {
+            $fail('Format jam audit tidak valid.');
+            return;
+        }
+
+        if ($jam < '08:00' || $jam > '16:00') {
+            $fail('Jam audit hanya boleh antara 08.00 sampai 16.00.');
+        }
     }
 
     // Mengembalikan pesan gagal ke modal AJAX atau redirect biasa sesuai jenis request.
@@ -342,15 +401,15 @@ class PenugasanController extends Controller
         $pesanAuditor = "Penugasan audit untuk {$namaUpt} telah aktif. Pelaksanaan AMI sudah dapat diakses.";
         $pesanAuditee = "Penugasan audit untuk {$namaUpt} telah aktif. Formulir AMI sudah dapat diakses.";
 
-        $this->notifikasiAuditor($penugasan, 'AMI Sudah Dapat Diakses', $pesanAuditor, route('auditor.pelaksanaan_audit.detail', $penugasan->upt_id));
+        $this->notifikasiAuditor($penugasan, 'AMI Sudah Dapat Diakses', $pesanAuditor, route('auditor.pelaksanaan_audit.detail', $penugasan->upt_id), true);
         $this->notifikasiAuditee($penugasan, 'AMI Sudah Dapat Diakses', $pesanAuditee, route('auditee.ami.detail', [
             'upt_id' => $penugasan->upt_id,
             'periode_id' => $penugasan->periode_id,
-        ]));
+        ]), true);
     }
 
     // Mengirim notifikasi ke ketua dan anggota auditor pada penugasan.
-    private function notifikasiAuditor(Penugasan $penugasan, string $judul, string $pesan, string $url): void
+    private function notifikasiAuditor(Penugasan $penugasan, string $judul, string $pesan, string $url, bool $kirimEmail = false): void
     {
         collect([
             $penugasan->auditor1?->user,
@@ -358,18 +417,18 @@ class PenugasanController extends Controller
         ])
             ->filter()
             ->unique('id')
-            ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+            ->each(fn($user) => $this->kirimNotifikasiUser($user, $penugasan, $judul, $pesan, $url, null, $kirimEmail));
     }
 
     // Mengirim notifikasi ke auditee sesuai UPT yang diaudit.
-    private function notifikasiAuditee(Penugasan $penugasan, string $judul, string $pesan, string $url): void
+    private function notifikasiAuditee(Penugasan $penugasan, string $judul, string $pesan, string $url, bool $kirimEmail = false): void
     {
         Auditee::with('user')
             ->where('upt_id', $penugasan->upt_id)
             ->get()
             ->pluck('user')
             ->filter()
-            ->each(fn($user) => $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url)));
+            ->each(fn($user) => $this->kirimNotifikasiUser($user, $penugasan, $judul, $pesan, $url, null, $kirimEmail));
     }
 
     // Mengirim notifikasi ke Kepala P4MP setelah semua penugasan periode diaktifkan.
@@ -391,12 +450,31 @@ class PenugasanController extends Controller
         User::where('role', 'kepala_p4mp')
             ->where('status_aktif', true)
             ->get()
-            ->each(fn($user) => $user->notify(new PenugasanAuditNotification(
+            ->each(fn($user) => $this->kirimNotifikasiUser(
+                $user,
                 $penugasanSample,
                 $judul,
                 $pesan,
                 $url,
-                'penugasan_aktif'
-            )));
+                'penugasan_aktif',
+                true
+            ));
+    }
+
+    // Mengirim notifikasi. Jika email gagal, notifikasi aplikasi tetap dikirim.
+    private function kirimNotifikasiUser(User $user, Penugasan $penugasan, string $judul, string $pesan, string $url, ?string $jenis = null, bool $kirimEmail = false): void
+    {
+        if (!$kirimEmail) {
+            $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis));
+            return;
+        }
+
+        $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis));
+
+        try {
+            $user->notify(new PenugasanAuditNotification($penugasan, $judul, $pesan, $url, $jenis, true, false));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 }
