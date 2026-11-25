@@ -108,6 +108,13 @@
                     <i class="bi bi-calendar3 mr-2 text-blue-600"></i>
                     {{ $tanggalHariIni }}
                 </div>
+
+                {{-- Theme Toggle (Desktop) --}}
+                <button id="theme-toggle-btn" onclick="siamiToggleTheme()" title="Ganti Tema"
+                    class="relative inline-flex items-center justify-center w-10 h-10 mr-2 text-gray-500 bg-white rounded-full hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition ease-in-out duration-150">
+                    <i class="bi bi-sun-fill text-lg siami-icon-sun hidden"></i>
+                    <i class="bi bi-moon-fill text-lg siami-icon-moon"></i>
+                </button>
                 <x-dropdown align="right" width="w-80" contentClasses="bg-white">
                     <x-slot name="trigger">
                         <button class="relative inline-flex items-center justify-center w-10 h-10 mr-3 text-gray-500 bg-white rounded-full hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition ease-in-out duration-150">
@@ -203,6 +210,13 @@
                 <div class="inline-flex max-w-[6.25rem] items-center truncate rounded-full bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700 sm:max-w-none sm:px-3 sm:text-xs">
                     <i class="bi bi-calendar3 mr-1 shrink-0"></i>
                     <span class="siami-date-short truncate">{{ $tanggalHariIniMobile }}</span>
+
+                {{-- Theme Toggle (Mobile) --}}
+                <button onclick="siamiToggleTheme()" title="Ganti Tema"
+                    class="inline-flex items-center justify-center w-9 h-9 text-gray-500 rounded-full hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition duration-150">
+                    <i class="bi bi-sun-fill siami-icon-sun hidden"></i>
+                    <i class="bi bi-moon-fill siami-icon-moon"></i>
+                </button>
                     <span class="siami-date-full truncate">{{ $tanggalHariIni }}</span>
                 </div>
 

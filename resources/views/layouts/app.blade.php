@@ -2,6 +2,15 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    {{-- Anti-flash: apply theme BEFORE styles load to prevent flicker --}}
+    <script>
+        (function () {
+            const t = localStorage.getItem('siami-theme');
+            if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -646,6 +655,24 @@
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
     @stack('js')
+
+    {{-- Dark/Light Theme Toggle --}}
+    <script>
+        function siamiToggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('siami-theme', isDark ? 'dark' : 'light');
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelectorAll('.siami-icon-sun').forEach(el => el.classList.toggle('hidden', !isDark));
+            document.querySelectorAll('.siami-icon-moon').forEach(el => el.classList.toggle('hidden', isDark));
+        }
+
+        document.addEventListener('DOMContentLoaded', updateThemeIcons);
+    </script>
 </body>
 
 </html>
